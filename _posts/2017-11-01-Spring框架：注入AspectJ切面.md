@@ -1,7 +1,5 @@
 ---
-title: "Spring框架：注入AspectJ切面"
-date: 2017-11-01T17:36:32+08:00
-draft: false
+layout: post
 ---
 
 虽然Spring AOP能够满足许多应用的切面需求，但是与AspectJ相比，Spring AOP 是一个功能**比较弱**的AOP解决方案。AspectJ提供了Spring AOP所不能支持的许多类型的切点。
@@ -16,13 +14,13 @@ draft: false
 
 程序清单4.15　使用AspectJ实现表演的评论员
 
-![2aa7cca176af389c1e64e2d4.png](/assets/img/2aa7cca176af389c1e64e2d4.png)
+![2aa7cca176af389c1e64e2d4.png](/image/2aa7cca176af389c1e64e2d4.png)
 
 CriticAspect的主要职责是在表演结束后为表演发表评论。程序清单4.15中的performance()切点匹配perform()方法。当它与afterReturning()通知一起配合使用时，我们可以让该切面在表演结束时起作用。
 
 程序清单4.15有趣的地方在于并不是评论员自己发表评论，实际上，CriticAspect与一个CriticismEngine对象相协作，在表演结束时，调用该对象的getCriticism()方法来发表一个苛刻的评论。为了避免CriticAspect和CriticismEngine之间产生不必要的耦合，我们通过Setter依赖注入为CriticAspect设置CriticismEngine。图4.9展示了此关系。
 
-![6a4ce40403bc2825b021edb9.png](/assets/img/6a4ce40403bc2825b021edb9.png)
+![6a4ce40403bc2825b021edb9.png](/image/6a4ce40403bc2825b021edb9.png)
 
 图4.9　切面也需要注入。像其他的bean一样，Spring可以为AspectJ切面注入依赖
 
