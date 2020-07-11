@@ -300,6 +300,34 @@ C:\Users\（您的用户名）\AppData\Local\Google\Chrome\Application\chrome.ex
 
 > 后续再补充安卓、iOS等其他客户端
 
+## Android
+
+我们这里用到[V2rayNG](https://github.com/2dust/v2rayNG)，一款开源的安卓软件，所有版本在https://github.com/2dust/v2rayNG/releases可以看到（请使用浏览器打开）；
+
+安装成功之后，因为V2rayNG只作为客户端，不提供代理服务，所以需要输入服务器配置。
+
+您可以自己搭建服务器，或者使用朋友的服务器（也有服务商提供付费服务），V2rayNG提供了【扫描二维码】的功能，便于分享服务器配置，如下：
+
+![68318ade7f2c3e28619e638f.png](/assets/img/68318ade7f2c3e28619e638f.png)
+
+导入成功之后，【配置文件】列表中会添加一个配置，如下：
+
+![00f2f986bc6135c0f6ee4a5a.png](/assets/img/00f2f986bc6135c0f6ee4a5a.png)
+
+就快完成了，点击左上角的三道杠（上图蓝色圈出）呼出设置菜单栏，点击【设置】
+
+![ecab8a2864e5b8d018f344c7.png](/assets/img/ecab8a2864e5b8d018f344c7.png)
+
+将【预定义规则】设置为「绕过局域网及大陆地址」，使得访问大陆网址和局域网地址不使用代理：
+
+![4c471ee00f340cd3fee55a53.png](/assets/img/4c471ee00f340cd3fee55a53.png)
+
+再次点击左上角，回到【配置文件】，选中我们刚刚导入的配置，然后点击右下角的V字按钮，启动服务（首次启动时，系统会弹出提示框，允许即可）：
+
+![9c898636fba3070ecce9de74.png](/assets/img/9c898636fba3070ecce9de74.png)
+
+好了，试试在浏览器中访问https://www.google.com/吧，如果访问成功，说明已经可以科学上网了。
+
 # 参考
 
 1. [How to set Google Chrome’s proxy settings in command line on Linux?](https://www.systutorials.com/how-to-set-google-chromes-proxy-settings-in-command-line-on-linux)
