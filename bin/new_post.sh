@@ -10,6 +10,7 @@ date=`date +%Y-%m-%d`
 newFilePath="../_posts/$date-$@.md"
 echo '---
 layout: post
----' > $newFilePath
-echo "new post created: '$(pwd)$newFilePath'"
+---
+' > "$newFilePath"
+echo "new post created: '$(pwd)/$newFilePath'"
 exit 0
