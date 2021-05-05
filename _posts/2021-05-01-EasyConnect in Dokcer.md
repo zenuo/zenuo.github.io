@@ -100,3 +100,7 @@ socket.socket = socks.socksocket
 3. https://github.com/Hagb/docker-easyconnect
 4. https://docs.docker.com/config/containers/container-networking/
 5. https://superuser.com/questions/454210/how-can-i-use-ssh-with-a-socks-5-proxy
+6. https://pypi.org/project/PySocks/
+7. https://www.mycli.net/
+8. https://dev.mysql.com/doc/refman/8.0/en/mysql.html
+
