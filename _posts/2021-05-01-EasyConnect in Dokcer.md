@@ -11,6 +11,8 @@ layout: post
 
 ## 1 运行容器
 
+> 在`Docker宿主机`为[Alpine Linux](https://alpinelinux.org/)时，映射到`Docker宿主机`的端口，无法在宿主机的外部网络（例如宿主机所在的局域网）访问，但可以在宿主机本地访问；
+
 创建文件用于保存登录凭证，以实现auto login：
 
 ```
