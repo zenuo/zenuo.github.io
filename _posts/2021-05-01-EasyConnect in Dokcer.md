@@ -60,16 +60,16 @@ Host 10.1.*
 
 1. 若git仓库的remote是`ssh`协议，编辑ssh配置文件`~/.ssh/config`，添加内容：
 
-```
-Host ${git仓库域名}
-    ProxyCommand /usr/bin/nc -x ${Docker宿主机IP}:1080 %h %p
-```
+    ```
+    Host ${git仓库域名}
+        ProxyCommand /usr/bin/nc -x ${Docker宿主机IP}:1080 %h %p
+    ```
 
 2. 若git仓库的remote是`http`或者`https`协议，那么在与remote交互时，为git命令指定变量`http_proxy`，例如：
 
-```
-$ https_proxy=socks5://localhost:1080 git clone http://${git仓库域名}/x/x.git
-```
+    ```
+    $ https_proxy=socks5://localhost:1080 git clone http://${git仓库域名}/x/x.git
+    ```
 
 ## 5 参考
 
