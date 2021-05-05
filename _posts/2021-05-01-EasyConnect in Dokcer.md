@@ -73,7 +73,27 @@ Host 10.1.*
     $ https_proxy=socks5://localhost:1080 git clone http://${git仓库域名}/x/x.git
     ```
 
-## 5 参考
+## 5 MySQL client over proxy
+
+因为[原生MySQL client](https://dev.mysql.com/doc/refman/8.0/en/mysql.html)不支持socks5代理，可通过其他客户端来达到目的；例如[mycli](https://www.mycli.net/)，但mycli目前没有支持socks5代理，所以也需要采取一些额外的措施。
+
+因为mycli基于Python实现，故可通过[PySocks](https://pypi.org/project/PySocks/)来对整个标准库进行猴补丁(Monkey patch)，使所有的socket都通过一个代理建立。
+
+假设您是通过brew安装的mycli，那么需要修改`/usr/local/bin/mycli`，添加内容：
+
+```python
+import socket
+import socks
+
+ip = '${Docker宿主机IP}'
+port = 1080
+socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, ip, port)
+socket.socket = socks.socksocket
+```
+
+保存即可使用。
+
+## 6 参考
 
 1. https://zhuanlan.zhihu.com/p/259634641
 2. https://www.sangfor.com/en/products/infrastructure/easyconnect
