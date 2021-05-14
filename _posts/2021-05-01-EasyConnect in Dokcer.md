@@ -2,7 +2,7 @@
 layout: post
 ---
 
-[Sangfor EasyConnect](https://www.sangfor.com/en/products/infrastructure/easyconnect)是一款专有的VPN解决方案，官方支持多种平台的客户端；但该软件目前存在以下的几种现象：
+[Sangfor EasyConnect](https://www.sangfor.com/en/products/infrastructure/easyconnect)是一款专有的VPN解决方案，官方支持多种平台的客户端；但该软件目前存在以下的几种行为：
 
 1. 配置一个开机自动启动的守护进程`EasyMonitor`
 2. 安装CA根证书
