@@ -47,6 +47,8 @@ $ chromium —proxy-server=socks5://${Docker宿主机IP}:1080
 
 ## 3 ssh over proxy
 
+> 若您是使用Arch Linux，需要安装openbsd-netcat，而不是gnu-netcat
+
 编辑ssh配置文件`~/.ssh/config`，添加内容：
 
 ```
