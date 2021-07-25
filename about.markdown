@@ -4,4 +4,4 @@ title: About
 permalink: /about/
 ---
 
-Hello, this is my blog, have fun 🐡
+一枚Ctrl-C和Ctrl-V工程师，面向猫猫🐱编程。
