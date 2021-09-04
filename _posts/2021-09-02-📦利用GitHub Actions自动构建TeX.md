@@ -6,7 +6,7 @@ layout: post
 
 联想到GitHub的Actions功能，可以用来做CI/CD，也许有戏。通过搜索，找到了[xu-cheng/latex-action](https://github.com/xu-cheng/latex-action)，可以达到通过`git push`操作来触发构建，并将构建的pdf文件打包放置到`Workflow`的`Artifacts`中。
 
-假设需要被编译的TeX文件的相对路径为`resume.tex`，编译器是`xelatex`，那么可以用下面的workflow描述文件来达到目的：
+假设需要被编译的TeX文件的相对路径为`resume.tex`，编译器是`XeLaTeX`，那么可以用下面的workflow描述文件来达到目的：
 
 ```yml
 name: Build LaTeX document
