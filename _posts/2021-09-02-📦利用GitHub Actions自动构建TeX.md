@@ -29,5 +29,5 @@ jobs:
           path: resume.pdf
 ```
 
-放置到仓库的`.github/workflows/`路径，再出发push即可。
+放置到仓库的`.github/workflows/`路径，再触发push即可。
 
