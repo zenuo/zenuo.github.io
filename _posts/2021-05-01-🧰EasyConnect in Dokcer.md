@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 [Sangfor EasyConnect](https://www.sangfor.com/en/products/infrastructure/easyconnect)是一款专有的VPN解决方案，官方支持多种平台的客户端；但该软件目前存在以下的几种行为：

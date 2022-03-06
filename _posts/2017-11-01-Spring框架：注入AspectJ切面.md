@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 虽然Spring AOP能够满足许多应用的切面需求，但是与AspectJ相比，Spring AOP 是一个功能**比较弱**的AOP解决方案。AspectJ提供了Spring AOP所不能支持的许多类型的切点。

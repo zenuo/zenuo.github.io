@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 ## 1 ps -eLf

@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 配置`~/.my.cnf`，开启binlog:

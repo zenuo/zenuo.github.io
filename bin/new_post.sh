@@ -9,7 +9,8 @@ cd `dirname $0`
 date=`date +%Y-%m-%d`
 newFilePath="../_posts/$date-$@.md"
 echo '---
-layout: post
+layout: single
+toc: true
 ---
 ' > "$newFilePath"
 echo "new post created: '$(pwd)/$newFilePath'"

@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 在使用VirtualBox时，若需要从**主机**访问**虚拟机**，我通常的做法是添加一个**host only**的网络适配器，然后通过这个适配器的IP访问。

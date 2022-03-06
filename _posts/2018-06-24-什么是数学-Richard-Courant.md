@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 > 摘自[什么是数学：对思想和方法的基本研究](https://book.douban.com/subject/10455982/)

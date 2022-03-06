@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 在默认情况下，Spring应用上下文中所有bean都是作为以**单例（singleton）**的形式创建的。也就是说，不管给定的一个bean被注入到其他bean多少次，每次所注入的都是**同一个实例**。

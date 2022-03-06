@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 当我们的主机没有全局IPv6地址时，我们可以使用`IPv6隧道`为主机提供IPv6地址；下面，我们来尝试一下在Ubuntu使用Hurricane Electric提供的隧道服务。

@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 以下是维基百科对`Shadowsocks`的描述：

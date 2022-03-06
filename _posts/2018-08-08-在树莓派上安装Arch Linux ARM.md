@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 > 来自https://archlinuxarm.org/platforms/armv6/raspberry-pi

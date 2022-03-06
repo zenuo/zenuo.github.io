@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 本人使用的`IntelliJ IDEA Community Edition`没有`Class Diagram`功能，在逛`stackoverflow`时，发现了工具[Class Visualizer](http://class-visualizer.net/)，通过加载Jar包的形式绘制类关系图表，在阅读开源项目源代码时能提供帮助，下图是`io.netty.channel.Channel`的关系图：

@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 首先在Xcode上创建一个`Swift Package`，菜单是`File` / `New` / `Swift Package`：

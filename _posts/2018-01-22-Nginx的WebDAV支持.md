@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 > 在`ArchLinux ARM`上编译`Nginx`及其拓展模块[nginx-dav-ext-module](https://github.com/arut/nginx-dav-ext-module)

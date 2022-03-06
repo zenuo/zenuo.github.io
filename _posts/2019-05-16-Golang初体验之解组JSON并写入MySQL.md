@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 闲话少叙，借助[chinese-poetry](https://github.com/zenuo/chinese-poetry)项目的数据，用以下Go代码实现读取部分JSON文件并写入MySQL数据库，首先创建数据库：

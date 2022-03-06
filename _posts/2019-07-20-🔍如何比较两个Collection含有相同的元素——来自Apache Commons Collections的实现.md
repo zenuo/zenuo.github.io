@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: single
+toc: true
 ---
 
 > 您可以在[org.apache.commons.collections4.CollectionUtils](https://github.com/apache/commons-collections/blob/master/src/main/java/org/apache/commons/collections4/CollectionUtils.java)查看源代码。
