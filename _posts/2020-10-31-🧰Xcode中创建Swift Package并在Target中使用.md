@@ -1,6 +1,7 @@
 ---
 layout: single
 toc: true
+title: 🧰Xcode中创建Swift Package并在Target中使用
 ---
 
 首先在Xcode上创建一个`Swift Package`，菜单是`File` / `New` / `Swift Package`：
