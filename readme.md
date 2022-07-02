@@ -1,5 +1,7 @@
 ## How to preview 
 
 ```bash
-bundle exec jekyll serve
+pip install mkdocs-material
+mkdocs serve
 ```
+

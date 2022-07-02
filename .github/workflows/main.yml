@@ -1,14 +1,16 @@
-name: GitHub Pages publication
-
+name: ci 
 on:
-  push
-
+  push:
+    branches:
+      - master 
+      - main
 jobs:
-  github-pages:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: helaili/jekyll-action@2.1.0
+      - uses: actions/setup-python@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          target_branch: 'gh-pages'
+          python-version: 3.x
+      - run: pip install mkdocs-material 
+      - run: mkdocs gh-deploy --force
