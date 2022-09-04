@@ -18,7 +18,19 @@ toc: true
 $ wget https://github.com/HaoH/redsocks/archive/release-0.68.tar.gz # 下载源码
 $ tar -zxvf redsocks-release-0.68.tar.gz # 解压缩
 $ cd redsocks-release-0.68
-$ vim utils.c # 微改代码
+```
+
+在我的电脑环境中，按照源码包的代码构建的结果，运行时会报错：
+
+```
+1662282301.374137 err redsocks.c:693 redsocks_connect_relay(...) [192.168.0.103:54303->10.100.*.*:80]: red_connect_relay failed!!!: Protocol not available
+1662282301.375292 err utils.c:154 red_prepare_relay(...) setsockopt: Protocol not available
+```
+
+可以看到报错在`utils.c:154`，经查阅[资料](https://git.kernel.dk/cgit/fio/commit/?id=8a768c2e725d6a527b904570949f6099c3f1434a)，此种报错可以被忽略，所以修改代码：
+
+```
+$ vim utils.c
 ```
 
 将153至156行注释，忽略setsocketopt的报错：
