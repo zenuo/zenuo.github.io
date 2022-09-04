@@ -7,7 +7,7 @@ fi
 
 cd `dirname $0`
 date=`date +%Y-%m-%d`
-newFilePath="../_posts/$date-$@.md"
+newFilePath="../docs/$date-$@.md"
 echo '---
 layout: single
 toc: true
