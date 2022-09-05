@@ -17,8 +17,8 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  icon:
-    repo: fontawesome/brands/github-square
+  # icon:
+  #   repo: fontawesome/brands/github-square
 repo_url: https://github.com/zenuo/zenuo.github.io
 repo_name: zenuo/zenuo.github.io
 extra:
