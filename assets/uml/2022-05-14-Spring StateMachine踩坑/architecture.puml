@@ -1,0 +1,62 @@
+@startuml architecture
+
+participant c as "定时任务"
+participant s as "用户服务"
+participant user_db as "UserDB"
+participant state_db as "StateDB"
+participant oa as "致远OA"
+
+activate c
+c -> s: 根据当前分片对应的类型和状态拉取数据列表
+activate s
+
+s -> user_db: query
+activate user_db
+
+user_db -> s: result
+deactivate user_db
+
+s -> c: return
+deactivate s
+
+loop 数据列表
+
+    c -> c: 根据当前状态，向状态机发送事件和（或）消息
+
+    activate c
+    c -> c: 拉取当前数据对应的状态机实例
+
+    c -> state_db: 根据状态机ID查询state_machine表
+
+    note right: state_machine表及其数据由SSM框架生成
+
+    activate state_db
+    state_db -> c: deserialize
+    deactivate state_db
+
+    c -> c: 根据transition定义和当前事件决定触发的action和转变的state
+
+    c -> c: 触发action
+    activate c
+    c -> oa: 发起审批、查询状态、获取正文
+    activate oa
+    oa -> c: return
+    deactivate oa
+
+    c -> s: 修改数据状态
+    activate s
+    s -> c: return
+    deactivate s
+    deactivate c
+
+    c -> state_db: 更新state_machine表
+    activate state_db
+    state_db -> c: return
+    deactivate state_db
+
+    deactivate c
+
+end
+
+deactivate c
+@enduml

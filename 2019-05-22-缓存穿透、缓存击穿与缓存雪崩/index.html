@@ -1,0 +1,2021 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://zenuo.github.io/2019-05-22-%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E7%BC%93%E5%AD%98%E5%87%BB%E7%A9%BF%E4%B8%8E%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9/">
+      
+      
+        <link rel="prev" href="../2019-05-20-CentOS%207%20%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E5%92%8C%E6%97%A5%E5%BF%97%E7%9A%84%E5%AF%B9%E7%85%A7/">
+      
+      
+        <link rel="next" href="../2019-05-27-Golang%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">
+      
+      <link rel="icon" href="../assets/img/22318999.jpeg">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+    
+    
+      
+        <title>2019 05 22 缓存穿透、缓存击穿与缓存雪崩 - /home/zenuo</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-cache-penetration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="/home/zenuo" class="md-header__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            /home/zenuo
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              2019 05 22 缓存穿透、缓存击穿与缓存雪崩
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="/home/zenuo" class="md-nav__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    /home/zenuo
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-02-Spring%E6%A1%86%E6%9E%B6Bean%E4%BD%9C%E7%94%A8%E5%9F%9F/" class="md-nav__link">
+        2017 09 02 Spring框架Bean作用域
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-10-Spring%E6%A1%86%E6%9E%B6%E8%BF%90%E8%A1%8C%E6%97%B6%E5%80%BC%E6%B3%A8%E5%85%A5/" class="md-nav__link">
+        Spring框架运行时值注入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-14-%E4%BD%BF%E7%94%A8Tomcat%20JDBC%20Pool%E6%8B%A6%E6%88%AA%E5%99%A8%E6%89%93%E5%8D%B0%E5%B8%A6%E5%8F%82%E6%95%B0%E7%9A%84SQL%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2017 09 14 使用Tomcat JDBC Pool拦截器打印带参数的SQL语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-02-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AF%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B/" class="md-nav__link">
+        2017 10 02 Spring框架：什么是面向切面编程
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-27-Logback%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F%E8%AE%BE%E5%AE%9A/" class="md-nav__link">
+        2017 10 27 Logback日志格式设定
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-01-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%B3%A8%E5%85%A5AspectJ%E5%88%87%E9%9D%A2/" class="md-nav__link">
+        2017 11 01 Spring框架：注入AspectJ切面
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-09-%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8FC%E8%AF%AD%E8%A8%80%E9%80%92%E5%BD%92%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2017 11 09 快速排序C语言递归实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-18-Spring%E6%A1%86%E6%9E%B6%EF%BC%9ASpring%20MVC%E8%B5%B7%E6%AD%A5/" class="md-nav__link">
+        Spring框架：Spring MVC起步
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E5%AE%A2%E6%88%B7%E7%AB%AF/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo客户端
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo服务器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/" class="md-nav__link">
+        2018 01 22 Netty框架：核心组件
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E7%BB%84%E4%BB%B6%E5%92%8C%E8%AE%BE%E8%AE%A1/" class="md-nav__link">
+        2018 01 22 Netty框架：组件和设计
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Nginx%E7%9A%84WebDAV%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 01 22 Nginx的WebDAV支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-03-25-how-to-set-the-font-of-console/" class="md-nav__link">
+        2018 03 25 how to set the font of console
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%9F%90%E5%BC%A0%E8%A1%A8%E7%9A%84%E5%88%97%E5%90%8D/" class="md-nav__link">
+        MySQL查询某张表的列名
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E7%9A%84mysqldump%E4%BE%8B%E5%AD%90/" class="md-nav__link">
+        2018 05 27 MySQL的mysqldump例子
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8Nginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E8%B0%B7%E6%AD%8C%E6%90%9C%E7%B4%A2/" class="md-nav__link">
+        2018 06 14 使用Nginx反向代理谷歌搜索
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95%E6%B3%A8%E5%85%A5%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2018 06 14 使用构造方法注入依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-15-%E4%BD%BF%E7%94%A8Jconsole%E7%9B%91%E6%8E%A7%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E8%BF%90%E8%A1%8C%E7%9A%84Java%E7%A8%8B%E5%BA%8F/" class="md-nav__link">
+        2018 06 15 使用Jconsole监控远程服务器上运行的Java程序
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-CSAPP%E7%BB%83%E4%B9%A0%E9%A2%982-13/" class="md-nav__link">
+        2018 06 22 CSAPP练习题2 13
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-Manjaro%20Linux%E8%AE%BF%E9%97%AEiPhone%E9%9C%80%E5%AE%89%E8%A3%85%E7%9A%84%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2018 06 22 Manjaro Linux访问iPhone需安装的工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-24-%E4%BB%80%E4%B9%88%E6%98%AF%E6%95%B0%E5%AD%A6-Richard-Courant/" class="md-nav__link">
+        2018 06 24 什么是数学 Richard Courant
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-08-%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E5%AE%89%E8%A3%85Arch%20Linux%20ARM/" class="md-nav__link">
+        2018 08 08 在树莓派上安装Arch Linux ARM
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-16-Timsort%20%E4%BD%A0%E4%BB%8E%E6%9C%AA%E5%90%AC%E8%AF%B4%E8%BF%87%E7%9A%84%E6%9C%80%E5%BF%AB%E7%9A%84%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2018 08 16 Timsort 你从未听说过的最快的排序算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-09-29-%E4%BD%BF%E7%94%A8Googletrans%E5%9C%A8%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8A%E7%BF%BB%E8%AF%91/" class="md-nav__link">
+        2018 09 29 使用Googletrans在命令行上翻译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-10-%E5%9F%BA%E4%BA%8EShadowsocks%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2018 10 10 基于Shadowsocks的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-14-%E5%9F%BA%E4%BA%8EOpenCV%E7%9A%84%E5%9B%BE%E5%83%8F%E7%BC%A9%E6%94%BE%E8%84%9A%E6%9C%AC/" class="md-nav__link">
+        1 OpenCV是什么
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-09-%E6%B5%85%E8%B0%88Java%E5%AF%B9%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 11 09 浅谈Java对函数式编程的支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-18-Linux%E7%9A%84TCP%20backlog%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" class="md-nav__link">
+        2018 11 18 Linux的TCP backlog如何工作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-27-%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99/" class="md-nav__link">
+        2019 01 27 建索引的五大原则
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-31-nginx%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 01 31 nginx架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-02-22-MySQL%E6%B5%8B%E8%AF%95%E8%A1%A8%E4%B8%AD%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E8%A1%8C%E7%9A%84%E6%9C%80%E4%BD%B3%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2019 02 22 MySQL测试表中是否存在行的最佳方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E4%BD%BF%E7%94%A8tcpdump%E6%8A%93%E5%8C%85/" class="md-nav__link">
+        2019 03 10 使用tcpdump抓包
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E5%AE%9E%E8%B7%B5java.util.concurrent.TransferQueue/" class="md-nav__link">
+        2019 03 10 实践java.util.concurrent.TransferQueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E6%9C%89%E5%85%B3%E5%BC%82%E6%AD%A5%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E5%AE%9E%E7%8E%B0%E7%9A%84%E8%AF%B4%E6%98%8E/" class="md-nav__link">
+        2019 03 18 有关异步输入输出实现的说明
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E7%BC%93%E5%AD%98%E9%82%A3%E4%BA%9B%E4%BA%8B/" class="md-nav__link">
+        2019 03 18 缓存那些事
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-21-Git%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 03 21 Git架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-class-visualizer%E2%80%94%E2%80%94%E4%B8%80%E4%B8%AA%E6%9F%A5%E7%9C%8B%E7%B1%BB%E5%85%B3%E7%B3%BB%E7%9A%84%E5%9B%BE%E5%BD%A2%E5%8C%96%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 04 19 class visualizer——一个查看类关系的图形化工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-%E6%A0%91%E8%8E%93%E6%B4%BE%E7%94%B5%E6%BA%90%E6%9C%80%E5%A4%A7%E5%8C%96/" class="md-nav__link">
+        2019 04 19 树莓派电源最大化
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-20-%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%AD%89%E7%BA%A7%E6%8F%90%E4%BA%A4%E8%AF%BB%E4%B8%8E%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 04 20 事务隔离等级提交读与可重复读的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-26-MySQL%E4%B8%AD%E7%9A%84%E5%B9%B6%E3%80%81%E5%B7%AE%E3%80%81%E4%BA%A4%E5%92%8C%E9%99%A4%E8%BF%90%E7%AE%97/" class="md-nav__link">
+        2019 04 26 MySQL中的并、差、交和除运算
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-01-%E5%8F%AF%E6%89%A9%E5%B1%95%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%EF%BC%9Aepoll%E4%B8%8Ekqueue/" class="md-nav__link">
+        2019 05 01 可扩展的事件多路复用：epoll与kqueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-05-%E5%85%B3%E4%BA%8EJava%E8%AF%AD%E8%A8%80%E7%9A%84finally%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2019 05 05 关于Java语言的finally语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-09-%E4%B8%80%E4%B8%AA%E6%88%90%E5%8A%9F%E7%9A%84Git%E5%88%86%E6%94%AF%E6%A8%A1%E5%9E%8B/" class="md-nav__link">
+        2019 05 09 一个成功的Git分支模型
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-11-%E3%80%8C%E5%8B%BE%E5%8B%BE%E3%80%8D%E4%B8%80%E4%B8%AA%E5%9F%BA%E4%BA%8E%E8%B0%B7%E6%AD%8C%E7%9A%84%E6%90%9C%E7%B4%A2%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 05 11 「勾勾」一个基于谷歌的搜索工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-16-Golang%E5%88%9D%E4%BD%93%E9%AA%8C%E4%B9%8B%E8%A7%A3%E7%BB%84JSON%E5%B9%B6%E5%86%99%E5%85%A5MySQL/" class="md-nav__link">
+        2019 05 16 Golang初体验之解组JSON并写入MySQL
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-17-%E4%B8%80%E4%B8%AAShell%E7%AE%A1%E9%81%93%E7%9A%84%E9%A2%98%E7%9B%AE/" class="md-nav__link">
+        2019 05 17 一个Shell管道的题目
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-20-CentOS%207%20%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E5%92%8C%E6%97%A5%E5%BF%97%E7%9A%84%E5%AF%B9%E7%85%A7/" class="md-nav__link">
+        2019 05 20 CentOS 7 的启动过程和日志的对照
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          2019 05 22 缓存穿透、缓存击穿与缓存雪崩
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        2019 05 22 缓存穿透、缓存击穿与缓存雪崩
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-cache-penetration" class="md-nav__link">
+    1 缓存穿透（Cache penetration）
+  </a>
+  
+    <nav class="md-nav" aria-label="1 缓存穿透（Cache penetration）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    1.1 是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    1.2 危险是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    1.3 为什么会发生
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    1.4 如何避免
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4 如何避免">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141" class="md-nav__link">
+    1.4.1 缓存空数据
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-bloomfilter" class="md-nav__link">
+    1.4.2 布隆过滤器（BloomFilter）
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143" class="md-nav__link">
+    1.4.3 比较两种方案
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-cache-breakdown" class="md-nav__link">
+    2 缓存击穿（Cache breakdown）
+  </a>
+  
+    <nav class="md-nav" aria-label="2 缓存击穿（Cache breakdown）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    2.1 是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    2.2 如何避免
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 如何避免">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-mutex" class="md-nav__link">
+    2.2.1 互斥（Mutex）
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222" class="md-nav__link">
+    2.2.2 设置不同的到期时间
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cahce-avalanche" class="md-nav__link">
+    3 缓存雪崩（Cahce avalanche）
+  </a>
+  
+    <nav class="md-nav" aria-label="3 缓存雪崩（Cahce avalanche）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    3.1 是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    3.2 如何避免
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 如何避免">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321" class="md-nav__link">
+    3.2.1 缓存集群确保高可用
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322" class="md-nav__link">
+    3.2.2 熔断器
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-Golang%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" class="md-nav__link">
+        2019 05 27 Golang的交叉编译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%B9%B6%E6%8F%92%E5%85%A5/" class="md-nav__link">
+        2019 05 27 MySQL查询数据并插入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-%E5%AF%B9%E7%A7%B0%E4%B8%8E%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2019 05 27 对称与非对称加密算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9C%A8Ubuntu%E4%B8%8A%E4%BD%BF%E7%94%A8Hurricane%20Electric%E7%9A%84IPv6%E9%9A%A7%E9%81%93/" class="md-nav__link">
+        2019 06 03 在Ubuntu上使用Hurricane Electric的IPv6隧道
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9F%BA%E4%BA%8ENginx%E7%9A%84%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2019 06 03 基于Nginx的反向代理
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-04-MySQL%E9%9A%8F%E6%9C%BA%E6%9F%A5%E8%AF%A2%E4%B8%80%E6%9D%A1%E8%AE%B0%E5%BD%95/" class="md-nav__link">
+        2019 06 04 MySQL随机查询一条记录
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-15-%E5%9F%BA%E4%BA%8EWine%E4%BD%BF%E7%94%A8QQ%E8%BD%BB%E8%81%8A%E7%89%88/" class="md-nav__link">
+        2019 06 15 基于Wine使用QQ轻聊版
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-23-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="md-nav__link">
+        2019 06 23 如何实现分布式锁
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-01-%F0%9F%90%9A%E5%88%9D%E8%AF%86%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" class="md-nav__link">
+        2019 07 01 🐚初识布隆过滤器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-02-%F0%9F%97%9C%E5%8E%9F%E5%A7%8B%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E5%9C%A8%E8%87%AA%E5%A2%9E%E8%BF%90%E7%AE%97%E4%B8%8A%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 07 02 🗜原始类型与包装类型在自增运算上的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-20-%F0%9F%94%8D%E5%A6%82%E4%BD%95%E6%AF%94%E8%BE%83%E4%B8%A4%E4%B8%AACollection%E5%90%AB%E6%9C%89%E7%9B%B8%E5%90%8C%E7%9A%84%E5%85%83%E7%B4%A0%E2%80%94%E2%80%94%E6%9D%A5%E8%87%AAApache%20Commons%20Collections%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2019 07 20 🔍如何比较两个Collection含有相同的元素——来自Apache Commons Collections的实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-01-%F0%9F%8D%AB%EF%BC%88%E8%AF%91%EF%BC%89Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E8%AF%AD%E4%B9%89%E5%AD%A6/" class="md-nav__link">
+        2019 09 01 🍫（译）Java内存模型语义学
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-23-%F0%9F%A7%B6Java%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%85%B6%E5%AF%B9%E5%BA%94%E7%9A%84Linux%E8%BF%9B%E7%A8%8B%E5%8F%B7/" class="md-nav__link">
+        2019 09 23 🧶Java线程与其对应的Linux进程号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-17-%F0%9F%A7%B7%E5%85%B3%E4%BA%8E%E6%8A%80%E6%9C%AF%E5%86%99%E4%BD%9C/" class="md-nav__link">
+        2020 01 17 🧷关于技术写作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-19-%F0%9F%A7%99%F0%9F%8F%BD%E2%80%8D%E2%99%82%EF%B8%8F%E6%96%B0%E4%BA%BA%E5%92%8C%E9%9D%9E%E6%8A%80%E6%9C%AF%E4%BA%BA%E5%91%98%E4%B9%9F%E8%83%BD%E7%9C%8B%E6%87%82%E7%9A%84%E7%BD%91%E7%AB%99%E5%BA%94%E7%94%A8%E6%8B%93%E5%B1%95/" class="md-nav__link">
+        2020 01 19 🧙🏽‍♂️新人和非技术人员也能看懂的网站应用拓展
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-04-05-%F0%9F%92%BC%E5%91%BD%E4%BB%A4Command%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8%E8%AE%BE%E8%AE%A1API%E6%97%B6%E7%9A%84%E8%BF%90%E7%94%A8/" class="md-nav__link">
+        2020 04 05 💼命令Command设计模式在设计API时的运用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-06-14-%F0%9F%A7%AF%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E5%AF%BC%E8%87%B4%E7%9A%84%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81/" class="md-nav__link">
+        2020 06 14 🧯记一次环境变量导致的中文乱码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-11-%F0%9F%9A%87%E5%9F%BA%E4%BA%8Ev2ray%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2020 07 11 🚇基于v2ray的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-12-%F0%9F%93%9C%E8%AF%BB%E5%8F%96MySQL%E7%9A%84binlog/" class="md-nav__link">
+        2020 07 12 📜读取MySQL的binlog
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-19-%F0%9F%93%9D%E5%9F%BA%E4%BA%8ExeCJK%E7%9A%84TeX%E4%B8%AD%E6%96%87%E4%B9%A6%E5%86%99/" class="md-nav__link">
+        📝基于xeCJK的TeX中文书写
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-19-%F0%9F%8F%8E%E5%8D%8F%E5%8F%98%E3%80%81%E9%80%86%E5%8F%98%E4%B8%8E%E4%B8%8D%E5%8F%98/" class="md-nav__link">
+        2020 10 19 🏎协变、逆变与不变
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-31-%F0%9F%A7%B0Xcode%E4%B8%AD%E5%88%9B%E5%BB%BASwift%20Package%E5%B9%B6%E5%9C%A8Target%E4%B8%AD%E4%BD%BF%E7%94%A8/" class="md-nav__link">
+        🧰Xcode中创建Swift Package并在Target中使用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-02-28-%F0%9F%94%A6%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8GDB%E8%B0%83%E8%AF%95Nginx/" class="md-nav__link">
+        2021 02 28 🔦如何使用GDB调试Nginx
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-05-01-%F0%9F%A7%B0EasyConnect%20in%20Dokcer/" class="md-nav__link">
+        2021 05 01 🧰EasyConnect in Dokcer
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-01-%F0%9F%93%A6VirtualBox%E7%9A%84%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E5%8A%9F%E8%83%BD/" class="md-nav__link">
+        2021 07 01 📦VirtualBox的端口转发功能
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-11-%F0%9F%93%B7%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E8%AE%BF%E9%97%AEiPhone%E6%8B%8D%E6%91%84%E7%9A%84%E7%85%A7%E7%89%87%E4%B8%8E%E8%A7%86%E9%A2%91/" class="md-nav__link">
+        2021 07 11 📷在树莓派上访问iPhone拍摄的照片与视频
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-08-30-lsof%E4%B9%8B%E5%A4%96%E7%9A%84%E6%9F%A5%E8%AF%A2%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9A%E6%96%87%E4%BB%B6%E7%9A%84%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2021 08 30 lsof之外的查询使用指定文件的进程的方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-02-%F0%9F%93%A6%E5%88%A9%E7%94%A8GitHub%20Actions%E8%87%AA%E5%8A%A8%E6%9E%84%E5%BB%BATeX/" class="md-nav__link">
+        2021 09 02 📦利用GitHub Actions自动构建TeX
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-25-%E5%9C%A8macOS%E4%B8%8A%E4%BD%BF%E7%94%A8VS%20Code%E9%98%85%E8%AF%BBOpenJDK%E6%BA%90%E7%A0%81/" class="md-nav__link">
+        2021 09 25 在macOS上使用VS Code阅读OpenJDK源码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-01-30-%EF%BC%88%E8%AF%91%EF%BC%89%E7%90%86%E8%A7%A3Maven%E7%89%88%E6%9C%AC%E5%8F%B7/" class="md-nav__link">
+        （译）理解Maven版本号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-07-02-%E4%BD%BF%E7%94%A8Javac%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E5%B7%A5%E7%A8%8B%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2022 07 02 使用Javac日志分析工程依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-09-04-%E5%9F%BA%E4%BA%8Eredsocks2%E5%92%8Cpf%E7%9A%84macOS%E9%80%8F%E6%98%8E%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2022 09 04 基于redsocks2和pf的macOS透明代理
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-cache-penetration" class="md-nav__link">
+    1 缓存穿透（Cache penetration）
+  </a>
+  
+    <nav class="md-nav" aria-label="1 缓存穿透（Cache penetration）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    1.1 是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    1.2 危险是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    1.3 为什么会发生
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    1.4 如何避免
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4 如何避免">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141" class="md-nav__link">
+    1.4.1 缓存空数据
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-bloomfilter" class="md-nav__link">
+    1.4.2 布隆过滤器（BloomFilter）
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143" class="md-nav__link">
+    1.4.3 比较两种方案
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-cache-breakdown" class="md-nav__link">
+    2 缓存击穿（Cache breakdown）
+  </a>
+  
+    <nav class="md-nav" aria-label="2 缓存击穿（Cache breakdown）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    2.1 是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    2.2 如何避免
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 如何避免">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-mutex" class="md-nav__link">
+    2.2.1 互斥（Mutex）
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222" class="md-nav__link">
+    2.2.2 设置不同的到期时间
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cahce-avalanche" class="md-nav__link">
+    3 缓存雪崩（Cahce avalanche）
+  </a>
+  
+    <nav class="md-nav" aria-label="3 缓存雪崩（Cahce avalanche）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    3.1 是什么
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    3.2 如何避免
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 如何避免">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321" class="md-nav__link">
+    3.2.1 缓存集群确保高可用
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322" class="md-nav__link">
+    3.2.2 熔断器
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>2019 05 22 缓存穿透、缓存击穿与缓存雪崩</h1>
+
+<blockquote>
+<p>翻译自<a href="https://medium.com/@mena.meseha/3-major-problems-and-solutions-in-the-cache-world-155ecae41d4f">3 major problems and solutions in the cache world</a></p>
+</blockquote>
+<p>当前的IO设备远远不能满足互联网应用程序的大量读写请求。然后有一个缓存，使用<strong>内存</strong>的高速读写性能来应对大量的查询请求。但是，内存资源非常宝贵，将全部数据存储在内存中显然是不切实际的。因此，当前内存和IO的组合，内存只存储<strong>热点数据</strong>，而IO设备存储全部数据。缓存的设计包含很多技巧，不正确的设计会导致<strong>严重的后果</strong>。</p>
+<h2 id="1-cache-penetration">1 缓存穿透（Cache penetration）</h2>
+<p>在大多数互联网应用程序中：</p>
+<ol>
+<li>当业务系统发起某个查询请求时，它首先确定数据是否存在于缓存中;</li>
+<li>如果有缓存，则直接返回数据;</li>
+<li>如果缓存不存在，请再次查询数据库并返回数据。</li>
+</ol>
+<p>在理解了上述过程之后，我们来谈谈<strong>缓存穿透</strong>。</p>
+<h3 id="11">1.1 是什么</h3>
+<p>当业务系统发起查询时，根据上面的过程，查询将首先进入缓存，因为缓存<strong>不存在</strong>，然后转到数据库进行查询。由于数据根本不存在，因此数据库也返回<strong><code>null</code></strong>。这是缓存穿透。</p>
+<p>总结一下：业务系统访问根本不存在的数据称为缓存穿透。</p>
+<h3 id="12">1.2 危险是什么</h3>
+<p>如果查询请求中不存在大量数据，那么这些大量请求将<strong>落入</strong>数据库，数据库压力将<strong>急剧增加</strong>，这可能导致系统崩溃。 （你必须知道当前业务系统中最脆弱的是IO，有点它会在压力下<strong>崩溃</strong>，所以我们必须想办法保护它）。</p>
+<h3 id="13">1.3 为什么会发生</h3>
+<ol>
+<li>恶意攻击故意创建大量<strong>不存在</strong>的数据来请求我们的服务。由于缓存中<strong>不存在</strong>这些数据，因此大量请求会<strong>进入数据库</strong>，这可能导致数据库崩溃。</li>
+<li>代码逻辑错误。这是程序员的锅，无话可说，必须在开发中避免！</li>
+</ol>
+<h3 id="14">1.4 如何避免</h3>
+<p>以下是防止的两种方法：</p>
+<h4 id="141">1.4.1 缓存空数据</h4>
+<p>缓存穿透的原因是缓存中没有用于存储这些空数据的密钥，导致所有这些请求都到达数据库。</p>
+<p>然后，我们可以稍微修改业务系统的代码，并将具有<strong>空数据库查询结果</strong>的密钥存储在缓存中。当再次发生对密钥的查询请求时，缓存直接返回<strong><code>null</code></strong>而不查询数据库。</p>
+<h4 id="142-bloomfilter">1.4.2 布隆过滤器（BloomFilter）</h4>
+<p>它需要在<strong>缓存</strong>之前添加一个<strong>屏障</strong>，它存储当前数据库中<strong>存在的所有key</strong>。</p>
+<p>当业务系统有查询请求时，首先转到BloomFilter以<strong>检查key是否存在</strong>。</p>
+<ul>
+<li>如果它不存在，则表示数据库中不存在数据，因此不应检查缓存，并直接返回<strong><code>null</code></strong>。</li>
+<li>如果存在，继续执行后续过程，首先<strong>查询缓存</strong>，如果没有缓存，则<strong>查询数据库</strong>。</li>
+</ul>
+<h4 id="143">1.4.3 比较两种方案</h4>
+<p>这两种解决方案都可以解决，但使用场景不同。</p>
+<p>对于某些恶意攻击，查询的key通常不同，而数据窃贼更多。此时，第一个方案太多了。因为它需要存储所有<strong>空数据</strong>的key，并且这些恶意攻击的密钥通常是不同的，并且相同的密钥通常只被<strong>请求一次</strong>。因此，即使缓存了这些空数据的密钥，由于不再使用第二次，因此<strong>无法实现</strong>保护数据库的作用。</p>
+<p>因此，对于空数据的key不同并且key重复请求的概率<strong>低</strong>的情况，应该选择第二方案。对于空数据的key数量有限且密钥重复请求的概率很<strong>高</strong>的情况，应选择第一种方案。</p>
+<h2 id="2-cache-breakdown">2 缓存击穿（Cache breakdown）</h2>
+<p>又称为<strong>热点数据集失效（Hotspot data set is invalid）</strong></p>
+<h3 id="21">2.1 是什么</h3>
+<p>我们通常为缓存设置一个<strong>到期时间</strong>。到期时间后，数据库将被缓存<strong>直接删除</strong>，从而在一定程度上保证数据的<strong>实时性</strong>。</p>
+<p>但是，对于一些请求非常高的<strong>热点数据（hotspot data）</strong>，一旦有效时间过去，此时将有大量请求落在数据库上，这可能导致数据库崩溃。过程如下：</p>
+<p>如果热点数据失败，那么当再次有数据查询请求<strong><code>[req-1]</code></strong>时，它将转到数据库查询。但是，从请求发送到数据库到数据更新到缓存的时间，由于数据仍然<strong>不在缓存中</strong>，因此在此期间到达的查询请求将落在数据库上，这将导致数据库巨大的压力。此外，当完成这些请求查询时，<strong>重复</strong>更新缓存。</p>
+<h3 id="22">2.2 如何避免</h3>
+<h4 id="221-mutex">2.2.1 互斥（Mutex）</h4>
+<p>我们可以使用缓存附带的<strong>锁定机制</strong>。启动第一个数据库查询请求时，将锁定缓存中的数据；此时，到达缓存的其他查询请求将<strong>无法</strong>查询该字段，因此将被<strong>阻塞等待</strong>；请求完成数据库查询并缓存数据更新值后，锁定被<strong>释放</strong>；此时，可以直接从缓存中检索其他阻止的查询请求。</p>
+<p>当热点数据失败时，只有<strong>第一个数据库查询请求</strong>被发送到数据库，并且所有其他查询请求都<strong>被阻止</strong>，从而<strong>保护</strong>数据库。但是，由于使用了互斥锁，其他请求将阻止等待，系统<strong>吞吐量将下降</strong>。这需要与实际的业务考虑相结合才能实现这一点。</p>
+<p>互斥锁可以<strong>避免</strong>因热点数据失败而导致数据库损坏的问题。在实际业务中，通常存在一批热点数据<strong>同时失败</strong>的场景。那么如何防止这种情况下的数据库超负荷？</p>
+<h3 id="222">2.2.2 设置不同的到期时间</h3>
+<p>当我们将这些数据存储在缓存中时，我们可以<strong>错开</strong>缓存到期时间。这可以避免同时发生故障。例如，在基准时间<strong>添加/减去</strong>随机数以错开这些缓存的到期时间。</p>
+<h2 id="3-cahce-avalanche">3 缓存雪崩（Cahce avalanche）</h2>
+<h3 id="31">3.1 是什么</h3>
+<p>从上面可以看出，缓存实际上起到了<strong>保护数据库</strong>的作用。它有助于数据库承受大量查询请求，从而避免易受攻击的数据库。</p>
+<p>如果由于某种原因缓存<strong>出现故障</strong>，那么最初被缓存阻止的大量查询请求将像疯狗一样<strong>涌向数据库</strong>。此时，如果数据库无法承受这种巨大的压力，它就会<strong>崩溃</strong>。这是缓存雪崩。</p>
+<h3 id="32">3.2 如何避免</h3>
+<h4 id="321">3.2.1 缓存集群确保高可用</h4>
+<p>也就是说，在发生雪崩之前，采取预防措施以防止雪崩的发生。</p>
+<h4 id="322">3.2.2 熔断器</h4>
+<p><a href="https://github.com/Netflix/Hystrix"><strong>Hystrix</strong></a>是一种开源的“抗雪崩工具”，<strong>降级（downgrade）</strong>和<strong>限流（current limit）</strong>来减少雪崩后的损耗。</p>
+<p>Hystrix是一个使用<strong>命令模式（command pattern）</strong>的Java类库，每个服务处理请求都有自己的<strong>处理器</strong>。所有请求都通过各自的处理器。处理器记录当前服务的<strong>请求失败率</strong>。一旦发现当前服务的故障率达到预设值，将拒绝所有后续服务请求并返回默认结果。这就是所谓的<strong>保险丝</strong>，即熔断器。经过一段时间后，Hystrix将<strong>释放</strong>部分服务请求，并<strong>再次计算其请求失败率</strong>。如果请求失败率此时满足预设值，则流量限制开关<strong>完全打开</strong>；如果请求失败率<strong>仍然很高</strong>，则拒绝所有服务请求，是为<strong>限流</strong>。Hystrix将默认结果直接返回给那些被拒绝的请求，是为<strong>降级</strong>。</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+  
+    
+  
+
+
+
+  
+
+
+<h4>Cookie consent</h4>
+<p></p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+      
+      
+        
+        
+      
+      <li class="task-list-item">
+        <label class="task-list-control">
+          <input type="checkbox" name="github" checked>
+          <span class="task-list-indicator"></span>
+          GitHub
+        </label>
+      </li>
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout(function(){document.querySelector("[data-md-component=consent]").hidden=!1},250);var action,form=document.forms.consent;for(action of["submit","reset"])form.addEventListener(action,function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map(function(e){return[e,!0]}))),location.hash="",location.reload()})</script>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      
+    
+  </body>
+</html>

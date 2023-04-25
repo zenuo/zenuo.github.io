@@ -1,0 +1,1799 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://zenuo.github.io/2022-01-30-%EF%BC%88%E8%AF%91%EF%BC%89%E7%90%86%E8%A7%A3Maven%E7%89%88%E6%9C%AC%E5%8F%B7/">
+      
+      
+        <link rel="prev" href="../2021-09-25-%E5%9C%A8macOS%E4%B8%8A%E4%BD%BF%E7%94%A8VS%20Code%E9%98%85%E8%AF%BBOpenJDK%E6%BA%90%E7%A0%81/">
+      
+      
+        <link rel="next" href="../2022-07-02-%E4%BD%BF%E7%94%A8Javac%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E5%B7%A5%E7%A8%8B%E4%BE%9D%E8%B5%96/">
+      
+      <link rel="icon" href="../assets/img/22318999.jpeg">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+    
+    
+      
+        <title>（译）理解Maven版本号 - /home/zenuo</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-maven" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="/home/zenuo" class="md-header__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            /home/zenuo
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              （译）理解Maven版本号
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="/home/zenuo" class="md-nav__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    /home/zenuo
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-02-Spring%E6%A1%86%E6%9E%B6Bean%E4%BD%9C%E7%94%A8%E5%9F%9F/" class="md-nav__link">
+        2017 09 02 Spring框架Bean作用域
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-10-Spring%E6%A1%86%E6%9E%B6%E8%BF%90%E8%A1%8C%E6%97%B6%E5%80%BC%E6%B3%A8%E5%85%A5/" class="md-nav__link">
+        Spring框架运行时值注入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-14-%E4%BD%BF%E7%94%A8Tomcat%20JDBC%20Pool%E6%8B%A6%E6%88%AA%E5%99%A8%E6%89%93%E5%8D%B0%E5%B8%A6%E5%8F%82%E6%95%B0%E7%9A%84SQL%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2017 09 14 使用Tomcat JDBC Pool拦截器打印带参数的SQL语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-02-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AF%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B/" class="md-nav__link">
+        2017 10 02 Spring框架：什么是面向切面编程
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-27-Logback%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F%E8%AE%BE%E5%AE%9A/" class="md-nav__link">
+        2017 10 27 Logback日志格式设定
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-01-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%B3%A8%E5%85%A5AspectJ%E5%88%87%E9%9D%A2/" class="md-nav__link">
+        2017 11 01 Spring框架：注入AspectJ切面
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-09-%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8FC%E8%AF%AD%E8%A8%80%E9%80%92%E5%BD%92%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2017 11 09 快速排序C语言递归实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-18-Spring%E6%A1%86%E6%9E%B6%EF%BC%9ASpring%20MVC%E8%B5%B7%E6%AD%A5/" class="md-nav__link">
+        Spring框架：Spring MVC起步
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E5%AE%A2%E6%88%B7%E7%AB%AF/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo客户端
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo服务器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/" class="md-nav__link">
+        2018 01 22 Netty框架：核心组件
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E7%BB%84%E4%BB%B6%E5%92%8C%E8%AE%BE%E8%AE%A1/" class="md-nav__link">
+        2018 01 22 Netty框架：组件和设计
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Nginx%E7%9A%84WebDAV%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 01 22 Nginx的WebDAV支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-03-25-how-to-set-the-font-of-console/" class="md-nav__link">
+        2018 03 25 how to set the font of console
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%9F%90%E5%BC%A0%E8%A1%A8%E7%9A%84%E5%88%97%E5%90%8D/" class="md-nav__link">
+        MySQL查询某张表的列名
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E7%9A%84mysqldump%E4%BE%8B%E5%AD%90/" class="md-nav__link">
+        2018 05 27 MySQL的mysqldump例子
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8Nginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E8%B0%B7%E6%AD%8C%E6%90%9C%E7%B4%A2/" class="md-nav__link">
+        2018 06 14 使用Nginx反向代理谷歌搜索
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95%E6%B3%A8%E5%85%A5%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2018 06 14 使用构造方法注入依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-15-%E4%BD%BF%E7%94%A8Jconsole%E7%9B%91%E6%8E%A7%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E8%BF%90%E8%A1%8C%E7%9A%84Java%E7%A8%8B%E5%BA%8F/" class="md-nav__link">
+        2018 06 15 使用Jconsole监控远程服务器上运行的Java程序
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-CSAPP%E7%BB%83%E4%B9%A0%E9%A2%982-13/" class="md-nav__link">
+        2018 06 22 CSAPP练习题2 13
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-Manjaro%20Linux%E8%AE%BF%E9%97%AEiPhone%E9%9C%80%E5%AE%89%E8%A3%85%E7%9A%84%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2018 06 22 Manjaro Linux访问iPhone需安装的工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-24-%E4%BB%80%E4%B9%88%E6%98%AF%E6%95%B0%E5%AD%A6-Richard-Courant/" class="md-nav__link">
+        2018 06 24 什么是数学 Richard Courant
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-08-%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E5%AE%89%E8%A3%85Arch%20Linux%20ARM/" class="md-nav__link">
+        2018 08 08 在树莓派上安装Arch Linux ARM
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-16-Timsort%20%E4%BD%A0%E4%BB%8E%E6%9C%AA%E5%90%AC%E8%AF%B4%E8%BF%87%E7%9A%84%E6%9C%80%E5%BF%AB%E7%9A%84%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2018 08 16 Timsort 你从未听说过的最快的排序算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-09-29-%E4%BD%BF%E7%94%A8Googletrans%E5%9C%A8%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8A%E7%BF%BB%E8%AF%91/" class="md-nav__link">
+        2018 09 29 使用Googletrans在命令行上翻译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-10-%E5%9F%BA%E4%BA%8EShadowsocks%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2018 10 10 基于Shadowsocks的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-14-%E5%9F%BA%E4%BA%8EOpenCV%E7%9A%84%E5%9B%BE%E5%83%8F%E7%BC%A9%E6%94%BE%E8%84%9A%E6%9C%AC/" class="md-nav__link">
+        1 OpenCV是什么
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-09-%E6%B5%85%E8%B0%88Java%E5%AF%B9%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 11 09 浅谈Java对函数式编程的支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-18-Linux%E7%9A%84TCP%20backlog%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" class="md-nav__link">
+        2018 11 18 Linux的TCP backlog如何工作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-27-%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99/" class="md-nav__link">
+        2019 01 27 建索引的五大原则
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-31-nginx%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 01 31 nginx架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-02-22-MySQL%E6%B5%8B%E8%AF%95%E8%A1%A8%E4%B8%AD%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E8%A1%8C%E7%9A%84%E6%9C%80%E4%BD%B3%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2019 02 22 MySQL测试表中是否存在行的最佳方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E4%BD%BF%E7%94%A8tcpdump%E6%8A%93%E5%8C%85/" class="md-nav__link">
+        2019 03 10 使用tcpdump抓包
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E5%AE%9E%E8%B7%B5java.util.concurrent.TransferQueue/" class="md-nav__link">
+        2019 03 10 实践java.util.concurrent.TransferQueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E6%9C%89%E5%85%B3%E5%BC%82%E6%AD%A5%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E5%AE%9E%E7%8E%B0%E7%9A%84%E8%AF%B4%E6%98%8E/" class="md-nav__link">
+        2019 03 18 有关异步输入输出实现的说明
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E7%BC%93%E5%AD%98%E9%82%A3%E4%BA%9B%E4%BA%8B/" class="md-nav__link">
+        2019 03 18 缓存那些事
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-21-Git%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 03 21 Git架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-class-visualizer%E2%80%94%E2%80%94%E4%B8%80%E4%B8%AA%E6%9F%A5%E7%9C%8B%E7%B1%BB%E5%85%B3%E7%B3%BB%E7%9A%84%E5%9B%BE%E5%BD%A2%E5%8C%96%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 04 19 class visualizer——一个查看类关系的图形化工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-%E6%A0%91%E8%8E%93%E6%B4%BE%E7%94%B5%E6%BA%90%E6%9C%80%E5%A4%A7%E5%8C%96/" class="md-nav__link">
+        2019 04 19 树莓派电源最大化
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-20-%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%AD%89%E7%BA%A7%E6%8F%90%E4%BA%A4%E8%AF%BB%E4%B8%8E%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 04 20 事务隔离等级提交读与可重复读的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-26-MySQL%E4%B8%AD%E7%9A%84%E5%B9%B6%E3%80%81%E5%B7%AE%E3%80%81%E4%BA%A4%E5%92%8C%E9%99%A4%E8%BF%90%E7%AE%97/" class="md-nav__link">
+        2019 04 26 MySQL中的并、差、交和除运算
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-01-%E5%8F%AF%E6%89%A9%E5%B1%95%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%EF%BC%9Aepoll%E4%B8%8Ekqueue/" class="md-nav__link">
+        2019 05 01 可扩展的事件多路复用：epoll与kqueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-05-%E5%85%B3%E4%BA%8EJava%E8%AF%AD%E8%A8%80%E7%9A%84finally%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2019 05 05 关于Java语言的finally语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-09-%E4%B8%80%E4%B8%AA%E6%88%90%E5%8A%9F%E7%9A%84Git%E5%88%86%E6%94%AF%E6%A8%A1%E5%9E%8B/" class="md-nav__link">
+        2019 05 09 一个成功的Git分支模型
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-11-%E3%80%8C%E5%8B%BE%E5%8B%BE%E3%80%8D%E4%B8%80%E4%B8%AA%E5%9F%BA%E4%BA%8E%E8%B0%B7%E6%AD%8C%E7%9A%84%E6%90%9C%E7%B4%A2%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 05 11 「勾勾」一个基于谷歌的搜索工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-16-Golang%E5%88%9D%E4%BD%93%E9%AA%8C%E4%B9%8B%E8%A7%A3%E7%BB%84JSON%E5%B9%B6%E5%86%99%E5%85%A5MySQL/" class="md-nav__link">
+        2019 05 16 Golang初体验之解组JSON并写入MySQL
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-17-%E4%B8%80%E4%B8%AAShell%E7%AE%A1%E9%81%93%E7%9A%84%E9%A2%98%E7%9B%AE/" class="md-nav__link">
+        2019 05 17 一个Shell管道的题目
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-20-CentOS%207%20%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E5%92%8C%E6%97%A5%E5%BF%97%E7%9A%84%E5%AF%B9%E7%85%A7/" class="md-nav__link">
+        2019 05 20 CentOS 7 的启动过程和日志的对照
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-22-%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E7%BC%93%E5%AD%98%E5%87%BB%E7%A9%BF%E4%B8%8E%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9/" class="md-nav__link">
+        2019 05 22 缓存穿透、缓存击穿与缓存雪崩
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-Golang%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" class="md-nav__link">
+        2019 05 27 Golang的交叉编译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%B9%B6%E6%8F%92%E5%85%A5/" class="md-nav__link">
+        2019 05 27 MySQL查询数据并插入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-%E5%AF%B9%E7%A7%B0%E4%B8%8E%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2019 05 27 对称与非对称加密算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9C%A8Ubuntu%E4%B8%8A%E4%BD%BF%E7%94%A8Hurricane%20Electric%E7%9A%84IPv6%E9%9A%A7%E9%81%93/" class="md-nav__link">
+        2019 06 03 在Ubuntu上使用Hurricane Electric的IPv6隧道
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9F%BA%E4%BA%8ENginx%E7%9A%84%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2019 06 03 基于Nginx的反向代理
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-04-MySQL%E9%9A%8F%E6%9C%BA%E6%9F%A5%E8%AF%A2%E4%B8%80%E6%9D%A1%E8%AE%B0%E5%BD%95/" class="md-nav__link">
+        2019 06 04 MySQL随机查询一条记录
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-15-%E5%9F%BA%E4%BA%8EWine%E4%BD%BF%E7%94%A8QQ%E8%BD%BB%E8%81%8A%E7%89%88/" class="md-nav__link">
+        2019 06 15 基于Wine使用QQ轻聊版
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-23-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="md-nav__link">
+        2019 06 23 如何实现分布式锁
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-01-%F0%9F%90%9A%E5%88%9D%E8%AF%86%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" class="md-nav__link">
+        2019 07 01 🐚初识布隆过滤器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-02-%F0%9F%97%9C%E5%8E%9F%E5%A7%8B%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E5%9C%A8%E8%87%AA%E5%A2%9E%E8%BF%90%E7%AE%97%E4%B8%8A%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 07 02 🗜原始类型与包装类型在自增运算上的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-20-%F0%9F%94%8D%E5%A6%82%E4%BD%95%E6%AF%94%E8%BE%83%E4%B8%A4%E4%B8%AACollection%E5%90%AB%E6%9C%89%E7%9B%B8%E5%90%8C%E7%9A%84%E5%85%83%E7%B4%A0%E2%80%94%E2%80%94%E6%9D%A5%E8%87%AAApache%20Commons%20Collections%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2019 07 20 🔍如何比较两个Collection含有相同的元素——来自Apache Commons Collections的实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-01-%F0%9F%8D%AB%EF%BC%88%E8%AF%91%EF%BC%89Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E8%AF%AD%E4%B9%89%E5%AD%A6/" class="md-nav__link">
+        2019 09 01 🍫（译）Java内存模型语义学
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-23-%F0%9F%A7%B6Java%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%85%B6%E5%AF%B9%E5%BA%94%E7%9A%84Linux%E8%BF%9B%E7%A8%8B%E5%8F%B7/" class="md-nav__link">
+        2019 09 23 🧶Java线程与其对应的Linux进程号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-17-%F0%9F%A7%B7%E5%85%B3%E4%BA%8E%E6%8A%80%E6%9C%AF%E5%86%99%E4%BD%9C/" class="md-nav__link">
+        2020 01 17 🧷关于技术写作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-19-%F0%9F%A7%99%F0%9F%8F%BD%E2%80%8D%E2%99%82%EF%B8%8F%E6%96%B0%E4%BA%BA%E5%92%8C%E9%9D%9E%E6%8A%80%E6%9C%AF%E4%BA%BA%E5%91%98%E4%B9%9F%E8%83%BD%E7%9C%8B%E6%87%82%E7%9A%84%E7%BD%91%E7%AB%99%E5%BA%94%E7%94%A8%E6%8B%93%E5%B1%95/" class="md-nav__link">
+        2020 01 19 🧙🏽‍♂️新人和非技术人员也能看懂的网站应用拓展
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-04-05-%F0%9F%92%BC%E5%91%BD%E4%BB%A4Command%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8%E8%AE%BE%E8%AE%A1API%E6%97%B6%E7%9A%84%E8%BF%90%E7%94%A8/" class="md-nav__link">
+        2020 04 05 💼命令Command设计模式在设计API时的运用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-06-14-%F0%9F%A7%AF%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E5%AF%BC%E8%87%B4%E7%9A%84%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81/" class="md-nav__link">
+        2020 06 14 🧯记一次环境变量导致的中文乱码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-11-%F0%9F%9A%87%E5%9F%BA%E4%BA%8Ev2ray%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2020 07 11 🚇基于v2ray的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-12-%F0%9F%93%9C%E8%AF%BB%E5%8F%96MySQL%E7%9A%84binlog/" class="md-nav__link">
+        2020 07 12 📜读取MySQL的binlog
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-19-%F0%9F%93%9D%E5%9F%BA%E4%BA%8ExeCJK%E7%9A%84TeX%E4%B8%AD%E6%96%87%E4%B9%A6%E5%86%99/" class="md-nav__link">
+        📝基于xeCJK的TeX中文书写
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-19-%F0%9F%8F%8E%E5%8D%8F%E5%8F%98%E3%80%81%E9%80%86%E5%8F%98%E4%B8%8E%E4%B8%8D%E5%8F%98/" class="md-nav__link">
+        2020 10 19 🏎协变、逆变与不变
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-31-%F0%9F%A7%B0Xcode%E4%B8%AD%E5%88%9B%E5%BB%BASwift%20Package%E5%B9%B6%E5%9C%A8Target%E4%B8%AD%E4%BD%BF%E7%94%A8/" class="md-nav__link">
+        🧰Xcode中创建Swift Package并在Target中使用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-02-28-%F0%9F%94%A6%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8GDB%E8%B0%83%E8%AF%95Nginx/" class="md-nav__link">
+        2021 02 28 🔦如何使用GDB调试Nginx
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-05-01-%F0%9F%A7%B0EasyConnect%20in%20Dokcer/" class="md-nav__link">
+        2021 05 01 🧰EasyConnect in Dokcer
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-01-%F0%9F%93%A6VirtualBox%E7%9A%84%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E5%8A%9F%E8%83%BD/" class="md-nav__link">
+        2021 07 01 📦VirtualBox的端口转发功能
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-11-%F0%9F%93%B7%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E8%AE%BF%E9%97%AEiPhone%E6%8B%8D%E6%91%84%E7%9A%84%E7%85%A7%E7%89%87%E4%B8%8E%E8%A7%86%E9%A2%91/" class="md-nav__link">
+        2021 07 11 📷在树莓派上访问iPhone拍摄的照片与视频
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-08-30-lsof%E4%B9%8B%E5%A4%96%E7%9A%84%E6%9F%A5%E8%AF%A2%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9A%E6%96%87%E4%BB%B6%E7%9A%84%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2021 08 30 lsof之外的查询使用指定文件的进程的方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-02-%F0%9F%93%A6%E5%88%A9%E7%94%A8GitHub%20Actions%E8%87%AA%E5%8A%A8%E6%9E%84%E5%BB%BATeX/" class="md-nav__link">
+        2021 09 02 📦利用GitHub Actions自动构建TeX
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-25-%E5%9C%A8macOS%E4%B8%8A%E4%BD%BF%E7%94%A8VS%20Code%E9%98%85%E8%AF%BBOpenJDK%E6%BA%90%E7%A0%81/" class="md-nav__link">
+        2021 09 25 在macOS上使用VS Code阅读OpenJDK源码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          （译）理解Maven版本号
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        （译）理解Maven版本号
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-maven" class="md-nav__link">
+    1 Maven版本号如何工作
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-snapshot" class="md-nav__link">
+    2 SNAPSHOT限定符
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    3 版本范围引用
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    4 参考
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-07-02-%E4%BD%BF%E7%94%A8Javac%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E5%B7%A5%E7%A8%8B%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2022 07 02 使用Javac日志分析工程依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-09-04-%E5%9F%BA%E4%BA%8Eredsocks2%E5%92%8Cpf%E7%9A%84macOS%E9%80%8F%E6%98%8E%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2022 09 04 基于redsocks2和pf的macOS透明代理
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-maven" class="md-nav__link">
+    1 Maven版本号如何工作
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-snapshot" class="md-nav__link">
+    2 SNAPSHOT限定符
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    3 版本范围引用
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    4 参考
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>（译）理解Maven版本号</h1>
+
+<blockquote>
+<p>来源<a href="https://docs.oracle.com/middleware/1212/core/MAVEN/maven_version.htm#MAVEN8855">Oracle® Fusion Middleware Developing Applications Using Continuous Integration</a></p>
+</blockquote>
+<p>在使用Maven时，理解如何使用版本号是非常重要的。一个经过深思熟虑（well thought out）的策略可以大大简化你的依赖管理工作量。本文介绍了关于版本号在Maven中如何工作的重要概念。</p>
+<p>包含以下三个部分：</p>
+<ul>
+<li>Maven版本号如何工作</li>
+<li>SNAPSHOT限定符</li>
+<li>版本范围引用</li>
+</ul>
+<h2 id="1-maven">1 Maven版本号如何工作</h2>
+<p>Maven的版本管理方案（scheme）使用以下的标准：</p>
+<ul>
+<li>MajorVersion</li>
+<li>MinorVersion</li>
+<li>IncrementalVersion</li>
+<li>BuildNumber</li>
+<li>Qualifier</li>
+</ul>
+<p>例如：</p>
+<ul>
+<li>MajorVersion: 1.2.1</li>
+<li>MinorVersion: 2.0</li>
+<li>IncrementalVersion: 1.2-SNAPSHOT</li>
+<li>BuildNumber: 1.4.2-12</li>
+<li>Qualifier: 1.2-beta-2</li>
+</ul>
+<p>具有限定符的版本，旧于没有限定符的（发布版本），例如：<code>1.2-beta-2</code>旧于<code>1.2</code>。</p>
+<p>带有不同限定符的相同版本，将会用基础的字符串比较，例如：<code>1.2-beta-2</code>新于<code>1.2-alpha-6</code>。</p>
+<p>如果你在项目版本管理方案中没有遵循Maven的版本标准，那么对于版本比较，Maven将整个版本解释为一个简单的字符串。Maven及其核心插件将版本比较用于多项任务，最重要的是用于发布过程。</p>
+<p>如果您使用非标准的版本管理方案，Maven发布和版本插件目标可能不会产生预期的结果。因为基本的字符串比较是在非标准的版本上进行的，所以在某些情况下，版本比较会错误地计算版本的顺序。</p>
+<p>例如，Maven按以下顺序排列版本列表：</p>
+<ul>
+<li>1.0.1.0</li>
+<li>1.0.10.1</li>
+<li>1.0.10.2</li>
+<li>1.0.9.3</li>
+</ul>
+<p>版本<code>1.0.9.3</code>应该在<code>1.0.10.1</code>和<code>1.0.10.2</code>之前，但意外的第四个字段（<code>.3</code>）迫使Maven将版本评估为一个字符串。</p>
+<p>在Maven版本插件中可以看到这种对Maven影响的例子。Maven版本插件提供了以不同方式检查项目依赖关系的目标。其中一个有用的目标是<code>versions:dependency-updates-report</code>，它将检查项目的依赖层次，并报告哪些项目有较新的版本。当你在协调一个大型发布时，这个目标可以帮你找到依赖配置中的陈旧引用。如果Maven<strong>错误地</strong>识别了一个较新的版本，那么在插件中也会出现错误的报告。在前面的这个例子中，若你当前版本是<code>1.0.10.2</code>，那么这个插件将会将<code>1.0.9.3</code>报告成一个较新的版本。</p>
+<p>如果你打算在你的依赖关系引用中使用版本范围，版本解析也是非常重要的。参见第3节，了解关于版本变化的信息。</p>
+<h2 id="2-snapshot">2 SNAPSHOT限定符</h2>
+<p>Maven对待SNAPSHOT限定符的处理方式跟其他所有限定符不同。若一个版本号以<code>-SNAPSHOT</code>结尾，那么Maven会认为它是相关MajorVersion、MinorVersion或IncrementalVersion的 "尚未发布 "版本。</p>
+<p>在一个持续集成环境中，SNAPSHOT版本在包成集成构建的最新性方面起着至关重要的作用，同时尽量减少每个集成步骤所需的重建量。</p>
+<p>SNAPSHOP版本引用使依赖项目构建时能够获取SNAPSHOT依赖的最新部署实例。请注意，SNAPSHOT是不断变化的。每当代理部署工件时，它就会在共享仓库中更新。SHAPSHOT依赖被重新获取，在开发者的机器上，或者它在每个构建中被更新。这确保了依赖的更新和集成最新的变化，而不需要改项目中的依赖引用配置。</p>
+<blockquote>
+<p>试想，在开发过程中若不使用SNAPSHOT，则每次发布都需要在工件、使用工件方，至少两个工程中修改版本号，麻了😵‍💫</p>
+</blockquote>
+<p>通常，只有最近部署的SNAPSHOT，对于一个特定版本的工件在工件仓库中被保存。虽然仓库可以被配置为维护一个滚动归档，其中有一些特定工件的最新部署，但旧的实例通常只用于故障排除，在集成中不发挥任何作用。</p>
+<p>持续构建服务器包括定义和执行基于Maven项目的作业的能力，如Hudson/Jenkins，可以配置为识别SNAPSHOT工件的更新，然后重建对更新工件有依赖性的项目。</p>
+<h2 id="3">3 版本范围引用</h2>
+<p>Maven能指定可接受的版本范围作为依赖，下标显示了一系列的版本规格。</p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>范围</strong></th>
+<th align="center"><strong>含义</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">(,1.0]</td>
+<td align="center">x &lt;= 1.0</td>
+</tr>
+<tr>
+<td align="center">1.0</td>
+<td align="center">如果1.0不可用，它通常意味着1.0或更高版本。不同的Maven插件可能对此有不同的解释，因此使用其他更具体的选项更为安全。</td>
+</tr>
+<tr>
+<td align="center">[1.0]</td>
+<td align="center">正是1.0</td>
+</tr>
+<tr>
+<td align="center">[1.2,1.3]</td>
+<td align="center">1.2 &lt;= x &lt;= 1.3</td>
+</tr>
+<tr>
+<td align="center">[1.0,2.0)</td>
+<td align="center">1.0 &lt;= x &lt; 2.0</td>
+</tr>
+<tr>
+<td align="center">[1.5,)</td>
+<td align="center">x &gt;= 1.5</td>
+</tr>
+<tr>
+<td align="center">(,1.0],[1.2,)</td>
+<td align="center">x &lt;= 1.0 or x &gt;= 1.2。多个集合用逗号隔开。</td>
+</tr>
+<tr>
+<td align="center">(,1.1),(1.1,)</td>
+<td align="center">如果已知1.1不能与库结合使用，这就排除了1.1</td>
+</tr>
+</tbody>
+</table>
+<p>当Maven遇到多个匹配的版本号时，它会使用最高匹配的版本。一般来说，版本引用应该根据需要来确定，这样Maven就可以酌情选择新的依赖版本，但也知道何时必须使用某个特定的版本。这试Maven能在跨依赖图的不同点桑指定不同版本的依赖时，选择最合适的版本。当发生这样的冲突时，Maven会从所有引用中选择最高版本。</p>
+<p>鉴于可以选择使用版本范围，你可能会想，使用SNAPSHOT版本是否还有用。尽管你可以通过使用版本范围表达式达到一些相同的结果，但在持续构建系统中，SNAPSHOT的效果更好，原因如下：</p>
+<ul>
+<li>Maven工件仓库管理器处理SNAPSHOT比处理下一版本范围更有效。因为一个工件在一天内可以部署多次，所以存储库维护的独特实例的数量会迅速增加。</li>
+<li>非SNAPSHOT发布版本是为了无限期地维护。如果你不断地发布新的版本并增加构建号或版本，存储需求很快就会变得无法管理。存储仓库管理器被设计为抛弃旧的SNAPSHOT，为新的实例腾出空间，因此所需的存储量保持不变。</li>
+<li>SNAPSHOT也能被Maven和Maven的发布流程识别，这让你在进行发布构建时获得了一些好处。</li>
+</ul>
+<h2 id="4">4 参考</h2>
+<ul>
+<li><a href="http://maven.apache.org/what-is-maven.html">What is Maven?</a></li>
+<li><a href="http://www.maestrodev.com/better-builds-with-maven/about-this-guide/">Better Builds with Maven</a></li>
+<li><a href="http://www.sonatype.org/maven">Maven By Example and Maven: The Complete Reference</a></li>
+</ul>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+  
+    
+  
+
+
+
+  
+
+
+<h4>Cookie consent</h4>
+<p></p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+      
+      
+        
+        
+      
+      <li class="task-list-item">
+        <label class="task-list-control">
+          <input type="checkbox" name="github" checked>
+          <span class="task-list-indicator"></span>
+          GitHub
+        </label>
+      </li>
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout(function(){document.querySelector("[data-md-component=consent]").hidden=!1},250);var action,form=document.forms.consent;for(action of["submit","reset"])form.addEventListener(action,function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map(function(e){return[e,!0]}))),location.hash="",location.reload()})</script>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      
+    
+  </body>
+</html>

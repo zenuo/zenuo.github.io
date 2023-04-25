@@ -1,0 +1,1964 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://zenuo.github.io/2019-01-31-nginx%E6%9E%B6%E6%9E%84/">
+      
+      
+        <link rel="prev" href="../2019-01-27-%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99/">
+      
+      
+        <link rel="next" href="../2019-02-22-MySQL%E6%B5%8B%E8%AF%95%E8%A1%A8%E4%B8%AD%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E8%A1%8C%E7%9A%84%E6%9C%80%E4%BD%B3%E6%96%B9%E6%B3%95/">
+      
+      <link rel="icon" href="../assets/img/22318999.jpeg">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+    
+    
+      
+        <title>2019 01 31 nginx架构 - /home/zenuo</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="/home/zenuo" class="md-header__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            /home/zenuo
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              2019 01 31 nginx架构
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="/home/zenuo" class="md-nav__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    /home/zenuo
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-02-Spring%E6%A1%86%E6%9E%B6Bean%E4%BD%9C%E7%94%A8%E5%9F%9F/" class="md-nav__link">
+        2017 09 02 Spring框架Bean作用域
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-10-Spring%E6%A1%86%E6%9E%B6%E8%BF%90%E8%A1%8C%E6%97%B6%E5%80%BC%E6%B3%A8%E5%85%A5/" class="md-nav__link">
+        Spring框架运行时值注入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-14-%E4%BD%BF%E7%94%A8Tomcat%20JDBC%20Pool%E6%8B%A6%E6%88%AA%E5%99%A8%E6%89%93%E5%8D%B0%E5%B8%A6%E5%8F%82%E6%95%B0%E7%9A%84SQL%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2017 09 14 使用Tomcat JDBC Pool拦截器打印带参数的SQL语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-02-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AF%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B/" class="md-nav__link">
+        2017 10 02 Spring框架：什么是面向切面编程
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-27-Logback%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F%E8%AE%BE%E5%AE%9A/" class="md-nav__link">
+        2017 10 27 Logback日志格式设定
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-01-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%B3%A8%E5%85%A5AspectJ%E5%88%87%E9%9D%A2/" class="md-nav__link">
+        2017 11 01 Spring框架：注入AspectJ切面
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-09-%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8FC%E8%AF%AD%E8%A8%80%E9%80%92%E5%BD%92%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2017 11 09 快速排序C语言递归实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-18-Spring%E6%A1%86%E6%9E%B6%EF%BC%9ASpring%20MVC%E8%B5%B7%E6%AD%A5/" class="md-nav__link">
+        Spring框架：Spring MVC起步
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E5%AE%A2%E6%88%B7%E7%AB%AF/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo客户端
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo服务器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/" class="md-nav__link">
+        2018 01 22 Netty框架：核心组件
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E7%BB%84%E4%BB%B6%E5%92%8C%E8%AE%BE%E8%AE%A1/" class="md-nav__link">
+        2018 01 22 Netty框架：组件和设计
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Nginx%E7%9A%84WebDAV%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 01 22 Nginx的WebDAV支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-03-25-how-to-set-the-font-of-console/" class="md-nav__link">
+        2018 03 25 how to set the font of console
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%9F%90%E5%BC%A0%E8%A1%A8%E7%9A%84%E5%88%97%E5%90%8D/" class="md-nav__link">
+        MySQL查询某张表的列名
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E7%9A%84mysqldump%E4%BE%8B%E5%AD%90/" class="md-nav__link">
+        2018 05 27 MySQL的mysqldump例子
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8Nginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E8%B0%B7%E6%AD%8C%E6%90%9C%E7%B4%A2/" class="md-nav__link">
+        2018 06 14 使用Nginx反向代理谷歌搜索
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95%E6%B3%A8%E5%85%A5%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2018 06 14 使用构造方法注入依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-15-%E4%BD%BF%E7%94%A8Jconsole%E7%9B%91%E6%8E%A7%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E8%BF%90%E8%A1%8C%E7%9A%84Java%E7%A8%8B%E5%BA%8F/" class="md-nav__link">
+        2018 06 15 使用Jconsole监控远程服务器上运行的Java程序
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-CSAPP%E7%BB%83%E4%B9%A0%E9%A2%982-13/" class="md-nav__link">
+        2018 06 22 CSAPP练习题2 13
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-Manjaro%20Linux%E8%AE%BF%E9%97%AEiPhone%E9%9C%80%E5%AE%89%E8%A3%85%E7%9A%84%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2018 06 22 Manjaro Linux访问iPhone需安装的工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-24-%E4%BB%80%E4%B9%88%E6%98%AF%E6%95%B0%E5%AD%A6-Richard-Courant/" class="md-nav__link">
+        2018 06 24 什么是数学 Richard Courant
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-08-%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E5%AE%89%E8%A3%85Arch%20Linux%20ARM/" class="md-nav__link">
+        2018 08 08 在树莓派上安装Arch Linux ARM
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-16-Timsort%20%E4%BD%A0%E4%BB%8E%E6%9C%AA%E5%90%AC%E8%AF%B4%E8%BF%87%E7%9A%84%E6%9C%80%E5%BF%AB%E7%9A%84%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2018 08 16 Timsort 你从未听说过的最快的排序算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-09-29-%E4%BD%BF%E7%94%A8Googletrans%E5%9C%A8%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8A%E7%BF%BB%E8%AF%91/" class="md-nav__link">
+        2018 09 29 使用Googletrans在命令行上翻译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-10-%E5%9F%BA%E4%BA%8EShadowsocks%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2018 10 10 基于Shadowsocks的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-14-%E5%9F%BA%E4%BA%8EOpenCV%E7%9A%84%E5%9B%BE%E5%83%8F%E7%BC%A9%E6%94%BE%E8%84%9A%E6%9C%AC/" class="md-nav__link">
+        1 OpenCV是什么
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-09-%E6%B5%85%E8%B0%88Java%E5%AF%B9%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 11 09 浅谈Java对函数式编程的支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-18-Linux%E7%9A%84TCP%20backlog%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" class="md-nav__link">
+        2018 11 18 Linux的TCP backlog如何工作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-27-%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99/" class="md-nav__link">
+        2019 01 27 建索引的五大原则
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          2019 01 31 nginx架构
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        2019 01 31 nginx架构
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    1 为何高并发性是重要的
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apache" class="md-nav__link">
+    Apache不合适吗？
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx" class="md-nav__link">
+    使用nginx有更多的优势吗？
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_1" class="md-nav__link">
+    nginx架构概述
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    代码结构
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker" class="md-nav__link">
+    Worker模型
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_2" class="md-nav__link">
+    nginx进程角色
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_3" class="md-nav__link">
+    nginx缓存概述
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_4" class="md-nav__link">
+    nginx配置
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_5" class="md-nav__link">
+    nginx内部
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    得到的教训
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-02-22-MySQL%E6%B5%8B%E8%AF%95%E8%A1%A8%E4%B8%AD%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E8%A1%8C%E7%9A%84%E6%9C%80%E4%BD%B3%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2019 02 22 MySQL测试表中是否存在行的最佳方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E4%BD%BF%E7%94%A8tcpdump%E6%8A%93%E5%8C%85/" class="md-nav__link">
+        2019 03 10 使用tcpdump抓包
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E5%AE%9E%E8%B7%B5java.util.concurrent.TransferQueue/" class="md-nav__link">
+        2019 03 10 实践java.util.concurrent.TransferQueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E6%9C%89%E5%85%B3%E5%BC%82%E6%AD%A5%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E5%AE%9E%E7%8E%B0%E7%9A%84%E8%AF%B4%E6%98%8E/" class="md-nav__link">
+        2019 03 18 有关异步输入输出实现的说明
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E7%BC%93%E5%AD%98%E9%82%A3%E4%BA%9B%E4%BA%8B/" class="md-nav__link">
+        2019 03 18 缓存那些事
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-21-Git%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 03 21 Git架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-class-visualizer%E2%80%94%E2%80%94%E4%B8%80%E4%B8%AA%E6%9F%A5%E7%9C%8B%E7%B1%BB%E5%85%B3%E7%B3%BB%E7%9A%84%E5%9B%BE%E5%BD%A2%E5%8C%96%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 04 19 class visualizer——一个查看类关系的图形化工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-%E6%A0%91%E8%8E%93%E6%B4%BE%E7%94%B5%E6%BA%90%E6%9C%80%E5%A4%A7%E5%8C%96/" class="md-nav__link">
+        2019 04 19 树莓派电源最大化
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-20-%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%AD%89%E7%BA%A7%E6%8F%90%E4%BA%A4%E8%AF%BB%E4%B8%8E%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 04 20 事务隔离等级提交读与可重复读的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-26-MySQL%E4%B8%AD%E7%9A%84%E5%B9%B6%E3%80%81%E5%B7%AE%E3%80%81%E4%BA%A4%E5%92%8C%E9%99%A4%E8%BF%90%E7%AE%97/" class="md-nav__link">
+        2019 04 26 MySQL中的并、差、交和除运算
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-01-%E5%8F%AF%E6%89%A9%E5%B1%95%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%EF%BC%9Aepoll%E4%B8%8Ekqueue/" class="md-nav__link">
+        2019 05 01 可扩展的事件多路复用：epoll与kqueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-05-%E5%85%B3%E4%BA%8EJava%E8%AF%AD%E8%A8%80%E7%9A%84finally%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2019 05 05 关于Java语言的finally语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-09-%E4%B8%80%E4%B8%AA%E6%88%90%E5%8A%9F%E7%9A%84Git%E5%88%86%E6%94%AF%E6%A8%A1%E5%9E%8B/" class="md-nav__link">
+        2019 05 09 一个成功的Git分支模型
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-11-%E3%80%8C%E5%8B%BE%E5%8B%BE%E3%80%8D%E4%B8%80%E4%B8%AA%E5%9F%BA%E4%BA%8E%E8%B0%B7%E6%AD%8C%E7%9A%84%E6%90%9C%E7%B4%A2%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 05 11 「勾勾」一个基于谷歌的搜索工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-16-Golang%E5%88%9D%E4%BD%93%E9%AA%8C%E4%B9%8B%E8%A7%A3%E7%BB%84JSON%E5%B9%B6%E5%86%99%E5%85%A5MySQL/" class="md-nav__link">
+        2019 05 16 Golang初体验之解组JSON并写入MySQL
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-17-%E4%B8%80%E4%B8%AAShell%E7%AE%A1%E9%81%93%E7%9A%84%E9%A2%98%E7%9B%AE/" class="md-nav__link">
+        2019 05 17 一个Shell管道的题目
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-20-CentOS%207%20%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E5%92%8C%E6%97%A5%E5%BF%97%E7%9A%84%E5%AF%B9%E7%85%A7/" class="md-nav__link">
+        2019 05 20 CentOS 7 的启动过程和日志的对照
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-22-%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E7%BC%93%E5%AD%98%E5%87%BB%E7%A9%BF%E4%B8%8E%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9/" class="md-nav__link">
+        2019 05 22 缓存穿透、缓存击穿与缓存雪崩
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-Golang%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" class="md-nav__link">
+        2019 05 27 Golang的交叉编译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%B9%B6%E6%8F%92%E5%85%A5/" class="md-nav__link">
+        2019 05 27 MySQL查询数据并插入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-%E5%AF%B9%E7%A7%B0%E4%B8%8E%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2019 05 27 对称与非对称加密算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9C%A8Ubuntu%E4%B8%8A%E4%BD%BF%E7%94%A8Hurricane%20Electric%E7%9A%84IPv6%E9%9A%A7%E9%81%93/" class="md-nav__link">
+        2019 06 03 在Ubuntu上使用Hurricane Electric的IPv6隧道
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9F%BA%E4%BA%8ENginx%E7%9A%84%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2019 06 03 基于Nginx的反向代理
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-04-MySQL%E9%9A%8F%E6%9C%BA%E6%9F%A5%E8%AF%A2%E4%B8%80%E6%9D%A1%E8%AE%B0%E5%BD%95/" class="md-nav__link">
+        2019 06 04 MySQL随机查询一条记录
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-15-%E5%9F%BA%E4%BA%8EWine%E4%BD%BF%E7%94%A8QQ%E8%BD%BB%E8%81%8A%E7%89%88/" class="md-nav__link">
+        2019 06 15 基于Wine使用QQ轻聊版
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-23-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="md-nav__link">
+        2019 06 23 如何实现分布式锁
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-01-%F0%9F%90%9A%E5%88%9D%E8%AF%86%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" class="md-nav__link">
+        2019 07 01 🐚初识布隆过滤器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-02-%F0%9F%97%9C%E5%8E%9F%E5%A7%8B%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E5%9C%A8%E8%87%AA%E5%A2%9E%E8%BF%90%E7%AE%97%E4%B8%8A%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 07 02 🗜原始类型与包装类型在自增运算上的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-20-%F0%9F%94%8D%E5%A6%82%E4%BD%95%E6%AF%94%E8%BE%83%E4%B8%A4%E4%B8%AACollection%E5%90%AB%E6%9C%89%E7%9B%B8%E5%90%8C%E7%9A%84%E5%85%83%E7%B4%A0%E2%80%94%E2%80%94%E6%9D%A5%E8%87%AAApache%20Commons%20Collections%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2019 07 20 🔍如何比较两个Collection含有相同的元素——来自Apache Commons Collections的实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-01-%F0%9F%8D%AB%EF%BC%88%E8%AF%91%EF%BC%89Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E8%AF%AD%E4%B9%89%E5%AD%A6/" class="md-nav__link">
+        2019 09 01 🍫（译）Java内存模型语义学
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-23-%F0%9F%A7%B6Java%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%85%B6%E5%AF%B9%E5%BA%94%E7%9A%84Linux%E8%BF%9B%E7%A8%8B%E5%8F%B7/" class="md-nav__link">
+        2019 09 23 🧶Java线程与其对应的Linux进程号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-17-%F0%9F%A7%B7%E5%85%B3%E4%BA%8E%E6%8A%80%E6%9C%AF%E5%86%99%E4%BD%9C/" class="md-nav__link">
+        2020 01 17 🧷关于技术写作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-19-%F0%9F%A7%99%F0%9F%8F%BD%E2%80%8D%E2%99%82%EF%B8%8F%E6%96%B0%E4%BA%BA%E5%92%8C%E9%9D%9E%E6%8A%80%E6%9C%AF%E4%BA%BA%E5%91%98%E4%B9%9F%E8%83%BD%E7%9C%8B%E6%87%82%E7%9A%84%E7%BD%91%E7%AB%99%E5%BA%94%E7%94%A8%E6%8B%93%E5%B1%95/" class="md-nav__link">
+        2020 01 19 🧙🏽‍♂️新人和非技术人员也能看懂的网站应用拓展
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-04-05-%F0%9F%92%BC%E5%91%BD%E4%BB%A4Command%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8%E8%AE%BE%E8%AE%A1API%E6%97%B6%E7%9A%84%E8%BF%90%E7%94%A8/" class="md-nav__link">
+        2020 04 05 💼命令Command设计模式在设计API时的运用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-06-14-%F0%9F%A7%AF%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E5%AF%BC%E8%87%B4%E7%9A%84%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81/" class="md-nav__link">
+        2020 06 14 🧯记一次环境变量导致的中文乱码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-11-%F0%9F%9A%87%E5%9F%BA%E4%BA%8Ev2ray%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2020 07 11 🚇基于v2ray的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-12-%F0%9F%93%9C%E8%AF%BB%E5%8F%96MySQL%E7%9A%84binlog/" class="md-nav__link">
+        2020 07 12 📜读取MySQL的binlog
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-19-%F0%9F%93%9D%E5%9F%BA%E4%BA%8ExeCJK%E7%9A%84TeX%E4%B8%AD%E6%96%87%E4%B9%A6%E5%86%99/" class="md-nav__link">
+        📝基于xeCJK的TeX中文书写
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-19-%F0%9F%8F%8E%E5%8D%8F%E5%8F%98%E3%80%81%E9%80%86%E5%8F%98%E4%B8%8E%E4%B8%8D%E5%8F%98/" class="md-nav__link">
+        2020 10 19 🏎协变、逆变与不变
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-31-%F0%9F%A7%B0Xcode%E4%B8%AD%E5%88%9B%E5%BB%BASwift%20Package%E5%B9%B6%E5%9C%A8Target%E4%B8%AD%E4%BD%BF%E7%94%A8/" class="md-nav__link">
+        🧰Xcode中创建Swift Package并在Target中使用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-02-28-%F0%9F%94%A6%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8GDB%E8%B0%83%E8%AF%95Nginx/" class="md-nav__link">
+        2021 02 28 🔦如何使用GDB调试Nginx
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-05-01-%F0%9F%A7%B0EasyConnect%20in%20Dokcer/" class="md-nav__link">
+        2021 05 01 🧰EasyConnect in Dokcer
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-01-%F0%9F%93%A6VirtualBox%E7%9A%84%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E5%8A%9F%E8%83%BD/" class="md-nav__link">
+        2021 07 01 📦VirtualBox的端口转发功能
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-11-%F0%9F%93%B7%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E8%AE%BF%E9%97%AEiPhone%E6%8B%8D%E6%91%84%E7%9A%84%E7%85%A7%E7%89%87%E4%B8%8E%E8%A7%86%E9%A2%91/" class="md-nav__link">
+        2021 07 11 📷在树莓派上访问iPhone拍摄的照片与视频
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-08-30-lsof%E4%B9%8B%E5%A4%96%E7%9A%84%E6%9F%A5%E8%AF%A2%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9A%E6%96%87%E4%BB%B6%E7%9A%84%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2021 08 30 lsof之外的查询使用指定文件的进程的方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-02-%F0%9F%93%A6%E5%88%A9%E7%94%A8GitHub%20Actions%E8%87%AA%E5%8A%A8%E6%9E%84%E5%BB%BATeX/" class="md-nav__link">
+        2021 09 02 📦利用GitHub Actions自动构建TeX
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-25-%E5%9C%A8macOS%E4%B8%8A%E4%BD%BF%E7%94%A8VS%20Code%E9%98%85%E8%AF%BBOpenJDK%E6%BA%90%E7%A0%81/" class="md-nav__link">
+        2021 09 25 在macOS上使用VS Code阅读OpenJDK源码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-01-30-%EF%BC%88%E8%AF%91%EF%BC%89%E7%90%86%E8%A7%A3Maven%E7%89%88%E6%9C%AC%E5%8F%B7/" class="md-nav__link">
+        （译）理解Maven版本号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-07-02-%E4%BD%BF%E7%94%A8Javac%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E5%B7%A5%E7%A8%8B%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2022 07 02 使用Javac日志分析工程依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-09-04-%E5%9F%BA%E4%BA%8Eredsocks2%E5%92%8Cpf%E7%9A%84macOS%E9%80%8F%E6%98%8E%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2022 09 04 基于redsocks2和pf的macOS透明代理
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    1 为何高并发性是重要的
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apache" class="md-nav__link">
+    Apache不合适吗？
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx" class="md-nav__link">
+    使用nginx有更多的优势吗？
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_1" class="md-nav__link">
+    nginx架构概述
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    代码结构
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker" class="md-nav__link">
+    Worker模型
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_2" class="md-nav__link">
+    nginx进程角色
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_3" class="md-nav__link">
+    nginx缓存概述
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_4" class="md-nav__link">
+    nginx配置
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nginx_5" class="md-nav__link">
+    nginx内部
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    得到的教训
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>2019 01 31 nginx架构</h1>
+
+<blockquote>
+<p>翻译自<a href="http://www.aosabook.org/en/nginx.html">The Architecture of Open Source Applications (Volume 2): nginx</a></p>
+</blockquote>
+<p>nginx（读作"engine x"）是由Igor Sysoev（一名俄罗斯软件工程师）开发的一款自由开源的Web服务器程序。自2004年公开发布以来，nginx一直专注于高性能、高并发行和低内存使用。负载均衡、缓存和访问及带宽控制等Web服务器功能之上的其他功能，以及有效集成各种应用程序的能力，都帮助使nginx成为现代架构的不错选择。当前nginx是互联网上第二受欢迎的开源Web服务器。</p>
+<h2 id="1">1 为何高并发性是重要的</h2>
+<p>如今，互联网如此广泛和无处不在，很难想象它不是十年前我们所知道的那样。从简单的HTML生成可点击文本，基于NCSA，然后是Apache Web服务器，到全球超过20亿用户使用的在线通信媒体，它已经有了长足发展。随着永久连接的个人电脑、移动设备和平板电脑的激增，互联网领域正在迅速变化，整个经济已经成为数字连线。在线服务变得更加精细，明显偏向即使可用的实时信息和娱乐。运行在线业务的安全方面也发生了重大变化。因此，现在的网站比以前复杂得多，并且通常需要更多的工程努力才能具有健壮性和可拓展性。</p>
+<p>一个网站架构的最大的变化之一经常是并发性。从Web服务开始以来，并发级别一直在不断增长。一个流行网站同时服务数十万甚至数百万用户的情况并不罕见。十年前，并发的主要原因是慢客户端（slow clients）——具有ADSL或拨号连接的用户。如今，并发是由于移动客户端和较新的应用程序体系架构的组合引起的，这些体系结构通常基于持久连接，以支持客户端实时更新新闻、推文和朋友订阅源等。另一个因素是现代浏览器的行为改变——它可以打开四到六个与网站的同时连接，以提高页面加载速度。</p>
+<p>为了说明慢客户端的问题，想象一个简单的基于Apache Web服务器，它产生一个相对较短的100 KB响应——一个带有文本或图像的网页。生成或健讼此页面只需要几分之一秒，但需要10秒才能将其传输到带宽为80 kbps（10KB/s）的客户端。从本质上讲，Web服务器会相对快都地提取100KB的内容，然后在释放连接之前，它将忙于将内容缓慢地（10秒）发送到客户端。假设有1000个同时连接的客户，他们呢请求了类似的内容。若每个客户端分配1MB的额外内存，则会产生1000 MB（约1 GB）的额外内存，专门用于为1000个用户端提供100 KB的内容。实际上，基于Apache的典型Web服务器通常为每个连接分配超过1 MB的额外内存，令人遗憾的是，数十kbps仍然是移动通信的有效速度。虽然在某种程度上通过增加操作系统内核socket缓冲区大小来改善向慢速客户端发送内懂的情况，但这不是解决该问题的一般办法，并且可能具有不良副作用。</p>
+<p>为了避免建立新HTTP连接的延时，客户端与服务端保持连接（persistent connection），并发处理的问题更加明显，Web服务器为每个已连接的客户端分配一定数量的内存。</p>
+<p>因此，为了处理与增长的受众相关的增加的工作量以及因此更高的并发水平——并且能够持续这样做——网站应该基于许多非常有效的构建块（building block）。硬件（CPU、内存、磁盘等）、网络能力、数据存储架构显然与Web服务器接受和处理客户端连接同等重要。因此，Web服务器应该能够随着并发连接和请求数量的增加而非线性地拓展。</p>
+<h2 id="apache">Apache不合适吗？</h2>
+<p>Apache这款web服务器程序在很大程度上仍然主宰着互联网，它起源于20世纪90年代初。最初，它的架构与当时存在的操作系统和硬件相匹配，其中网站通常是运行单个Apache实例的独立物理服务器。2000年代初，轻松复制独立的Web服务器模型显然不足以满足不断增长的Web服务需求。尽管Apache为未来的开发提供了坚实的基础，但它的架构是为每个新连接生成自己的副本，这不适合网站的非线性可伸缩性。最终，Apache成为了一个通用的Web服务器，专注于拥有许多不同的功能，各种第三方拓展，以及几乎任何类型Web应用程序开发的普遍适用性。然后，没有任何代价地在单个软件中拥有如此丰富和通用的工具组合的缺点是可伸缩性较差，因为每个连接都会增加CPU和内存的使用量。</p>
+<p>因此，当服务器硬件、操作系统和网络资源不再成为网站增加的主要限制时，全球的Web开发人员开始寻找更有效的运行Web服务器的方法。大约十年前，著名软件工程师Daniel Kegel<a href="http://www.kegel.com/c10k.html">宣称</a>：<code>Web服务器是时候同时处理一万个客户端的时候了</code>，并预测了我们现在所谓<code>互联网云服务</code>的东西。Kegel的C10K清单激发了许多尝试来解决Web服务器优化问题，同时处理大量客户端，而nginx成为最成功的之一。</p>
+<p>旨在解决10,000个同时连接的C10K问题，nginx在编写时考虑了不同的体系结构——一个更适合并发连接数和每秒请求数的非线性可伸缩性。nginx是基于事件的（event-based），并不遵循Apache为每个网页请求生成新进程或线程的风格，以实现即使负载增加，CPU和内存适用仍然可控。nginx现在可以在一台典型主机上处理数万个并发连接。</p>
+<p>nginx首个版本发布时，作为静态内容（如HTML、CSS、JavaScript和图片）服务器与Apache一起部署，分担基于Apache的应用服务器的并发和延时。在开发过程中，nginx通过适用FastCGI，uSWGI或SCGI协议以及分布式内存对象缓存系统（如memcached）增加了与应用程序的集成，其他有用的功能也被开发出来，如具有负载均衡和缓存反向代理（reverse proxy）等等。这些附加功能使nginx成为有效的工具组合，可构建可拓展的Web基础架构。</p>
+<p>2012年2月，Apache 2.4.x分支公开发布，尽管其最新版本添加了新的多处理核心模块，以及新的指向增强可伸缩性和性能的代理模块，现在谈论它与纯事件驱动的Web服务器谁在性能、并发和资源利用等方面更好还为时尚早。非常高兴能看到Apache应用服务器伸缩性能更好，不过，可能缓解在典型nginx加Apache的Web配置中仍然没解决的问题。</p>
+<h2 id="nginx">使用nginx有更多的优势吗？</h2>
+<p>以高性能和高效率处理高并发始终是部署nginx的关键优势，但现在有更多有趣的好处。</p>
+<p>在最近几年，Web架构师已经接受了将其应用程序基础设施与Web服务器解耦和分离的想法。然而，以前以LAMP（Linux，Apache，MySQL，PHP，Python或Perl）为基础的网站形式，现在可能不仅仅是一个基于LEMP的（E'代表'Engine x'）但是，越来越多的做法是将Web服务器推向基础设施的边缘，并以不同的方式围绕它集成相同或经过改进的应用程序和数据库工具集。</p>
+<p>nginx很适合这些，因为它提供了方便处理并发、延迟，SSL，静态内容，压缩和缓存，连接和请求限制，甚至来自应用程序的HTTP媒体流所需的关键功能层到更有效的边缘Web服务器层，它还允许直接与memcached / Redis或其他“NoSQL”解决方案集成，以在为大量并发用户提供服务时提高性能。</p>
+<p>nginx代码库是原创的，完全是用C编程语言从头开始编写的。 nginx已经移植到许多架构和操作系统，包括Linux，FreeBSD，Solaris，Mac OS X，AIX和Microsoft Windows。 nginx有自己的库，其标准模块除了zlib，PCRE和OpenSSL之外不会超出系统的C库，zlib，PCRE和OpenSSL可以选择从构建中排除，如果不需要或者由于潜在的许可证冲突。</p>
+<p>关于Windows版nginx的几句话。虽然nginx适用于Windows环境，但nginx的Windows版本更像是概念验证（proof-of-concept）而不是功能齐全的移植。nginx和Windows内核架构存在某些限制，目前这些架构不能很好地交互。Windows的nginx版本的已知问题包括并发连接数量少得多，性能下降，没有缓存以及没有带宽监管。面向Windows的nginx的未来版本将更紧密地匹配主流功能。</p>
+<h2 id="nginx_1">nginx架构概述</h2>
+<p>处理并发连接的传统基于进程（或线程）的模型设计适用单独的进程（或线程）处理每个连接，以及阻塞网络输入/输出。根据应用程序的不同，内存和CPU消耗可能非常低效。生成一个单独的进程（或线程）需要准备一个新的运行时环境，包含分配堆和栈内存，以及创建一个新的执行上下文。创建这些项目会话费额外的CPU时间，由于过多的上下文切换（excessive context switching）导致线程抖动（thread thrashing），最终会导致性能下降。所有这些复杂性都表现在像Apache这样的老式Web服务器架构中。这是在提供丰富的通用适用功能和优化服务器资源适用之间的权衡。</p>
+<p>从一开始，nginx就是一种专业工具，可以实现更高的性能、密度和经济都适用服务器资源，同时实现网站的动态增长，因此它遵循不同的模式。实际上，它受到各种操作系统中基于事件的高级机制持续开发的启发。结果是模块化，事件驱动，异步，单线程（single-threaded），非阻塞架构（non-blocking architecture），它成为nginx代码的基础。</p>
+<p>nginx大量使用多路复用（multiplexing）和事件通知，并将特定任务由单独的进程处理。连接在一个名为<code>workers</code>的有限数量的但线程进程中以高效的运行循环（run-loop）进行处理。在每个<code>worker</code>中，nginx可以处理数千个并发连接和请求。</p>
+<h2 id="_1">代码结构</h2>
+<p>nginx worker代码包含核心和功能模块（module）。nginx的核心是负责维护一个紧密运行循环，并在每个请求处理阶段（stage）执行模块代码的适当部分。模块构成了大部分表示和应用程序层功能。模块读取和写入网络和存储，转换内容，执行出站过滤，应用服务器端包含包含操作、并在代理被启用使将请求传递给上游（upstream）服务器。</p>
+<p>nginx的模块化架构通常允许开发人员在不修改nginx核心的情况下拓展Web服务器功能集。ngin模块间存在区别，亦即核心模块、事件模块、阶段处理器、协议、变量处理器、过滤器、上游和负载均衡器。目前，nginx不支持动态加载的（dynamically loaded）模块，即模块在构建阶段与核心一起编译。但是，计划在未来的主要（major）版本中支持可加载模块和ABI。关于不用模块角色的更多信息，请参见<a href="http://www.aosabook.org/en/nginx.html#sec.nginx.internals">第14.4节</a>。</p>
+<p>一个nginx架构高级的概述如下：</p>
+<p><img alt="Diagram of nginx's architecture" src="../assets/img/bd842aeeddc39c7fda6f30e6.png" /></p>
+<h2 id="worker">Worker模型</h2>
+<p>如前所述，nginx不会为每个连接生成进程（或线程）。相反，worker进程接受来自共享侦听socket的新请求，并在每个worker内执行高效的运行循环，以处理每个worker的数千个连接。nginx不含有worker专门的仲裁（arbitration）或分配，这项工作由OS内核机制完成。启动时，一组初始侦听socket，然后worker在处理HTTP请求和响应不断accept、读取和写入socket。</p>
+<p>运行循环（run-loop）是worker代码中最复杂的部分。它包括全面的内部调用，并且很大程度依赖于异步任务处理（synchronous task handing）的idea。异步操作通过模块化（modularity）、事件通知（event notification）、回调函数的广泛使用和微调定时器（fine-tuned）来实现。总的来说，关键原则是尽可能<code>non-blocking</code>。nginx仍然可以阻塞的情况是当worker进程没有足够的磁盘存储性能时。</p>
+<p>因为nginx不会为每个连接复制（fork）进程（或线程），所以在绝大多数情况下，内存使用非常保守（conservative）和高效。nginx也尽量节省CPU周期，因为进程（或线程）没有正在进行的“创建—销毁”模式。nginx做的是检查网络和存储的状态，初始化新连接，将它们添加到运行循环，并异步处理直至完成，这是连接被解除分配并从运行循环中删除。结合细心使用系统调用和精确实现支持接口，如池和板内存分配器（slab memory allocator），即使在极端工作负载下，ngixn通常也可实现“中到低”的CPU使用率。</p>
+<p>因为nginx会产生几个worker处理连接，所以可以跨多个<code>CPU核心</code>很好地伸缩。通常，每个CPU核心的单独worker允许充分利用<code>多核架构</code>，并防止<code>线程抖动</code>和<code>锁定</code>。在单线程worker进程中，没有资源匮乏，资源控制机制是独立（isolated）的。此模型还允许跨物理存储设备实现更高的可伸缩性，有助于提高磁盘利用率并避免阻塞<code>磁盘I/O</code>。因此，在多个worker共享工作负载的情况下，可以更有效地利用服务器资源。</p>
+<p>对于一些磁盘使用和CPU负载模式，应该调整worker的数量，这个规则是基础的，系统管理员应该为他们的工作负载尝试几种配置。一般建议可能如下：</p>
+<ul>
+<li>
+<p>若负载是CPU密集型——例如，处理大量TCP/IP，执行SSL或压缩——worker数量应与CPU核心数匹配。</p>
+</li>
+<li>
+<p>若负载是I/O密集型——例如，服务存储中的不容内容集（文件服务器）或者繁重的代理——worker数量可能是CPU核型数量的1.5到2倍。</p>
+</li>
+</ul>
+<p>一些工程师根据单个存储单元的数量来选择worker数量，但这种方法的效率取决于磁盘存储的类型和配置。</p>
+<p>nginx的开发人员将在即将推出的版本中解决的一个主要问题是如何便面磁盘I/O上的大部分阻塞。目前，如果没有足够的存储性能来为特定worker生成的磁盘操作提供服务，那么该worker仍可能阻塞地从磁盘读取/写入。存在许多机制和配置文件指令以减轻此类磁盘I/O阻方案。最值得注意的是，sendfile和AIO等选项的组合通常会为磁盘性能带来很大的空间。应根据数据集，nginx可用的内存亮以及底层存储架构来规划nginx安装。</p>
+<p>现有worker模型的另一个问题与嵌入式脚本的有限支持有关。首先，使用标准的nginx发行版，只支持嵌入Perl脚本。由一个简单的解释：关键问题是嵌入式脚本可能素则任何操作或意外退出。这两种行为都会立即导致worker被挂起，同时影响数千个连接。更多的工作中正在被计划，使nginx的嵌入式脚本更简单、可靠和适用于更广泛的应用程序。</p>
+<h2 id="nginx_2">nginx进程角色</h2>
+<p>nginx在内存中运行几种进程，一个<code>master</code>进程和几个<code>worker</code>进程，还有一些特殊用途的进程，特别是<code>cache loader</code>和<code>cache manager</code>。在nginx版本1.x中的所有进程都是单线程，所有进程主要使用共享内存机制进行进程间通信（inter-process communication）。master进程以root用户身份运行，cache loader/cache manager/worker作为非特权用户运行。</p>
+<p>master进程负责以下任务：</p>
+<ul>
+<li>读取和验证配置</li>
+<li>创建、绑定和关闭socket</li>
+<li>启动、终止和维护配置的worker进程数</li>
+<li>无需中断服务的重新配置</li>
+<li>控制不停机的二进制升级（启动新二进制并在必要时回滚）</li>
+<li>重新打开日志文件</li>
+<li>编译嵌入Perl脚本</li>
+</ul>
+<p>Worker进程接收、处理来自客户端的连接，提供反向代理和过滤功能，并执行nginx能够执行的几乎所有的其他操作。关于监视nginx实例的行为，系统管理员应该关注worker，因为它们是反映Web服务器的实际日常（day-to-day）操作的过程。</p>
+<p>Cache loader进程负责检查磁盘缓存并使用缓存元数据填充nginx的内存数据库。本质上，cache loader新婚被nginx实例以处理已经存储在磁盘上的文件，这些文件位于特殊分配的目录结构中。它遍历目录，检查缓存内容元数据，更新共享内存中的相关条目，然后在一切都干净并准备好使用时退出。</p>
+<p>Cache manager主要负责缓存过期和失效。他在正常的nginx操作期间保留在内存中，并在发生故障时由master进程重启。</p>
+<h2 id="nginx_3">nginx缓存概述</h2>
+<p>nginx中的缓存是以文件系统上的分层数据存储（hierarchical data storage）的形式实现的。缓存键（cache key）是可配置的，并且可以使用不同的特定于请求的参数来控制进入缓存的内容。缓存键，和缓存元数据存储在共享内存段中，cache loader/code manager/worker都可以访问。目前，除了操作系统的虚拟文件系统机制所暗示的优化之外，没有任何内存中的文件缓存。每个被缓存的响应都方在文件系统上的不同文件中，层级结构（级别和命名细节）通过nginx配置指令控制。将响应写入缓存目录结构时，文件的路径和名称将从代理URL的MD5哈希派生。</p>
+<p>将内容放入缓存的过程如下：当nginx从上游服务器读取响应时，首相将内容写入缓存目录结构之外的临时文件。当nginx完成处理请求时，它会重命名临时文件并将其移动到缓存目录。若代理的临时文件目录位于另一个文件系统上，则会复制该文件，因此建议将临时目录和缓存目录保留在同一文件系统上。当需要显式清除文件时，从缓存目录结构中删除文件也是非常安全的。nginx有第三方拓展，可以远程控制缓存内容，并计划在主要发行版中集成更多功能。</p>
+<h2 id="nginx_4">nginx配置</h2>
+<p>nginx的配置系统的灵感主要来自Igor Sysoev的Apache经验，他的主要观点时可拓展的配置系统对于Web服务器至关重要。在维护包含大量虚拟服务器、目录、未知和1数据集的大型复杂配置时遇到了主要的拓展问题。在相对较大的Web配置中，若在应用程序级别和系统工程师没有正确配置，则可能是一场噩梦。</p>
+<p>因此，nginx配置旨在简化日常操作，并为进一步拓展Web服务器配置提供简便方法。</p>
+<p>nginx配置保存在许多纯文本文件中，这些文件通常位于<code>/usr/local/etc/nginx</code>或<code>/etc/nginx</code>中。主配置文件通常名为<code>nginx.conf</code>，为了保持整洁，可以将部分配置放在单独的文件中，这些文件可以自动包含在主文件中。但是，这里应该注意，nginx目前不支持Apache风格的分布式配置（即.htaccess文件）。于nginx Web服务器行为相关的所有配置都应驻留在一组集中的配置文件中。</p>
+<p>配置文件最初由主进程读取和验证，nginx配置的已编译只读（compiled read-only）形式可供worker进程使用，因为它们时从master进程复制（fork）的。配置结构由通常的虚拟内存管理机制自动共享。</p>
+<p>nginx配置有几个不同的上下文用于<code>main</code>,<code>http</code>,<code>server</code>,<code>upstream</code>,<code>location</code>（以及邮件代理的<code>mail</code>）指令块。上下文从不重叠。例如，没有将<code>location</code>放在<code>main</code>指令块中。此外，为了避免不必要的歧义，没有像“全局Web服务器（global server configuration）”配置那样的东西。nginx配置意味着干净且合乎逻辑，允许用户维护包含数千个指令的复杂配置文件。在私人谈话中，Sysoev说，“全局服务器配置中的位置，目录和其他块是我从未在Apache中喜欢的功能，所以这就是为什么它们从未在nginx中实现的原因。”</p>
+<p>配置语法，格式和定义遵循所谓的C风格约定。制作配置文件的这种特殊方法已经被各种开源和商业软件应用程序使用。通过设计，C风格的配置非常适合嵌套描述，具有逻辑性，易于创建，读取和维护，并且受到许多工程师的喜爱。nginx的C风格配置也可以轻松实现自动化。</p>
+<p>虽然一些nginx指令类似于Apache配置的某些部分，但是设置nginx实例是一种完全不同的体验。例如，nginx支持重写规则，但需要管理员手动调整遗留Apache重写配置以匹配nginx样式。重写引擎的实现也不同。</p>
+<p>通常，nginx设置还支持几种原始机制，这些机制作为精简Web服务器配置的一部分非常有用。简单地提及变量和<code>try_files</code>指令是有意义的，这些指令对于nginx来说有些独特。开发了nginx中的变量，以提供额外的更强大的机制来控制Web服务器的运行时配置。变量针对快速评估进行了优化，并在内部预编译为索引。评估是按需进行的，即变量的值通常仅计算一次并缓存特定请求的生命周期。变量可以与不同的配置指令一起使用，为描述条件请求处理行为提供了额外的灵活性。</p>
+<p><code>try_files</code>指令最初意味着以更恰当的方式逐步替换条件<code>if</code>配置语句，并且它旨在快速有效地尝试/匹配不同的URI到内容映射。总的来说，<code>try_files</code>指令运行良好，可以非常高效和有用。建议读者彻底检查<a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#try_files"><code>try_files</code></a>指令并在适用时采用它。</p>
+<h2 id="nginx_5">nginx内部</h2>
+<p>如前所述，nginx代码库由核心和许多模块组成。nginx核心时负责提供Wen服务器，Web和邮件和反向代理功能的基础，它支持使用底层网络洗诶，构建必要的运行时环境，并确保不同模块之间的无缝交互。但是大多数协议和应用程序特定的功能都是由其他模块完成的，而不是核心模块。</p>
+<p>在内部，nginx通过模块的管道或者链来处理连接。换句话说，对于每个操作，都有一个正在进行的相关工作的模块；例如：压缩、修改内容、执行服务器端包括（server-side includes），通过FastCGI或uwsgi协议与上游应用服务器通信，或与memcached通信。</p>
+<p>有几个nginx模块位于核心和真正的“功能”模块之间，是<code>http</code>和<code>mail</code>，这两个模块在核心组件和缔结组件之间提供了额外的抽象级别。在这些模块中，实现了与诸如HTTP，SMTP或IMAP的相应应用层协议相关联的事件序列的处理。结合nginx核心，这些上层模块负责维护对各个功能模块的正确调用顺序。虽然HTTP协议目前是作为<code>http</code>模块的一部分实现的，但由于需要支持SPDY等其他协议，因此计划将来将其分离为功能模块（参见<a href="http://www.chromium.org/spdy/spdy-whitepaper">"SPDY: An experimental protocol for a faster web"</a>）。</p>
+<p>功能模块可分为事件模块（event module）、阶段处理器（phase handler）、输出过滤器（output filter）、变量处理器（variable handler）、协议、上游（upstream）和负载均衡器。这些模块中的大多数补充了nginx的HTTP功能，但<code>事件模块</code>和<code>协议</code>也用于<code>mail</code>。事件模块提供特定的OS以来的事件通知机制，如<code>kqueue</code>和<code>epoll</code>。nginx使用的事件模型取决于操作系统功能和构建配置。协议模块允许nginx通过HTTPS，TLS / SSL，SMTP，POP3和IMAP进行通信。</p>
+<p>典型的HTTP请求处理周期如下所示：</p>
+<p>1) 客户端发送HTTP请求</p>
+<p>2) nginx核心根据与请求匹配的已配置位置选择适当的阶段处理器</p>
+<p>3) 如果配置为执行此操作，则负载均衡器会选择上游服务器进行代理</p>
+<p>4) 阶段处理器完成其工作并将每个输出缓冲区传递给第一个过滤器</p>
+<p>5) 第一个过滤器将输出传递给第二个过滤器</p>
+<p>6) 第二个过滤器将输出传递给第三个（依此类推） </p>
+<p>7) 响应将发送给客户端</p>
+<p>nginx模块调用是非常可定制的，它通过使用指向可执行函数的指针的一系列回调来执行。然而，这样做的缺点是它可能给想要编写自己的模块的程序员带来很大的负担，因为他们必须确切地定义模块应该如何以及何时运行。 nginx API和开发人员的文档都在不断改进，并且可以更多地用来缓解这个问题。</p>
+<p>模块可以附加的一些示例是：</p>
+<ul>
+<li>在读取和处理配置文件之前</li>
+<li>对于位置的每个配置指令以及它出现的服务器</li>
+<li>初始化主配置时</li>
+<li>当初始化服务器（即主机/端口）时</li>
+<li>当服务器配置与主配置合并时</li>
+<li>初始化位置配置或与其父服务器配置合并时</li>
+<li>主程序启动或退出时</li>
+<li>一个新的worker进程启动或退出时</li>
+<li>处理一个请求时</li>
+<li>过滤响应标头（header）和正文（body）时</li>
+<li>挑选、启动并重启对上游服务器的请求</li>
+<li>处理来自上游服务器的响应时</li>
+<li>完成与上游服务器的交互时</li>
+</ul>
+<p>在worker中，导致生成响应的运行循环的操作序列如下所示：</p>
+<p>1) 开始<code>ngx_worker_process_cycle()</code></p>
+<p>2) 处理OS特定机制的事件（如<code>epoll</code>或<code>kqueue</code>）</p>
+<p>3) 接收事件和分配相关动作</p>
+<p>4) 处理或代理请求标头和正文</p>
+<p>5) 生成响应内容（标题，正文）并将其流式传输到客户端</p>
+<p>6) 完成请求</p>
+<p>7) 重新初始化计时器和事件</p>
+<p>运行循环本身（步骤5和6）确保增量生成响应并将其流式传输到客户端。</p>
+<p>处理HTTP请求的更详细视图可能如下所示：</p>
+<p>1) 初始化请求处理</p>
+<p>2) 处理标头</p>
+<p>3) 处理正文</p>
+<p>4) 调用关联的处理程序</p>
+<p>5) 贯穿处理阶段（processing phases）</p>
+<p>这将我们带到了阶段（phases）。当nginx处理HTTP请求时，它会将其传递给许多处理阶段。在每个阶段都有处理程序调用。通常，阶段处理程序处理请求并生成相关输出。阶段处理程序附加到配置文件中定义的位置。</p>
+<p>阶段处理程序通常执行以下四项操作：获取位置配置，生成适当的响应，发送标头以及发送正文。处理程序有一个参数：描述请求的特定结构。请求结构有很多关于客户端请求的有用信息，例如请求方法，URI和标头。</p>
+<p>读取HTTP请求标头时，nginx会查找关联的虚拟服务器。若找到虚拟服务器，请求将经历六个阶段：</p>
+<p>1) 服务器重写阶段</p>
+<p>2) 位置阶段</p>
+<p>3) 位置重写阶段（这可以将请求带回上一阶段）</p>
+<p>4) 访问控制阶段</p>
+<p>5) <code>try_files</code>阶段</p>
+<p>6) 日志阶段</p>
+<p>为了响应请求生成必要的内容，nginx将请求传递给合适的内容处理程序。根据确切的位置配置，nginx可能首先尝试所谓的无条件处理程序，如<code>perl</code>，<code>proxy_pass</code>，<code>flv</code>，<code>mp4</code>等。如果请求与上述任何内容处理程序都不匹配，则由以下处理程序之一按照以下确切顺序选择：随机索引，<code>index</code>，<code>autoindex</code>，<code>gzip_static</code>，<code>static</code>。</p>
+<p>索引模块的详细信息可以在nginx文档中找到，但这些是使用尾部斜杠处理请求的模块。如果像<code>mp4</code>或<code>autoindex</code>这样的专用模块不合适，则内容被认为只是磁盘上的文件或目录（即静态），并由静态内容处理程序提供服务。对于目录，它会自动重写URI，以便始终存在尾部斜杠（然后发出HTTP重定向）。</p>
+<p>然后将内容处理程序的内容传递给过滤器。过滤器也附加到位置，并且可以为位置配置多个过滤器。过滤器执行操作处理程序生成的输出的任务。过滤器执行的顺序在编译时确定。对于预先定义的开箱即用过滤器，对于第三方过滤器，可以在构建阶段对其进行配置。在现有的nginx实现中，过滤器只能进行出站更改，并且当前没有机制来编写和附加过滤器来进行输入内容转换。输入过滤将出现在nginx的未来版本中。</p>
+<p>过滤器遵循特定的设计模式。调用过滤器，开始工作，并调用下一个过滤器，直到调用链中的最终过滤器。之后，nginx完成响应。过滤器不必等待前一个过滤器完成。链中的下一个过滤器可以在前一个输入可用时立即开始工作。反过来，生成的输出响应可以在收到来自上游服务器的整个响应之前传递给客户端。</p>
+<p>有标头过滤器（header filter）和正文过滤器（body filter）; nginx分别将响应的标题和正文提供给关联的过滤器。</p>
+<p>标头过滤器包含三个基本步骤：</p>
+<p>1) 决定是否对此响应进行操作</p>
+<p>2) 响应操作</p>
+<p>3) 调用下一个过滤器</p>
+<p>正文过滤器转换生成的内容，例子包括：</p>
+<ul>
+<li>服务器端include</li>
+<li>XSLT过滤</li>
+<li>图像过滤（例如，动态调整图像大小）</li>
+<li>字符集修改</li>
+<li><code>gzip</code>压缩</li>
+<li>分块编码</li>
+</ul>
+<p>在过滤器链之后，响应被传递给writer。与writer一起，还有一些额外的专用过滤器，即<code>copy</code>过滤器和<code>postpone</code>过滤器。<code>copy</code>过滤器负责使用可能存储在代理临时目录中的相关响应内容填充内存缓冲区。<code>postpone</code>过滤器用于子请求。</p>
+<p>子请求是请求/响应处理的非常重要的机制。子请求也是nginx最强大的方面之一。对于子请求，nginx可以从与客户端最初请求的URL不同的URL返回结果。一些Web框架将此称为内部重定向。但是，nginx更进一步 - 过滤器不仅可以执行多个子请求，而且可以将输出组合成单个响应，但子请求也可以嵌套和分层。子请求可以执行其自己的<code>子子请求</code>（sub-subrequest），并且子子请求可以发起子子子请求。子请求可以映射到硬盘，其他处理程序或上游服务器上的文件。子请求对于根据原始响应中的数据插入其他内容非常有用。例如，SSI（服务器端包含）模块使用过滤器来解析返回文档的内容，然后将<code>include</code>伪指令替换为指定URL的内容。或者，它可以是一个过滤器，将文档的整个内容视为要检索的URL，然后将新文档附加到URL本身。</p>
+<p>上游和负载平衡器也值得简要描述。上游用于实现可以被识别为内容处理程序的内容，该内容处理程序是反向代理（<code>proxy_pass</code>处理程序）。上游模块主要准备将请求发送到上游服务器（或“后端”）并从上游服务器接收响应。这里没有调用输出过滤器。当上游服务器准备好被写入和读取时，上游模块确切地做的是设置要调用的回调。</p>
+<p>存在实现以下功能的回调：</p>
+<ul>
+<li>制作要发送到上游服务器的请求缓冲区（或它们的链）</li>
+<li>重新初始化/重置与上游服务器的连接（在再次创建请求之前发生）</li>
+<li>处理上游响应的第一位并保存指向从上游服务器接收的有效负载的指针</li>
+<li>中止请求（在客户端过早终止时发生）</li>
+<li>当nginx完成从上游服务器读取时完成请求</li>
+<li>修剪响应正文（例如移除拖车）</li>
+</ul>
+<p>负载平衡器模块连接到<code>proxy_pass</code>处理程序，以便在多个上游服务器符合条件时提供选择上游服务器的功能。负载均衡器注册启用配置文件指令，提供额外的上游初始化函数（以解析DNS中的上游名称等），初始化连接结构，决定将请求路由到何处以及更新统计信息。目前，nginx支持两种标准规则，用于对上游服务器进行负载均衡：<code>round-robin</code>和<code>ip-hash</code>。</p>
+<p>上游和负载平衡处理机制包括用于检测失败的上游服务器并将新请求重新路由到其余服务器的算法 - 尽管计划进行大量额外工作以增强此功能。通常，计划在负载平衡器上开展更多工作，并且在下一版本的nginx中，将大大改进跨不同上游服务器分配负载以及运行状况检查的机制。</p>
+<p>还有一些其他有趣的模块提供了一组额外的变量供配置文件使用。虽然nginx中的变量是在不同模块中创建和更新的，但有两个模块完全专用于变量：<code>geo</code>和<code>map</code>。<code>geo</code>模块用于根据客户端的IP地址来跟踪客户端。此模块可以创建依赖于客户端IP地址的任意变量。另一个模块map允许从其他变量创建变量，实质上提供了对主机名和其他运行时变量进行灵活映射的能力。这种模块可以称为变量处理器（variable handler）。</p>
+<p>在一个nginx worker中实现的内存分配机制在某种程度上受到了Apache的启发。 nginx内存管理的高级描述如下：对于每个连接，必要的内存缓冲区被动态分配，链接，用于存储和操作请求和响应的头部和主体，然后在连接释放时释放。非常重要的是要注意nginx尽量避免在内存中复制数据，并且大多数数据都是通过指针值传递的，而不是通过调用<code>memcpy</code>传递的。</p>
+<p>更深入一点，当模块生成响应时，将检索到的内容放入内存缓冲区，然后将其添加到缓冲区链接链接中。后续处理也适用于此缓冲链链接。缓冲链在nginx中非常复杂，因为有几种处理方案因模块类型而异。例如，在实现体滤波器模块时精确管理缓冲区可能非常棘手。这样的模块一次只能在一个缓冲区（链路链路）上运行，它必须决定是否覆盖输入缓冲区，用新分配的缓冲区替换缓冲区，或者在有问题的缓冲区之前或之后插入新的缓冲区。更复杂的是，有时模块会收到几个缓冲区，因此它必须有一个不完整的缓冲区链。但是，此时nginx只提供了一个用于操作缓冲区链的低级API，因此在进行任何实际实现之前，第三方模块开发人员应该能够熟练使用nginx这个神秘的部分。</p>
+<p>关于上述方法的注释是在连接的整个生命周期中分配了内存缓冲区，因此对于长期连接，保留了一些额外的内存。同时，在空闲的keepalive连接上，nginx只花费550个字节的内存。对nginx的未来版本进行可能的优化将是重用和共享内存缓冲区以实现长期连接。</p>
+<p>管理内存分配的任务由nginx池分配器完成。共享内存区域用于接受互斥锁，缓存元数据，SSL会话缓存以及与带宽管制和管理（限制）相关的信息。在nginx中实现了一个slab分配器来管理共享内存分配。为了允许同时安全使用共享内存，可以使用许多锁定机制（互斥锁和信号量）。为了组织复杂的数据结构，nginx还提供了一个红黑树实现。红黑树用于将缓存元数据保存在共享内存中，跟踪非正则表达式位置定义以及其他几项任务。</p>
+<p>不幸的是，以上所有内容从未以一致和简单的方式描述，使得为nginx开发第三方扩展的工作相当复杂。虽然存在关于nginx内部的一些好的文档 - 例如，由Evan Miller生成的那些文档 - 需要大量的逆向工程工作，并且nginx模块的实现对于许多人来说仍然是黑色艺术（balck art）。</p>
+<p>尽管与第三方模块开发相关的某些困难，nginx用户社区最近看到了许多有用的第三方模块。例如，有一个用于nginx的嵌入式Lua解释器模块，用于负载平衡的附加模块，完整的WebDAV支持，高级缓存控制以及本章作者鼓励并将在未来支持的其他有趣的第三方工作。</p>
+<h2 id="_2">得到的教训</h2>
+<p>当Igor Sysoev开始编写nginx时，大多数支持Internet的软件已经存在，并且这种软件的体系结构通常遵循传统服务器和网络硬件，操作系统和旧的Internet体系结构的定义。然而，这并没有阻止Igor认为他可能能够改进Web服务器领域的东西。所以，虽然第一课可能看起来很明显，但事实是：总有改进的余地。</p>
+<p>考虑到更好的Web软件的想法，Igor花了很多时间开发初始代码结构并研究为各种操作系统优化代码的不同方法。十年后，他正在开发nginx版本2.0的原型，考虑到版本1的多年积极开发。很明显，新架构的初始原型和初始代码结构对于未来的重要性非常重要。一个软件产品。</p>
+<p>值得一提的另一点是发展应该集中。 Windows版本的nginx可能是一个很好的例子，说明如何避免在既不是开发人员的核心竞争力或目标应用程序的情况下稀释开发工作。它同样适用于重写引擎，该引擎在多次尝试增强nginx时出现，具有更多功能，以便与现有的旧设置向后兼容。</p>
+<p>最后但同样重要的是，值得一提的是，尽管nginx开发人员社区不是很大，但nginx的第三方模块和扩展一直是其受欢迎程度的重要组成部分。 Evan Miller，Piotr Sikora，Valery Kholodkov，Zhang Yichun（agentzh）和其他才华横溢的软件工程师所做的工作得到了nginx用户社区及其原始开发人员的赞赏。</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+  
+    
+  
+
+
+
+  
+
+
+<h4>Cookie consent</h4>
+<p></p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+      
+      
+        
+        
+      
+      <li class="task-list-item">
+        <label class="task-list-control">
+          <input type="checkbox" name="github" checked>
+          <span class="task-list-indicator"></span>
+          GitHub
+        </label>
+      </li>
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout(function(){document.querySelector("[data-md-component=consent]").hidden=!1},250);var action,form=document.forms.consent;for(action of["submit","reset"])form.addEventListener(action,function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map(function(e){return[e,!0]}))),location.hash="",location.reload()})</script>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      
+    
+  </body>
+</html>

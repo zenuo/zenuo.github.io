@@ -1,0 +1,1893 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://zenuo.github.io/2019-06-23-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
+      
+      
+        <link rel="prev" href="../2019-06-15-%E5%9F%BA%E4%BA%8EWine%E4%BD%BF%E7%94%A8QQ%E8%BD%BB%E8%81%8A%E7%89%88/">
+      
+      
+        <link rel="next" href="../2019-07-01-%F0%9F%90%9A%E5%88%9D%E8%AF%86%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/">
+      
+      <link rel="icon" href="../assets/img/22318999.jpeg">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+    
+    
+      
+        <title>2019 06 23 如何实现分布式锁 - /home/zenuo</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="/home/zenuo" class="md-header__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            /home/zenuo
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              2019 06 23 如何实现分布式锁
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="/home/zenuo" class="md-nav__button md-logo" aria-label="/home/zenuo" data-md-component="logo">
+      
+  <img src="../assets/img/22318999.jpeg" alt="logo">
+
+    </a>
+    /home/zenuo
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/zenuo/zenuo.github.io" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    zenuo/zenuo.github.io
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-02-Spring%E6%A1%86%E6%9E%B6Bean%E4%BD%9C%E7%94%A8%E5%9F%9F/" class="md-nav__link">
+        2017 09 02 Spring框架Bean作用域
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-10-Spring%E6%A1%86%E6%9E%B6%E8%BF%90%E8%A1%8C%E6%97%B6%E5%80%BC%E6%B3%A8%E5%85%A5/" class="md-nav__link">
+        Spring框架运行时值注入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-09-14-%E4%BD%BF%E7%94%A8Tomcat%20JDBC%20Pool%E6%8B%A6%E6%88%AA%E5%99%A8%E6%89%93%E5%8D%B0%E5%B8%A6%E5%8F%82%E6%95%B0%E7%9A%84SQL%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2017 09 14 使用Tomcat JDBC Pool拦截器打印带参数的SQL语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-02-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AF%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B/" class="md-nav__link">
+        2017 10 02 Spring框架：什么是面向切面编程
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-10-27-Logback%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F%E8%AE%BE%E5%AE%9A/" class="md-nav__link">
+        2017 10 27 Logback日志格式设定
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-01-Spring%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%B3%A8%E5%85%A5AspectJ%E5%88%87%E9%9D%A2/" class="md-nav__link">
+        2017 11 01 Spring框架：注入AspectJ切面
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-09-%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8FC%E8%AF%AD%E8%A8%80%E9%80%92%E5%BD%92%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2017 11 09 快速排序C语言递归实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2017-11-18-Spring%E6%A1%86%E6%9E%B6%EF%BC%9ASpring%20MVC%E8%B5%B7%E6%AD%A5/" class="md-nav__link">
+        Spring框架：Spring MVC起步
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E5%AE%A2%E6%88%B7%E7%AB%AF/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo客户端
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9AEcho%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="md-nav__link">
+        2018 01 22 Netty框架：Echo服务器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/" class="md-nav__link">
+        2018 01 22 Netty框架：核心组件
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Netty%E6%A1%86%E6%9E%B6%EF%BC%9A%E7%BB%84%E4%BB%B6%E5%92%8C%E8%AE%BE%E8%AE%A1/" class="md-nav__link">
+        2018 01 22 Netty框架：组件和设计
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-01-22-Nginx%E7%9A%84WebDAV%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 01 22 Nginx的WebDAV支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-03-25-how-to-set-the-font-of-console/" class="md-nav__link">
+        2018 03 25 how to set the font of console
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%9F%90%E5%BC%A0%E8%A1%A8%E7%9A%84%E5%88%97%E5%90%8D/" class="md-nav__link">
+        MySQL查询某张表的列名
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-05-27-MySQL%E7%9A%84mysqldump%E4%BE%8B%E5%AD%90/" class="md-nav__link">
+        2018 05 27 MySQL的mysqldump例子
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8Nginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E8%B0%B7%E6%AD%8C%E6%90%9C%E7%B4%A2/" class="md-nav__link">
+        2018 06 14 使用Nginx反向代理谷歌搜索
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-14-%E4%BD%BF%E7%94%A8%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95%E6%B3%A8%E5%85%A5%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2018 06 14 使用构造方法注入依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-15-%E4%BD%BF%E7%94%A8Jconsole%E7%9B%91%E6%8E%A7%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E8%BF%90%E8%A1%8C%E7%9A%84Java%E7%A8%8B%E5%BA%8F/" class="md-nav__link">
+        2018 06 15 使用Jconsole监控远程服务器上运行的Java程序
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-CSAPP%E7%BB%83%E4%B9%A0%E9%A2%982-13/" class="md-nav__link">
+        2018 06 22 CSAPP练习题2 13
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-22-Manjaro%20Linux%E8%AE%BF%E9%97%AEiPhone%E9%9C%80%E5%AE%89%E8%A3%85%E7%9A%84%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2018 06 22 Manjaro Linux访问iPhone需安装的工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-06-24-%E4%BB%80%E4%B9%88%E6%98%AF%E6%95%B0%E5%AD%A6-Richard-Courant/" class="md-nav__link">
+        2018 06 24 什么是数学 Richard Courant
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-08-%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E5%AE%89%E8%A3%85Arch%20Linux%20ARM/" class="md-nav__link">
+        2018 08 08 在树莓派上安装Arch Linux ARM
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-08-16-Timsort%20%E4%BD%A0%E4%BB%8E%E6%9C%AA%E5%90%AC%E8%AF%B4%E8%BF%87%E7%9A%84%E6%9C%80%E5%BF%AB%E7%9A%84%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2018 08 16 Timsort 你从未听说过的最快的排序算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-09-29-%E4%BD%BF%E7%94%A8Googletrans%E5%9C%A8%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8A%E7%BF%BB%E8%AF%91/" class="md-nav__link">
+        2018 09 29 使用Googletrans在命令行上翻译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-10-%E5%9F%BA%E4%BA%8EShadowsocks%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2018 10 10 基于Shadowsocks的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-10-14-%E5%9F%BA%E4%BA%8EOpenCV%E7%9A%84%E5%9B%BE%E5%83%8F%E7%BC%A9%E6%94%BE%E8%84%9A%E6%9C%AC/" class="md-nav__link">
+        1 OpenCV是什么
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-09-%E6%B5%85%E8%B0%88Java%E5%AF%B9%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E6%94%AF%E6%8C%81/" class="md-nav__link">
+        2018 11 09 浅谈Java对函数式编程的支持
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2018-11-18-Linux%E7%9A%84TCP%20backlog%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" class="md-nav__link">
+        2018 11 18 Linux的TCP backlog如何工作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-27-%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99/" class="md-nav__link">
+        2019 01 27 建索引的五大原则
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-01-31-nginx%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 01 31 nginx架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-02-22-MySQL%E6%B5%8B%E8%AF%95%E8%A1%A8%E4%B8%AD%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E8%A1%8C%E7%9A%84%E6%9C%80%E4%BD%B3%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2019 02 22 MySQL测试表中是否存在行的最佳方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E4%BD%BF%E7%94%A8tcpdump%E6%8A%93%E5%8C%85/" class="md-nav__link">
+        2019 03 10 使用tcpdump抓包
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-10-%E5%AE%9E%E8%B7%B5java.util.concurrent.TransferQueue/" class="md-nav__link">
+        2019 03 10 实践java.util.concurrent.TransferQueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E6%9C%89%E5%85%B3%E5%BC%82%E6%AD%A5%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E5%AE%9E%E7%8E%B0%E7%9A%84%E8%AF%B4%E6%98%8E/" class="md-nav__link">
+        2019 03 18 有关异步输入输出实现的说明
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-18-%E7%BC%93%E5%AD%98%E9%82%A3%E4%BA%9B%E4%BA%8B/" class="md-nav__link">
+        2019 03 18 缓存那些事
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-03-21-Git%E6%9E%B6%E6%9E%84/" class="md-nav__link">
+        2019 03 21 Git架构
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-class-visualizer%E2%80%94%E2%80%94%E4%B8%80%E4%B8%AA%E6%9F%A5%E7%9C%8B%E7%B1%BB%E5%85%B3%E7%B3%BB%E7%9A%84%E5%9B%BE%E5%BD%A2%E5%8C%96%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 04 19 class visualizer——一个查看类关系的图形化工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-19-%E6%A0%91%E8%8E%93%E6%B4%BE%E7%94%B5%E6%BA%90%E6%9C%80%E5%A4%A7%E5%8C%96/" class="md-nav__link">
+        2019 04 19 树莓派电源最大化
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-20-%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%AD%89%E7%BA%A7%E6%8F%90%E4%BA%A4%E8%AF%BB%E4%B8%8E%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 04 20 事务隔离等级提交读与可重复读的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-04-26-MySQL%E4%B8%AD%E7%9A%84%E5%B9%B6%E3%80%81%E5%B7%AE%E3%80%81%E4%BA%A4%E5%92%8C%E9%99%A4%E8%BF%90%E7%AE%97/" class="md-nav__link">
+        2019 04 26 MySQL中的并、差、交和除运算
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-01-%E5%8F%AF%E6%89%A9%E5%B1%95%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%EF%BC%9Aepoll%E4%B8%8Ekqueue/" class="md-nav__link">
+        2019 05 01 可扩展的事件多路复用：epoll与kqueue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-05-%E5%85%B3%E4%BA%8EJava%E8%AF%AD%E8%A8%80%E7%9A%84finally%E8%AF%AD%E5%8F%A5/" class="md-nav__link">
+        2019 05 05 关于Java语言的finally语句
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-09-%E4%B8%80%E4%B8%AA%E6%88%90%E5%8A%9F%E7%9A%84Git%E5%88%86%E6%94%AF%E6%A8%A1%E5%9E%8B/" class="md-nav__link">
+        2019 05 09 一个成功的Git分支模型
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-11-%E3%80%8C%E5%8B%BE%E5%8B%BE%E3%80%8D%E4%B8%80%E4%B8%AA%E5%9F%BA%E4%BA%8E%E8%B0%B7%E6%AD%8C%E7%9A%84%E6%90%9C%E7%B4%A2%E5%B7%A5%E5%85%B7/" class="md-nav__link">
+        2019 05 11 「勾勾」一个基于谷歌的搜索工具
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-16-Golang%E5%88%9D%E4%BD%93%E9%AA%8C%E4%B9%8B%E8%A7%A3%E7%BB%84JSON%E5%B9%B6%E5%86%99%E5%85%A5MySQL/" class="md-nav__link">
+        2019 05 16 Golang初体验之解组JSON并写入MySQL
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-17-%E4%B8%80%E4%B8%AAShell%E7%AE%A1%E9%81%93%E7%9A%84%E9%A2%98%E7%9B%AE/" class="md-nav__link">
+        2019 05 17 一个Shell管道的题目
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-20-CentOS%207%20%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E5%92%8C%E6%97%A5%E5%BF%97%E7%9A%84%E5%AF%B9%E7%85%A7/" class="md-nav__link">
+        2019 05 20 CentOS 7 的启动过程和日志的对照
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-22-%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E7%BC%93%E5%AD%98%E5%87%BB%E7%A9%BF%E4%B8%8E%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9/" class="md-nav__link">
+        2019 05 22 缓存穿透、缓存击穿与缓存雪崩
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-Golang%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" class="md-nav__link">
+        2019 05 27 Golang的交叉编译
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-MySQL%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%B9%B6%E6%8F%92%E5%85%A5/" class="md-nav__link">
+        2019 05 27 MySQL查询数据并插入
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-05-27-%E5%AF%B9%E7%A7%B0%E4%B8%8E%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" class="md-nav__link">
+        2019 05 27 对称与非对称加密算法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9C%A8Ubuntu%E4%B8%8A%E4%BD%BF%E7%94%A8Hurricane%20Electric%E7%9A%84IPv6%E9%9A%A7%E9%81%93/" class="md-nav__link">
+        2019 06 03 在Ubuntu上使用Hurricane Electric的IPv6隧道
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-03-%E5%9F%BA%E4%BA%8ENginx%E7%9A%84%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2019 06 03 基于Nginx的反向代理
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-04-MySQL%E9%9A%8F%E6%9C%BA%E6%9F%A5%E8%AF%A2%E4%B8%80%E6%9D%A1%E8%AE%B0%E5%BD%95/" class="md-nav__link">
+        2019 06 04 MySQL随机查询一条记录
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-06-15-%E5%9F%BA%E4%BA%8EWine%E4%BD%BF%E7%94%A8QQ%E8%BD%BB%E8%81%8A%E7%89%88/" class="md-nav__link">
+        2019 06 15 基于Wine使用QQ轻聊版
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          2019 06 23 如何实现分布式锁
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        2019 06 23 如何实现分布式锁
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    你将锁定用于何处
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    使用锁保护资源
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    使用围栏使锁安全
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    利用时间解决共识
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redlock" class="md-nav__link">
+    用糟糕的时间打破Redlock
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redlock_1" class="md-nav__link">
+    Redlock的同步假设
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    总结
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    参考
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-01-%F0%9F%90%9A%E5%88%9D%E8%AF%86%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" class="md-nav__link">
+        2019 07 01 🐚初识布隆过滤器
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-02-%F0%9F%97%9C%E5%8E%9F%E5%A7%8B%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B%E5%9C%A8%E8%87%AA%E5%A2%9E%E8%BF%90%E7%AE%97%E4%B8%8A%E7%9A%84%E5%8C%BA%E5%88%AB/" class="md-nav__link">
+        2019 07 02 🗜原始类型与包装类型在自增运算上的区别
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-07-20-%F0%9F%94%8D%E5%A6%82%E4%BD%95%E6%AF%94%E8%BE%83%E4%B8%A4%E4%B8%AACollection%E5%90%AB%E6%9C%89%E7%9B%B8%E5%90%8C%E7%9A%84%E5%85%83%E7%B4%A0%E2%80%94%E2%80%94%E6%9D%A5%E8%87%AAApache%20Commons%20Collections%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="md-nav__link">
+        2019 07 20 🔍如何比较两个Collection含有相同的元素——来自Apache Commons Collections的实现
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-01-%F0%9F%8D%AB%EF%BC%88%E8%AF%91%EF%BC%89Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E8%AF%AD%E4%B9%89%E5%AD%A6/" class="md-nav__link">
+        2019 09 01 🍫（译）Java内存模型语义学
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2019-09-23-%F0%9F%A7%B6Java%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%85%B6%E5%AF%B9%E5%BA%94%E7%9A%84Linux%E8%BF%9B%E7%A8%8B%E5%8F%B7/" class="md-nav__link">
+        2019 09 23 🧶Java线程与其对应的Linux进程号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-17-%F0%9F%A7%B7%E5%85%B3%E4%BA%8E%E6%8A%80%E6%9C%AF%E5%86%99%E4%BD%9C/" class="md-nav__link">
+        2020 01 17 🧷关于技术写作
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-01-19-%F0%9F%A7%99%F0%9F%8F%BD%E2%80%8D%E2%99%82%EF%B8%8F%E6%96%B0%E4%BA%BA%E5%92%8C%E9%9D%9E%E6%8A%80%E6%9C%AF%E4%BA%BA%E5%91%98%E4%B9%9F%E8%83%BD%E7%9C%8B%E6%87%82%E7%9A%84%E7%BD%91%E7%AB%99%E5%BA%94%E7%94%A8%E6%8B%93%E5%B1%95/" class="md-nav__link">
+        2020 01 19 🧙🏽‍♂️新人和非技术人员也能看懂的网站应用拓展
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-04-05-%F0%9F%92%BC%E5%91%BD%E4%BB%A4Command%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%9C%A8%E8%AE%BE%E8%AE%A1API%E6%97%B6%E7%9A%84%E8%BF%90%E7%94%A8/" class="md-nav__link">
+        2020 04 05 💼命令Command设计模式在设计API时的运用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-06-14-%F0%9F%A7%AF%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E5%AF%BC%E8%87%B4%E7%9A%84%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81/" class="md-nav__link">
+        2020 06 14 🧯记一次环境变量导致的中文乱码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-11-%F0%9F%9A%87%E5%9F%BA%E4%BA%8Ev2ray%E7%9A%84%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="md-nav__link">
+        2020 07 11 🚇基于v2ray的科学上网
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-12-%F0%9F%93%9C%E8%AF%BB%E5%8F%96MySQL%E7%9A%84binlog/" class="md-nav__link">
+        2020 07 12 📜读取MySQL的binlog
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-07-19-%F0%9F%93%9D%E5%9F%BA%E4%BA%8ExeCJK%E7%9A%84TeX%E4%B8%AD%E6%96%87%E4%B9%A6%E5%86%99/" class="md-nav__link">
+        📝基于xeCJK的TeX中文书写
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-19-%F0%9F%8F%8E%E5%8D%8F%E5%8F%98%E3%80%81%E9%80%86%E5%8F%98%E4%B8%8E%E4%B8%8D%E5%8F%98/" class="md-nav__link">
+        2020 10 19 🏎协变、逆变与不变
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2020-10-31-%F0%9F%A7%B0Xcode%E4%B8%AD%E5%88%9B%E5%BB%BASwift%20Package%E5%B9%B6%E5%9C%A8Target%E4%B8%AD%E4%BD%BF%E7%94%A8/" class="md-nav__link">
+        🧰Xcode中创建Swift Package并在Target中使用
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-02-28-%F0%9F%94%A6%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8GDB%E8%B0%83%E8%AF%95Nginx/" class="md-nav__link">
+        2021 02 28 🔦如何使用GDB调试Nginx
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-05-01-%F0%9F%A7%B0EasyConnect%20in%20Dokcer/" class="md-nav__link">
+        2021 05 01 🧰EasyConnect in Dokcer
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-01-%F0%9F%93%A6VirtualBox%E7%9A%84%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E5%8A%9F%E8%83%BD/" class="md-nav__link">
+        2021 07 01 📦VirtualBox的端口转发功能
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-07-11-%F0%9F%93%B7%E5%9C%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E4%B8%8A%E8%AE%BF%E9%97%AEiPhone%E6%8B%8D%E6%91%84%E7%9A%84%E7%85%A7%E7%89%87%E4%B8%8E%E8%A7%86%E9%A2%91/" class="md-nav__link">
+        2021 07 11 📷在树莓派上访问iPhone拍摄的照片与视频
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-08-30-lsof%E4%B9%8B%E5%A4%96%E7%9A%84%E6%9F%A5%E8%AF%A2%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9A%E6%96%87%E4%BB%B6%E7%9A%84%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%96%B9%E6%B3%95/" class="md-nav__link">
+        2021 08 30 lsof之外的查询使用指定文件的进程的方法
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-02-%F0%9F%93%A6%E5%88%A9%E7%94%A8GitHub%20Actions%E8%87%AA%E5%8A%A8%E6%9E%84%E5%BB%BATeX/" class="md-nav__link">
+        2021 09 02 📦利用GitHub Actions自动构建TeX
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2021-09-25-%E5%9C%A8macOS%E4%B8%8A%E4%BD%BF%E7%94%A8VS%20Code%E9%98%85%E8%AF%BBOpenJDK%E6%BA%90%E7%A0%81/" class="md-nav__link">
+        2021 09 25 在macOS上使用VS Code阅读OpenJDK源码
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-01-30-%EF%BC%88%E8%AF%91%EF%BC%89%E7%90%86%E8%A7%A3Maven%E7%89%88%E6%9C%AC%E5%8F%B7/" class="md-nav__link">
+        （译）理解Maven版本号
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-07-02-%E4%BD%BF%E7%94%A8Javac%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E5%B7%A5%E7%A8%8B%E4%BE%9D%E8%B5%96/" class="md-nav__link">
+        2022 07 02 使用Javac日志分析工程依赖
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2022-09-04-%E5%9F%BA%E4%BA%8Eredsocks2%E5%92%8Cpf%E7%9A%84macOS%E9%80%8F%E6%98%8E%E4%BB%A3%E7%90%86/" class="md-nav__link">
+        2022 09 04 基于redsocks2和pf的macOS透明代理
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    你将锁定用于何处
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    使用锁保护资源
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    使用围栏使锁安全
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    利用时间解决共识
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redlock" class="md-nav__link">
+    用糟糕的时间打破Redlock
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redlock_1" class="md-nav__link">
+    Redlock的同步假设
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    总结
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    参考
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>2019 06 23 如何实现分布式锁</h1>
+
+<blockquote>
+<p>翻译自<a href="https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html">How to do distributed locking</a></p>
+</blockquote>
+<p>作为<a href="http://dataintensive.net/">本书</a>的一部分，我在<a href="http://redis.io/">Redis</a>发现了一种名为<a href="http://redis.io/topics/distlock">Redlock</a>的算法，该算法声称在Redis上实现容错分布式锁（或者更确切地说，<a href="https://pdfs.semanticscholar.org/a25e/ee836dbd2a5ae680f835309a484c9f39ae4e.pdf">租用</a>[1]），并且页面要求来自分布式系统地人的反馈。这个算法本能在我的脑海里引发了一些警钟，所以我花了些时间思考它，并写下这些笔记。</p>
+<p>由于已经有<a href="http://redis.io/topics/distlock">超过10个独立的Redlock实现</a>，我们不知道谁已经依赖这个算法，我认为值得公开分享我的笔记。我不会涉及Redis的其他方面，其中一些已经在其他地方被评论过。</p>
+<p>在我详细介绍Redlock之前，请允许我说我非常喜欢Redis，过去我已成功将它用于生产中。我认为它非常适合您希望在服务器之间共享一些<code>瞬态，近似，快速变化</code>的数据的情况，以及如果您因某种原因偶尔丢失数据并不是什么大不了的地方。例如，一个好的用例是维护每个IP地址的请求计数器（用于速率限制）和每个用户ID的不同IP地址集（用于滥用检测）。</p>
+<p>然而，Redis已经逐渐进入数据管理领域，这些领域具有更强的一致性和耐用性预期 - 这让我担心，因为这不是Redis的设计目标。 可以说，分布式锁定是其中一个领域。 让我们更详细地研究它。可以说，分布式锁定是其中一个领域。 让我们更详细地研究它。</p>
+<h2 id="_1">你将锁定用于何处</h2>
+<p>锁定的目的是确保在可能尝试执行相同工作的多个节点中，只有一个实际执行它（至少一次只执行一次）。这项工作可能是将一些数据写入共享存储系统，执行某些计算，调用某些外部API等。 在较高的层次上，有两个原因可能导致您在分布式应用程序中需要锁定：<a href="http://research.google.com/archive/chubby.html">效率或正确性</a>。为了区分这些情况，您可以询问如果锁定失败会发生什么：</p>
+<ul>
+<li>
+<p>效率：锁定可以避免不必要地执行相同的工作两次（例如，一些昂贵的计算）。 如果锁定失败并且两个节点最终完成相同的工作，结果是成本略有增加（最终为AWS支付的费用比您原本要多5美分）或稍有不便（例如用户最终） 两次收到相同的电子邮件通知）。</p>
+</li>
+<li>
+<p>正确性：采取锁定可防止并发进程踩到彼此的脚趾并弄乱系统状态。 如果锁定失败并且两个节点同时处理同一条数据，则结果是文件损坏，数据丢失，永久性不一致，给予患者的药物剂量错误或其他一些严重问题。</p>
+</li>
+</ul>
+<p>两者都是想要锁定的有效案例，但是你需要非常清楚你要处理的两个中的哪一个。</p>
+<p>我将争辩说，如果您仅仅为了提高效率而使用锁，则不必承担Redlock的成本和复杂性，运行5台Redis服务器并检查大多数锁以获取锁。 您最好只使用一个Redis实例，可能在主要崩溃的情况下使用异步复制到辅助实例。</p>
+<p>如果您使用单个Redis实例，当然如果Redis节点上的电源突然断电或者出现其他问题，您将丢弃一些锁。 但是如果你只是使用锁作为效率优化，并且崩溃不会经常发生，那没什么大不了的。 这个“没什么大不了的”情景是Redis闪耀的地方。 至少如果您依赖于单个Redis实例，那么每个看系统的人都很清楚锁是近似的，并且仅用于非关键目的。</p>
+<p>另一方面，具有5个副本和多数表决权的Redlock算法乍一看，好像它适用于锁定对正确性很重要的情况。 我将在以下各节中论证它不适合这个目的。 对于本文的其余部分，我们将假设您的锁对于正确性很重要，并且如果两个不同的节点同时认为它们持有相同的锁，那么这是一个严重的错误。</p>
+<h2 id="_2">使用锁保护资源</h2>
+<p>让我们暂时搁置Redlock的细节，并讨论如何使用分布式锁（与所使用的特定锁定算法无关）。 重要的是要记住，分布式系统中的锁不像多线程应用程序中的互斥锁。 这是一个更复杂的野兽，因为不同的节点和网络都可以以各种方式独立地失败。</p>
+<p>例如，假设您有一个应用程序，其中客户端需要更新共享存储中的文件（例如HDFS或S3）。 客户端首先获取锁，然后读取文件，进行一些更改，将修改后的文件写回，最后释放锁。 该锁防止两个客户端同时执行此读 - 修改 - 写周期，这将导致更新丢失。 代码可能如下所示：</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// THIS CODE IS BROKEN</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">writeData</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">lock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lockService</span><span class="p">.</span><span class="nx">acquireLock</span><span class="p">(</span><span class="nx">filename</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">lock</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="s1">&#39;Failed to acquire lock&#39;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">storage</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">filename</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">updateContents</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">storage</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span><span class="w"> </span><span class="nx">updated</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">lock</span><span class="p">.</span><span class="nx">release</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>不幸的是，即使您拥有完美的锁定服务，上面的代码也会被破坏。 下图显示了如何最终处理损坏的数据：</p>
+<p><img alt="ad53c33624958c0a10d76c44.png" src="../assets/img/ad53c33624958c0a10d76c44.png" /></p>
+<p>在此示例中，获取锁的客户端在持有锁的同时暂停一段时间 - 例如，因为垃圾收集器（GC）启动。锁具有超时（即它是租约），这是 总是一个好主意（否则一个崩溃的客户端可能会永远持有一个锁，永远不会释放它）。 但是，如果GC暂停持续时间超过租约到期时间，并且客户端没有意识到它已经过期，则可能会继续进行并进行一些不安全的更改。</p>
+<p>这个错误不是理论上的：HBase曾经<a href="http://www.slideshare.net/enissoz/hbase-and-hdfs-understanding-filesystem-usage">有过这个问题</a>[3,4]。 通常情况下，GC暂停非常短暂，但“停止世界”的GC暂停有时会持续<a href="http://blog.cloudera.com/blog/2011/02/avoiding-full-gcs-in-hbase-with-memstore-local-allocation-buffers-part-1/">几分钟</a>[5]  - 肯定足够长的时间让租约到期。 即使是所谓的“并发”垃圾收集器，如HotSpot JVM的CMS也无法与应用程序代码并行运行 - 即使他们需要不时地<a href="http://mechanical-sympathy.blogspot.co.uk/2013/07/java-garbage-collection-distilled.html">停止这个世界</a>[6]。</p>
+<p>在写回存储之前，通过在锁定到期时插入检查来解决此问题。 请记住，GC可以在<code>任何时候</code>暂停正在运行的线程，包括对您来说最不方便的点（在最后一次检查和写入操作之间）。</p>
+<p>如果您感到自鸣得意，因为您的编程语言运行时没有长时间的GC暂停，那么您的进程可能会暂停的原因还有很多。 也许您的进程尝试读取尚未加载到内存中的地址，因此它会出现页面错误并暂停，直到从磁盘加载页面为止。 也许您的磁盘实际上是EBS，因此无意中读取变量会变成亚马逊拥塞网络上的同步网络请求。 也许有许多其他进程争用CPU，并且您在<a href="https://twitter.com/aphyr/status/682077908953792512">调度程序树中遇到了一个黑色节点</a>。 也许有人不小心将<code>SIGSTOP</code>发送给了这个过程。 随你。 您的流程将暂停。</p>
+<p>如果您仍然不相信过程暂停，请考虑在到达存储服务之前，文件写入请求可能会在网络中延迟。 诸如以太网和IP之类的分组网络可能会任意延迟数据包，并且<a href="https://queue.acm.org/detail.cfm?id=2655736">它们会</a>[7]：在<a href="https://github.com/blog/1364-downtime-last-saturday">GitHub的一个着名事故</a>中，数据包在网络中延迟了大约90秒[8]。 这意味着应用程序进程可以发送写入请求，并且可以在租约已经过期的一分钟后到达存储服务器。</p>
+<p>即使在管理良好的网络中，也会发生这种情况。 您根本无法对时序做出任何假设，这就是为什么上面的代码根本不安全，无论您使用什么锁服务。</p>
+<h2 id="_3">使用围栏使锁安全</h2>
+<p>解决此问题的方法实际上非常简单：您需要在存储服务的每个写入请求中包含一个防护标记。 在此上下文中，防护令牌只是每次客户端获取锁定时增加（例如，由锁定服务递增）的数字。 如下图所示：</p>
+<p><img alt="abe363584ccdb78cc4fc5aae.png" src="../assets/img/abe363584ccdb78cc4fc5aae.png" /></p>
+<p>客户端1获取租约并获得33的令牌，但随后它会进入长时间停顿并且租约到期。 客户端2获取租约，获得34的令牌（数量总是增加），然后将其写入发送到存储服务，包括令牌34.稍后，客户端1恢复生命并将其写入发送到存储服务 但是，存储服务器会记住它已经处理了具有更高令牌号的写入（34），因此它拒绝带有令牌33的请求。</p>
+<p>请注意，这要求存储服务器在检查令牌时起主动作用，并拒绝令牌反向的任何写入。 但是，一旦你知道了这个诀窍，这并不是特别难。 并且只要锁定服务生成严格单调增加的令牌，这就使锁定安全。 例如，如果您使用ZooKeeper作为锁定服务，则可以使用zxid或znode版本号作为防护令牌，并且您处于良好状态[3]。</p>
+<p>然而，这导致我们遇到Redlock的第一个大问题：<strong>它没有任何生成防护令牌的工具</strong>。 每次客户端获取锁定时，该算法不会产生任何保证增加的数字。 这意味着即使算法完美无缺，也不会安全使用，因为在一个客户端暂停或其数据包被延迟的情况下，您无法阻止客户端之间的竞争条件。</p>
+<p>对我来说，如何更改Redlock算法以开始生成fencing令牌并不明显。 它使用的唯一随机值不能提供所需的单调性。 简单地将计数器保留在一个Redis节点上是不够的，因为该节点可能会失败。 将计数器保留在几个节点上意味着它们会不同步。 您可能需要一个一致的算法来生成防护令牌。 （如果只是增加<a href="https://twitter.com/lindsey/status/575006945213485056">一个计数器</a>很简单。）</p>
+<h2 id="_4">利用时间解决共识</h2>
+<p>Redlock无法生成防护令牌这一事实应该已经足以成为在正确性取决于锁定的情况下不使用它的理由。 但还有一些值得讨论的问题。</p>
+<p>在学术文献中，这种算法最实用的系统模型是<a href="http://courses.csail.mit.edu/6.852/08/papers/CT96-JACM.pdf">具有不可靠故障检测器的异步模型</a>[9]。 简单来说，这意味着算法不会对时序做出任何假设：进程可能暂停任意长度的时间，数据包可能在网络中被任意延迟，时钟可能是任意错误的 - 然而算法仍然可以正确执行 事情。 鉴于我们上面讨论的内容，这些都是非常合理的假设。</p>
+<p>算法可以使用时钟的唯一目的是生成超时，以避免在节点关闭时永远等待。 但是超时不必是准确的：仅仅因为请求超时，这并不意味着另一个节点肯定是关闭的 - 它也可能是因为网络中存在大的延迟，或者您的本地时钟 是错的。 当用作故障检测器时，超时只是猜测出现了问题。 （如果可以的话，分布式算法将完全没有时钟，但随后<a href="http://www.cs.princeton.edu/courses/archive/fall07/cos518/papers/flp.pdf">协商变得不可能</a>[10]。获取锁定就像是比较和设置操作，这<a href="https://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf">需要共识</a>[11]。）</p>
+<p>请注意，Redis<a href="https://github.com/antirez/redis/blob/edd4d555df57dc84265fdfb4ef59a4678832f6da/src/server.c#L390-L404">使用<code>gettimeofday</code></a>而不是<a href="http://linux.die.net/man/2/clock_gettime">单调时钟</a>来确定密钥的<a href="https://github.com/antirez/redis/blob/f0b168e8944af41c4161249040f01ece227cfc0c/src/db.c#L933-L959">到期时间</a>。 gettimeofday的手册页<a href="http://linux.die.net/man/2/gettimeofday">明确表示</a>它返回的时间会受制于系统时间的不连续跳跃 - 也就是说，它可能会突然向前跳几分钟，甚至可能会跳回时间（例如，如果时钟<a href="https://www.eecis.udel.edu/~mills/ntp/html/clock.html">由NTP步进</a>，因为 它与NTP服务器的区别太大，或者如果时钟由管理员手动调整）。 因此，如果系统时钟做了奇怪的事情，很容易发生Redis中的密钥到期比预期快得多或慢得多。</p>
+<p>对于异步模型中的算法，这不是一个大问题：这些算法通常确保其安全属性始终保持不变，而<a href="http://www.net.t-labs.tu-berlin.de/~petr/ADC-07/papers/DLS88.pdf">不做任何时序假设</a>[12]。 只有活动属性取决于超时或其他一些故障检测器。 简单来说，这意味着即使系统中的时间到处都是（进程暂停，网络延迟，时钟向前和向后跳跃），算法的性能可能会下降，但算法永远不会成为 错误的决定。</p>
+<p>但是，Redlock不是这样的。 它的安全性取决于许多时序假设：它假设所有Redis节点在到期之前保持密钥大约合适的时间长度; 与到期时间相比，网络延迟较小; 并且该过程暂停比到期持续时间短得多。</p>
+<h2 id="redlock">用糟糕的时间打破Redlock</h2>
+<p>让我们看一些例子来证明Redlock对时序假设的依赖。 假设系统有五个Redis节点（A，B，C，D和E）和两个客户端（1和2）。 如果其中一个Redis节点上的时钟跳转，会发生什么？</p>
+<ol>
+<li>客户端1获取节点A，B，C上的锁定。由于网络问题，无法访问D和E.</li>
+<li>节点C上的时钟向前跳跃，导致锁定到期。</li>
+<li>客户端2获取节点C，D，E上的锁定。由于网络问题，无法访问A和B.</li>
+<li>客户1和2现在都认为他们持有锁。</li>
+</ol>
+<p>如果C在将锁持久保存到磁盘之前崩溃并且立即重新启动，则可能发生类似的问题。 出于这个原因，Redlock文档建议至少<a href="http://redis.io/topics/distlock#performance-crash-recovery-and-fsync">延迟崩溃节点的重启</a>，以获得最长寿命锁的生存时间。 但是这种重启延迟再次依赖于合理准确的时间测量，并且如果时钟跳跃则会失败。</p>
+<p>好吧，也许你认为时钟跳转是不现实的，因为你非常有信心正确配置NTP只能转换时钟。 在这种情况下，让我们看一个进程暂停如何导致算法失败的示例：</p>
+<ol>
+<li>客户端1请求锁定节点A，B，C，D，E。</li>
+<li>虽然对客户端1的响应正在进行中，但客户端1进入了<code>STW</code>的GC。</li>
+<li>锁定在所有Redis节点上过期。</li>
+<li>客户端2获取节点A，B，C，D，E上的锁。</li>
+<li>客户端1完成GC，并从Redis节点接收响应，指示它已成功获取锁（它们在进程暂停时保存在客户端1的内核网络缓冲区中）。</li>
+<li>客户1和2现在都认为他们持有锁。</li>
+</ol>
+<p>请注意，即使Redis是用C语言编写的，因此没有GC，但这对我们没有帮助：客户端可能遇到GC暂停的任何系统都存在此问题。 您只能在客户端2获取锁定后阻止客户端1在锁定下执行任何操作，例如使用上面的防护方法，从而使此安全。</p>
+<p>长网络延迟可以产生与进程暂停相同的效果。 它可能取决于您的TCP用户超时 - 如果您使超时显着短于Redis TTL，可能会忽略延迟的网络数据包，但我们必须详细查看TCP实现以确保。 此外，随着超时，我们又回到了时间测量的准确性！</p>
+<h2 id="redlock_1">Redlock的同步假设</h2>
+<p>这些示例显示只有在您采用同步系统模型时Redlock才能正常工作 - 即具有以下属性的系统：</p>
+<ul>
+<li>有限的网络延迟（您可以保证数据包总是在一些保证的最大延迟内到达），</li>
+<li>有限的过程暂停（换句话说，硬实时约束，通常只能在汽车安全气囊系统中找到），以及</li>
+<li>有限的时钟错误（交叉你的手指你没有从<a href="http://xenia.media.mit.edu/~nelson/research/ntp-survey99/">坏的NTP服务器</a>得到你的时间）。</li>
+</ul>
+<p>请注意，同步模型并不意味着完全同步的时钟：它意味着您假设<a href="http://www.net.t-labs.tu-berlin.de/~petr/ADC-07/papers/DLS88.pdf">已知的，固定的网络延迟上限</a>，暂停和时钟漂移[12]。 Redlock假设延迟，暂停和漂移相对于锁的生存时间都很小; 如果时间问题变得与生存时间一样大，则算法失败。</p>
+<p>在性能相当良好的数据中心环境中，时序假设将在大多数时间内得到满足 - 这被称为<a href="http://www.net.t-labs.tu-berlin.de/~petr/ADC-07/papers/DLS88.pdf">部分同步系统</a>[12]。 但这还够好吗？ 一旦这些时间假设被打破，Redlock可能会违反其安全属性，例如， 在另一个客户到期之前向一个客户授予租约。 如果你依赖于锁定的正确性，“大部分时间”是不够的 - 你需要它<code>始终</code>是正确的。</p>
+<p>有大量证据表明，对于大多数实际系统环境，假设同步系统模型是不安全的[7,8]。 使用<a href="https://github.com/blog/1364-downtime-last-saturday">90秒的数据包延迟</a>提醒自己GitHub事件。 Redlock不太可能在<a href="https://aphyr.com/tags/jepsen">Jepsen</a>测试中存活下来。</p>
+<p>另一方面，为部分同步系统模型（或具有故障检测器的异步模型）设计的一致性算法实际上有机会工作。 Raft，Viewstamped Replication，Zab和Paxos都属于这一类。 这样的算法必须放弃所有时序假设。 这很难：假设网络，流程和时钟比实际更可靠，这是很诱人的。 但是在分布式系统的混乱现实中，你必须非常小心你的假设。</p>
+<h2 id="_5">总结</h2>
+<p>我认为Redlock算法是一个糟糕的选择，因为它“既不是鱼也不是鸡”：它对于效率优化锁是不必要的重量级和昂贵的，但是对于正确性取决于锁的情况它并不足够安全。</p>
+<p>特别是，该算法对时序和系统时钟做出了危险的假设（基本上假设一个同步系统具有有界网络延迟和有限的操作执行时间），如果不满足这些假设，它就违反了安全属性。 此外，它缺乏用于生成防护令牌的设施（其保护系统免受网络中的长时间延迟或暂停的过程）。</p>
+<p>如果您只需要尽力而为（仅作为效率优化，而不是正确性），我建议坚持使用Redis的<a href="http://redis.io/commands/set">简单单节点锁定算法</a>（条件集 - 如果不存在则获得锁定， atomic delete-if-value-matches以释放锁定，并在您的代码中非常清楚地记录锁只是近似的，有时可能会失败。 不要费心设置五个Redis节点的集群。</p>
+<p>另一方面，如果您需要锁定正确，请不要使用Redlock。 相反，请使用适当的共识系统，如<a href="https://zookeeper.apache.org/">ZooKeeper</a>，可能通过实施锁定的<a href="http://curator.apache.org/curator-recipes/index.html">Curator配方</a>之一。 （至少，使用<a href="http://www.postgresql.org/">具有合理事务保证的数据库</a>。）并且请在锁定下的所有资源访问上强制使用fencing令牌。</p>
+<p>正如我在开始时所说的，如果你正确使用它，Redis是一个很好的工具。 以上都没有减少Redis用于其预期目的的有用性。 <a href="http://antirez.com/">Salvatore</a>多年来一直致力于该项目，其成功当之无愧。 但是每种工具都有局限性，了解它们并进行相应的规划非常重要。</p>
+<p>如果您想了解更多信息，我会在<a href="http://dataintensive.net/">本书的第8章和第9章</a>中更详细地解释这个主题，现在可以在O'Reilly的早期版本中找到。 （上图来自我的书。）为了学习如何使用ZooKeeper，我推荐<a href="http://shop.oreilly.com/product/0636920028901.do">Junqueira和Reed的书</a>[3]。 为了更好地介绍分布式系统理论，我推荐了<a href="http://www.distributedprogramming.net/">Cachin，Guerraoui和Rodrigues的教科书</a>[13]。</p>
+<p>感谢<a href="https://aphyr.com/">Kyle Kingsbury，Camille Fournier，Flavio Junqueira</a>和<a href="http://antirez.com/">Salvatore Sanfilippo</a>审阅本文的草稿。 当然，任何错误都是我的。</p>
+<p>2016年2月9日更新：Redlock的原作者<a href="http://antirez.com/">Salvatore</a>发表了<a href="http://antirez.com/news/101">对本文的反驳</a>（另见<a href="https://news.ycombinator.com/item?id=11065933">HN讨论</a>）。 他提出了一些好的观点，但我坚持我的结论。 如果我有时间，我可以在后续帖子中详细说明，但请形成您自己的意见 - 请参考下面的参考资料，其中许多已获得严格的学术同行评审（与我们的任何博客文章不同）。</p>
+<h2 id="_6">参考</h2>
+<ol>
+<li>
+<p>Cary G Gray and David R Cheriton: “<a href="https://pdfs.semanticscholar.org/a25e/ee836dbd2a5ae680f835309a484c9f39ae4e.pdf">Leases: An Efficient Fault-Tolerant Mechanism for Distributed File Cache Consistency</a>,” at 12th ACM Symposium on Operating Systems Principles (SOSP), December 1989. <a href="http://dx.doi.org/10.1145/74850.74870">doi:10.1145/74850.74870</a></p>
+</li>
+<li>
+<p>Mike Burrows: “<a href="http://research.google.com/archive/chubby.html">The Chubby lock service for loosely-coupled distributed systems</a>,” at 7th USENIX Symposium on Operating System Design and Implementation (OSDI), November 2006.</p>
+</li>
+<li>
+<p>Flavio P Junqueira and Benjamin Reed: <a href="http://shop.oreilly.com/product/0636920028901.do">ZooKeeper: Distributed Process Coordination</a>. O’Reilly Media, November 2013. ISBN: 978-1-4493-6130-3</p>
+</li>
+<li>
+<p>Enis Söztutar: “<a href="http://www.slideshare.net/enissoz/hbase-and-hdfs-understanding-filesystem-usage">HBase and HDFS: Understanding filesystem usage in HBase</a>,” at HBaseCon, June 2013.</p>
+</li>
+<li>
+<p>Todd Lipcon: “<a href="http://blog.cloudera.com/blog/2011/02/avoiding-full-gcs-in-hbase-with-memstore-local-allocation-buffers-part-1/">Avoiding Full GCs in Apache HBase with MemStore-Local Allocation Buffers: Part 1</a>,” blog.cloudera.com, 24 February 2011.</p>
+</li>
+<li>
+<p>Martin Thompson: “<a href="http://mechanical-sympathy.blogspot.co.uk/2013/07/java-garbage-collection-distilled.html">Java Garbage Collection Distilled</a>,” mechanical-sympathy.blogspot.co.uk, 16 July 2013.</p>
+</li>
+<li>
+<p>Peter Bailis and Kyle Kingsbury: “<a href="https://queue.acm.org/detail.cfm?id=2655736">The Network is Reliable</a>,” ACM Queue, volume 12, number 7, July 2014. <a href="http://dx.doi.org/10.1145/2639988.2639988">doi:10.1145/2639988.2639988</a></p>
+</li>
+<li>
+<p>Mark Imbriaco: “<a href="https://github.com/blog/1364-downtime-last-saturday">Downtime last Saturday</a>,” github.com, 26 December 2012.</p>
+</li>
+<li>
+<p>Tushar Deepak Chandra and Sam Toueg: “<a href="http://courses.csail.mit.edu/6.852/08/papers/CT96-JACM.pdf">Unreliable Failure Detectors for Reliable Distributed Systems</a>,” Journal of the ACM, volume 43, number 2, pages 225–267, March 1996. <a href="http://dx.doi.org/10.1145/226643.226647">doi:10.1145/226643.226647</a></p>
+</li>
+<li>
+<p>Michael J Fischer, Nancy Lynch, and Michael S Paterson: “<a href="http://www.cs.princeton.edu/courses/archive/fall07/cos518/papers/flp.pdf">Impossibility of Distributed Consensus with One Faulty Process</a>,” Journal of the ACM, volume 32, number 2, pages 374–382, April 1985. <a href="http://dx.doi.org/10.1145/3149.214121">doi:10.1145/3149.214121</a></p>
+</li>
+<li>
+<p>Maurice P Herlihy: <a href="https://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf">“Wait-Free Synchronization</a>,” ACM Transactions on Programming Languages and Systems, volume 13, number 1, pages 124–149, January 1991. <a href="http://dx.doi.org/10.1145/114005.102808">doi:10.1145/114005.102808</a></p>
+</li>
+<li>
+<p>Cynthia Dwork, Nancy Lynch, and Larry Stockmeyer: “<a href="http://www.net.t-labs.tu-berlin.de/~petr/ADC-07/papers/DLS88.pdf">Consensus in the Presence of Partial Synchrony</a>,” Journal of the ACM, volume 35, number 2, pages 288–323, April 1988. <a href="http://dx.doi.org/10.1145/42282.42283">doi:10.1145/42282.42283</a></p>
+</li>
+<li>
+<p>Christian Cachin, Rachid Guerraoui, and Luís Rodrigues: <a href="http://www.distributedprogramming.net/">Introduction to Reliable and Secure Distributed Programming</a>, Second Edition. Springer, February 2011. ISBN: 978-3-642-15259-7, <a href="http://dx.doi.org/10.1007/978-3-642-15260-3">doi:10.1007/978-3-642-15260-3</a></p>
+</li>
+</ol>
+<p>加入关于Hacker News的这<a href="https://news.ycombinator.com/item?id=11059738">篇文章的讨论</a>。</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+  
+    
+  
+
+
+
+  
+
+
+<h4>Cookie consent</h4>
+<p></p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+      
+      
+        
+        
+      
+      <li class="task-list-item">
+        <label class="task-list-control">
+          <input type="checkbox" name="github" checked>
+          <span class="task-list-indicator"></span>
+          GitHub
+        </label>
+      </li>
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout(function(){document.querySelector("[data-md-component=consent]").hidden=!1},250);var action,form=document.forms.consent;for(action of["submit","reset"])form.addEventListener(action,function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map(function(e){return[e,!0]}))),location.hash="",location.reload()})</script>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      
+    
+  </body>
+</html>
