@@ -7,10 +7,11 @@ fi
 
 cd `dirname $0`
 date=`date +%Y-%m-%d`
-newFilePath="../docs/$date-$@.md"
+newFilePath="../content/$date-$@.md"
 echo '---
-layout: single
-toc: true
+title: ""
+date: date
+categories: ["tech"]
 ---
 ' > "$newFilePath"
 echo "new post created: '$(pwd)/$newFilePath'"

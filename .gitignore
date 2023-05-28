@@ -1,6 +1,21 @@
-_site
-.sass-cache
-.jekyll-cache
-.jekyll-metadata
-vendor
+# Generated files
+/public
+/resources/_gen/
+
+# MacOS
 .DS_Store
+
+# Executables
+hugo.exe
+hugo.linux
+hugo.darwin
+
+/content/notes
+/content/one-on-one
+/content/books
+
+# direnv
+.direnv/
+
+hugo_stats.json
+.hugo_build.lock

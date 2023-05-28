@@ -1,0 +1,230 @@
+/* General */
+
+#nav-menu li a {
+  @apply font-sans-serif;
+  @apply uppercase;
+  @apply inline-block;
+  @apply text-sm;
+  @apply mr-4;
+  @apply text-gray-900;
+  @apply font-semibold;
+  @apply border-b-2;
+  @apply border-transparent;
+}
+
+#nav-menu li a:hover {
+  @apply border-gray-900;
+}
+
+.title {
+  @apply font-bold;
+  @apply text-gray-900;
+  @apply text-3xl;
+}
+
+.title a {
+  @apply text-gray-900;
+}
+
+.title a:hover {
+  @apply text-indigo-700;
+}
+
+.badge {
+ @apply text-xs;
+ @apply px-2;
+ @apply py-1;
+}
+
+.badge a {
+  @apply text-white;
+}
+
+.badge a:hover {
+  @apply text-white;
+}
+
+.badge {
+ @apply mr-2;
+ @apply mt-1;
+}
+
+.badge-primary {
+ @apply bg-indigo-500;
+}
+
+.badge-primary:hover {
+ @apply bg-indigo-700;
+}
+
+.rounded-badge {
+ @apply rounded;
+}
+
+.btn {
+  @apply border;
+  @apply border-gray-600;
+  @apply px-4;
+  @apply py-2;
+  @apply inline-block;
+  @apply rounded-md;
+}
+
+.btn:hover {
+  @apply border-indigo-700;
+}
+
+a.btn {
+  @apply text-gray-600;
+}
+
+a.btn:hover {
+  @apply text-indigo-700;
+}
+
+nav#TableOfContents > ul {
+  @apply m-0;
+}
+
+nav#TableOfContents > ul > li {
+  @apply list-none;
+}
+
+/* Markdown */
+/* purgecss start ignore */
+.markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
+  @apply font-bold;
+  @apply leading-relaxed;
+}
+
+.markdown h1 {
+  @apply text-2xl;
+  @apply mt-16;
+  @apply mb-5;
+}
+
+.markdown h2 {
+  @apply text-xl;
+  @apply mt-10;
+  @apply mb-4;
+}
+
+.markdown h3 {
+  @apply text-lg;
+  @apply mt-6;
+  @apply mb-2;
+}
+
+.markdown p {
+  @apply text-lg;
+  @apply leading-relaxed;
+}
+
+.markdown p + p {
+  @apply mt-4;
+}
+
+.markdown li > ul {
+  list-style-type: circle;
+  @apply mb-0;
+  @apply mt-0;
+}
+
+.markdown ul, ul.disc {
+  @apply list-disc;
+  @apply ml-8;
+  @apply mt-2;
+  @apply mb-5;
+}
+
+.markdown ol {
+  @apply list-decimal;
+  @apply ml-8;
+  @apply mt-2;
+  @apply mb-5;
+}
+
+.markdown li {
+  @apply text-lg;
+}
+
+.markdown hr {
+  @apply my-6;
+}
+
+.markdown table {
+  @apply border-collapse;
+  @apply my-4;
+}
+
+.markdown table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.markdown table th {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.markdown table td {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.callout {
+  @apply block;
+  @apply border-l-4;
+  @apply p-4;
+  @apply my-6;
+}
+
+.callout-info {
+  @apply bg-blue-50;
+  @apply border-blue-500;
+}
+
+.callout-warning {
+  @apply bg-yellow-50;
+  @apply border-yellow-500;
+}
+
+.markdown blockquote {
+  @apply font-serif;
+  @apply my-4;
+  @apply px-5;
+}
+
+.markdown blockquote p {
+  @apply text-2xl;
+  @apply italic;
+  @apply font-serif;
+  @apply text-gray-600;
+}
+
+.markdown blockquote p:before {
+  content: '\201C';
+  @apply mr-1;
+}
+
+.markdown blockquote p:after {
+  content: '\201D';
+  @apply ml-1;
+}
+
+.font-sans-serif {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+.font-serif {
+  font-family: 'Lora', sans-serif;
+}
+
+.serif h1, .serif h2, .serif h3, .serif h4, .serif h5, .serif h6  {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+.serif p, .serif li, .serif a {
+  font-family: 'Lora', sans-serif;
+}
+/* purgecss end ignore */

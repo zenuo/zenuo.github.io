@@ -1,0 +1,32 @@
+baseURL = "https://zenuo.github.io/"
+languageCode = "en-us"
+theme = "my-theme"
+
+staticDir = ['static']
+pygmentsUseClasses = true
+pygmentsCodeFences = true
+
+enableGitInfo = true
+summaryLength = 50
+
+[taxonomies]
+  category = 'categories'
+  tag = 'tags'
+
+[permalinks]
+posts = "/:sections/:year/:month/:day/:slug/"
+books = "/:sections/:title"
+
+[build]
+  writeStats = true
+
+[markup]
+  [markup.tableOfContents]
+    endLevel = 1
+    startLevel = 1
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[security.exec]
+  osEnv = ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$','(?i)^ASDF', '^HOME$']

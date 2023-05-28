@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+  echo "Please enter a git commit message"
+  exit
+fi
+
+echo "Build css..."
+cd themes/my-theme/ && npx tailwindcss --postcss ./assets/css/postcss.config.js -c ./assets/css/tailwind.config.js -i ./assets/css/main.css -o ./assets/css/styles.css && cd ../..
+
+echo "Cleaning public directoy...."
+cd public && find . -path ./.git -prune -o -exec rm -rf {} \; 2> /dev/null
+
+echo "Run hugo..."
+cd .. && hugo
+
+echo "Committing to git"
+cd public && git add . && git commit -m "$1" && git push origin master
+
+echo "Successfully push to GitHub"
+cd ..

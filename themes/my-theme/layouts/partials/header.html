@@ -1,0 +1,49 @@
+<nav class="mt-8">
+  <ul id="nav-menu" class="w-full flex items-center list-reset">
+    {{ with .Site.GetPage "/" }}
+    <li>
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+
+    {{ with .Site.GetPage "/series" }}
+    <li>
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+
+    {{ with .Site.GetPage "/fragments" }}
+    <li>
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+
+    {{ with .Site.GetPage "/books" }}
+    <li>
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+
+
+    {{ with .Site.GetPage "/about" }}
+    <li>
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+
+    {{ with .Site.GetPage "/tags" }}
+    <li>
+      <a href="{{ .Permalink }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+
+
+    <!-- {{ range $taxonomy_term, $taxonomy := .Site.Taxonomies}} -->
+    <!-- {{ with $.Site.GetPage (printf "/%s" $taxonomy_term) }} -->
+    <!-- <li> -->
+    <!--   <a href="{{ .Permalink }}">{{ title $taxonomy_term }}</a> -->
+    <!-- </li> -->
+    <!-- {{ end }} -->
+    <!-- {{ end }} -->
+  </ul>
+</nav>

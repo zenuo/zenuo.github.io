@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+cd `dirname $0`
 
 # 目标路径
-image_path='assets/img/'
+image_path='/img/'
 
 # 移动指定的图片到文件夹，并重命名为随机字符串
 
@@ -21,7 +22,7 @@ extension=${filename##*.}
 rand=`openssl rand -hex 12`
 
 # 将参数指定的文件移动到图片文件夹，并重命名
-mv "$1" ..assets/img/$rand.$extension && \
+mv "$1" static/img/$rand.$extension && \
 echo ![$rand.$extension]\($image_path$rand.$extension\) && \
 
 # 若xclip存在（Linux系统）
