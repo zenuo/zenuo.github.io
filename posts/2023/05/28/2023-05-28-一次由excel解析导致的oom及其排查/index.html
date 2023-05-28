@@ -1,0 +1,86 @@
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>2023-05-28-一次由Excel解析导致的OOM及其排查</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/posts>posts</a></p><p>May 28, 2023</p></div><h1 class="title mb-2">2023-05-28-一次由Excel解析导致的OOM及其排查</h1><p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (337 words)</p><div id=tags><span class="badge badge-primary rounded-badge"><a href=https://zenuo.github.io/tags/tech/>tech</a></span></div></header><article class="prose serif mb-12 text-gray-800"><p>在业务系统功能中，不难见到上传Excel文件批量处理的场景，由于Excel文件的复杂性，存在很多容易出问题的可能性。</p><h2 id=1-复现>1 复现</h2><p>我们通过一个简化的SpringBoot工程来演示有问题的代码、如何通过<code>Eclipse Memory Analyzer</code>工具分析堆转储文件，来定位到问题代码。</p><p>工程代码：</p><pre tabindex=0><code>.
+├── pom.xml
+├── readme.md
+├── src
+│   └── main
+│       └── java
+│           └── demo
+│               └── exceloom
+│                   └── DemoExcelOomApplication.java
+├── test.xlsx
+</code></pre><p>在<code>DemoExcelOomApplication.java</code>中是我们关注的重点，使用Apache POI框架解析输入流，然后读取第一张表的每一行：</p><pre tabindex=0><code>@RequestMapping(value = &#34;import&#34;, method = RequestMethod.POST)
+public ResponseEntity&lt;String&gt; importData(MultipartFile file) throws Exception {
+    Workbook workbook = WorkbookFactory.create(file.getInputStream()); // poi解析输入流
+    Sheet sheetOne = workbook.getSheetAt(0);
+
+    for (int i = 1; i &lt;= sheetOne.getLastRowNum(); i++) {
+        Row row = sheetOne.getRow(i);
+        // 读取每一行
+    }
+
+    return new ResponseEntity&lt;&gt;(&#34;ok&#34;, HttpStatus.OK);
+}
+</code></pre><blockquote><p>需要使用JDK8构建和运行</p></blockquote><p>构建：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>mvn clean package
+</span></span></code></pre></div><p>为了演示，这里将JVM最大堆内存限制为64m，运行:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>java <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    -server -Xms64m -Xmx64m <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    -XX:+HeapDumpOnOutOfMemoryError <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    -jar target/excel-oom-0.0.1-SNAPSHOT.jar
+</span></span></code></pre></div><p>工程包里已含有一个Excel文件，行数是148269：</p><p><img src=/vx_images/535242396015956.png alt=Excel行数></p><p>使用Excel文件调用接口，其中Excel：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>curl --location <span class=s1>&#39;localhost:8080/import&#39;</span> --form <span class=s1>&#39;file=@&#34;test.xlsx&#34;&#39;</span>
+</span></span></code></pre></div><p>不出意外的话，控制台将会提示OOM已发生，JVM将会在当前目录生成堆转储文件，例如<code>java_pid27718.hprof</code>，其中27718是进程ID：</p><pre tabindex=0><code class=language-log data-lang=log>2023-05-28T16:45:38.821+08:00  INFO 27718 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+        java.lang.OutOfMemoryError: Java heap space
+Dumping heap to java_pid27718.hprof ...
+Heap dump file created [94201075 bytes in 0.246 secs]
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread &#34;Catalina-utility-2&#34;
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread &#34;http-nio-8080-Poller&#34;
+Exception in thread &#34;Catalina-utility-1&#34; java.lang.OutOfMemoryError: Java heap space
+2023-05-28T16:49:05.855+08:00 ERROR 27718 --- [nio-8080-exec-5] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+</code></pre><p>从日志里可以发现OOM的线程是<code>nio-8080-exec-5</code>，这里是由于日志配置限制了展示的线程名称的长度。更多的信息需要借助<code>Eclipse Memory Analyzer</code>来获取了。</p><h2 id=2-分析>2 分析</h2><p>到<a href=http://www.eclipse.org/mat/>mat官网</a>下载，解压之后需要给mat分配足够的堆内存，避免分析过程卡顿，编辑<code>MemoryAnalyzer.ini</code>：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-ini data-lang=ini><span class=line><span class=cl><span class=na>-startup</span>
+</span></span><span class=line><span class=cl><span class=na>../Eclipse/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar</span>
+</span></span><span class=line><span class=cl><span class=na>--launcher.library</span>
+</span></span><span class=line><span class=cl><span class=na>../Eclipse/plugins/org.eclipse.equinox.launcher.cocoa.macosx.x86_64_1.2.700.v20221108-1024</span>
+</span></span><span class=line><span class=cl><span class=na>-vmargs</span>
+</span></span><span class=line><span class=cl><span class=na>--add-exports</span><span class=o>=</span><span class=s>java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED</span>
+</span></span><span class=line><span class=cl><span class=na>-Xmx4g #添加</span>
+</span></span><span class=line><span class=cl><span class=na>-Xms4g #添加</span>
+</span></span><span class=line><span class=cl><span class=na>-Dorg.eclipse.swt.internal.carbon.smallFonts</span>
+</span></span><span class=line><span class=cl><span class=na>-XstartOnFirstThread</span>
+</span></span></code></pre></div><p>保存后启动，打开示例工程生成的堆转储文件：</p><p><img src=/vx_images/75512480907869.png alt></p><p>解析完成之后，选择Leak Suspects Report > Finish</p><p><img src=/vx_images/343982892017687.png alt></p><p>得出的问题嫌疑只有一个，占用了51.3MB的内存：</p><p><img src=/vx_images/42703865940289.png alt></p><p>在Problem Suspect 1中发现线程是<code>http-nio-8080-exec-5</code>，与我们在日志中看到的一致。</p><p><img src=/vx_images/36883197331484.png alt></p><p>点击<code>See stacktrace</code>，查看栈跟踪，从上往下看，可以找到第一个业务代码，既是问题所在了。</p><p><img src=/vx_images/501864599913004.png alt></p><p>当然这个步骤也不是必须人眼一行一行地看，可以借助Intellij IDEA快速定位到业务代码：首先复制栈跟踪的文本，再切换到IDEA，点击菜单Code>Analyze Stack Trace or Thread Dump>OK</p><p><img src=/vx_images/380965020996132.png alt></p><p>蓝色字体就是业务代码了，点击可以跳转，是不是比肉眼看更快？</p><p><img src=/vx_images/162885560657598.png alt></p><p>至此找到了导致OOM的业务代码，<del>可以甩锅了Win+L锁屏下班</del>，看起来也无可厚非：解析后读取，但如果继续深入跟POI的源码的话，会发现是要将全部内容都加载到内存解析完成再返回，对于JVM堆内存无法解析输入Excel的行数规模时，OOM就会发生。</p><p>那么有哪些思路可以避免这种情况的发生呢？</p><h2 id=3-思路>3 思路</h2><p>第一个思路当然是换坑，换一个框架，比如alibaba的easyexcel，引入依赖：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=line><span class=cl><span class=nt>&lt;dependency&gt;</span>
+</span></span><span class=line><span class=cl>	<span class=nt>&lt;groupId&gt;</span>com.alibaba<span class=nt>&lt;/groupId&gt;</span>
+</span></span><span class=line><span class=cl>	<span class=nt>&lt;artifactId&gt;</span>easyexcel<span class=nt>&lt;/artifactId&gt;</span>
+</span></span><span class=line><span class=cl>	<span class=nt>&lt;version&gt;</span>2.2.7<span class=nt>&lt;/version&gt;</span>
+</span></span><span class=line><span class=cl><span class=nt>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>使用以下代码来读取：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Data</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>ExcelRow</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=nd>@ExcelProperty</span><span class=o>(</span><span class=s>&#34;name&#34;</span><span class=o>)</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=nd>@ExcelProperty</span><span class=o>(</span><span class=s>&#34;id&#34;</span><span class=o>)</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>String</span> <span class=n>id</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@RequestMapping</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;import-by-easyexcel&#34;</span><span class=o>,</span> <span class=n>method</span> <span class=o>=</span> <span class=n>RequestMethod</span><span class=o>.</span><span class=na>POST</span><span class=o>)</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=nf>importDataByEasyExcel</span><span class=o>(</span><span class=n>MultipartFile</span> <span class=n>file</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>final</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>ExcelRow</span><span class=o>&gt;</span> <span class=n>objects</span> <span class=o>=</span> <span class=n>EasyExcel</span><span class=o>.</span><span class=na>read</span><span class=o>(</span><span class=n>file</span><span class=o>.</span><span class=na>getInputStream</span><span class=o>(),</span> <span class=n>ExcelRow</span><span class=o>.</span><span class=na>class</span><span class=o>,</span> <span class=k>new</span> <span class=n>AnalysisEventListener</span><span class=o>&lt;</span><span class=n>ExcelRow</span><span class=o>&gt;()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>private</span> <span class=kt>int</span> <span class=n>count</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span> <span class=c1>// 行数
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=kd>private</span> <span class=kd>final</span> <span class=kd>static</span> <span class=kt>int</span> <span class=n>maxCount</span> <span class=o>=</span> <span class=mi>100</span><span class=o>;</span> <span class=c1>// 常量：最大行数
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>        <span class=kd>public</span> <span class=kt>void</span> <span class=nf>invoke</span><span class=o>(</span><span class=n>ExcelRow</span> <span class=n>data</span><span class=o>,</span> <span class=n>AnalysisContext</span> <span class=n>context</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>count</span><span class=o>++;</span> <span class=c1>// 增加行数
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>        <span class=kd>public</span> <span class=kt>void</span> <span class=nf>doAfterAllAnalysed</span><span class=o>(</span><span class=n>AnalysisContext</span> <span class=n>context</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>        <span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>hasNext</span><span class=o>(</span><span class=n>AnalysisContext</span> <span class=n>context</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=n>count</span> <span class=o>&lt;=</span> <span class=n>maxCount</span><span class=o>;</span><span class=c1>// 行数不能大于最大行数
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}).</span><span class=na>sheet</span><span class=o>(</span><span class=mi>0</span><span class=o>).</span><span class=na>doReadSync</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=n>ResponseEntity</span><span class=o>&lt;&gt;(</span><span class=s>&#34;ok,rows:&#34;</span> <span class=o>+</span> <span class=n>objects</span><span class=o>.</span><span class=na>size</span><span class=o>(),</span> <span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><p>以同样的JVM参数启动后，发起请求：</p><pre tabindex=0><code>curl --location &#39;localhost:8080/import-by-easyexcel&#39; --form &#39;file=@&#34;test.xlsx&#34;&#39;
+</code></pre><p>得到响应：</p><pre tabindex=0><code>ok,rows:100
+</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://github.com/alibaba/easyexcel/issues/2572>关于读取大文件时只读取前几行前几列的相关解决方案</a></li></ul></article></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>
