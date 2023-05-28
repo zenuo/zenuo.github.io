@@ -19,3 +19,8 @@ hugo.darwin
 
 hugo_stats.json
 .hugo_build.lock
+
+
+vx.json
+vx_notebook
+

@@ -10,7 +10,7 @@ date=`date +%Y-%m-%d`
 newFilePath="../content/$date-$@.md"
 echo '---
 title: ""
-date: date
+date: $date
 categories: ["tech"]
 ---
 ' > "$newFilePath"
