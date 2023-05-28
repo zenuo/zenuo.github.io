@@ -131,7 +131,7 @@ $3 ==> 100
 
 > 截图自[jclasslib](https://github.com/ingokegel/jclasslib)工具
 
-![afcd7098269159ba07bf670a.png](assets/img/afcd7098269159ba07bf670a.png)
+![afcd7098269159ba07bf670a.png](/img/afcd7098269159ba07bf670a.png)
 
 - `6-8`行，将**本地变量数组（local variable array）**的第`0`个值（即20）加80，并被压入**操作数栈**，保存在第`1`个int值中
 - `19-22`行，将`150`压入操作数栈，保存在`本地变量数组的第0个值`中，将`本地变量数组的第1个值`即（100）压入操作数栈，返回
@@ -163,7 +163,7 @@ $4 ==> {KEY=FINALLY}
 
 这个例子的[字节码](/attachment/finally-reference-type-example.tgz)如图：
 
-![2cb3134765477ad23e79d035.png](assets/img/2cb3134765477ad23e79d035.png)
+![2cb3134765477ad23e79d035.png](/img/2cb3134765477ad23e79d035.png)
 
 与上同理。
 

@@ -87,19 +87,19 @@ CONF=macosx-x86_64-normal-server-slowdebug make vscode-project
 
 打开文件`/opt/source/jdk11u/src/java.base/share/native/libjli/java.c`，在方法`JavaMain`的第一行代码打上断点，如图的394行：
 
-![88a9a5b1f309789a78d6deb2.jpg](assets/img/88a9a5b1f309789a78d6deb2.jpg)
+![88a9a5b1f309789a78d6deb2.jpg](/img/88a9a5b1f309789a78d6deb2.jpg)
 
 在侧边栏的`Run and Debug`中选择`java (Build artifacts)`：
 
-![ad6eec34a947569280539b6c.png](assets/img/ad6eec34a947569280539b6c.png)
+![ad6eec34a947569280539b6c.png](/img/ad6eec34a947569280539b6c.png)
 
 点击绿色三角形按钮，开始运行：
 
-![f5d34f285e85191b06c47f5b.png](assets/img/f5d34f285e85191b06c47f5b.png)
+![f5d34f285e85191b06c47f5b.png](/img/f5d34f285e85191b06c47f5b.png)
 
 等待程序运行到断点：
 
-![ba6eac21ed89a7b59e5940bd.png](assets/img/ba6eac21ed89a7b59e5940bd.png)
+![ba6eac21ed89a7b59e5940bd.png](/img/ba6eac21ed89a7b59e5940bd.png)
 
 ## 8 参考
 

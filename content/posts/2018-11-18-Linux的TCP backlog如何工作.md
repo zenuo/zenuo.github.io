@@ -8,7 +8,7 @@ categories: ["tech"]
 
 当某个应用程序使用[listen系统调用](http://linux.die.net/man/2/listen)将一个socket置为`LISTEN`状态时，需要为这个socket设置参数`backlog`，该参数通常被描述为传入（incoming）连接队列的数量限制。
 
-![TCP state diagram](assets/img/3d75825650e82a8afd29e773.png)
+![TCP state diagram](/img/3d75825650e82a8afd29e773.png)
 
 因为TCP使用三步握手（3-way handshake），在一个传入的连接在到达`ESTABLISHED`状态之前必须经过中间（intermediate）状态`SYN RECEIVED`，并且可由[accept系统调用](http://linux.die.net/man/2/accept)返回到应用程序（请参阅上面复制的[TCP状态图](http://commons.wikimedia.org/wiki/File:Tcp_state_diagram_fixed.svg)）。这意味着TCP/IP堆栈有两个选项来实现`LISTEN`状态的socket的积压队列（backlog queue）：
 

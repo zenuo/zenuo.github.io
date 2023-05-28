@@ -208,7 +208,7 @@ echo "}"
 start D:\bin\v2ray\wv2ray.exe -config D:\bin\v2ray\vpoint_socks_vmess.json
 ```
 
-![27da7be3a641f73e22f6380e.png](assets/img/27da7be3a641f73e22f6380e.png)
+![27da7be3a641f73e22f6380e.png](/img/27da7be3a641f73e22f6380e.png)
 
 配置文件`D:\bin\v2ray\vpoint_socks_vmess.json`与您的服务端配置有关，对应上面的服务端的参考配置，客户端的参考配置：
 
@@ -272,7 +272,7 @@ start D:\bin\v2ray\wv2ray.exe -config D:\bin\v2ray\vpoint_socks_vmess.json
 
 保存配置文件后，即可双击`v2ray.bat`运行，若客户端配置争取，则能在`任务管理器`看到`w2ray.exe`运行：
 
-![8034d8f58c0885234da7741d.png](assets/img/8034d8f58c0885234da7741d.png)
+![8034d8f58c0885234da7741d.png](/img/8034d8f58c0885234da7741d.png)
 
 接下来在`Chrome`中安装`Proxy SwitchyOmega`插件，关闭所有打开的`Chrome`窗口，然后在powershell运行下面命令，运行一个Chrome实例，所有流量由`socks5://localhost:1080`代理，没错，这个代理就是我们刚刚在本地运行的v2ray实例：
 
@@ -282,23 +282,23 @@ C:\Users\（您的用户名）\AppData\Local\Google\Chrome\Application\chrome.ex
 
 访问`https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif`，或者搜索`Proxy SwitchyOmega`：
 
-![e6df7231e15a13db9d8709a7.png](assets/img/e6df7231e15a13db9d8709a7.png)
+![e6df7231e15a13db9d8709a7.png](/img/e6df7231e15a13db9d8709a7.png)
 
 安装插件，设置代理服务器为本地的实例：
 
-![2e67f16ba9663bba6ad93099.png](assets/img/2e67f16ba9663bba6ad93099.png)
+![2e67f16ba9663bba6ad93099.png](/img/2e67f16ba9663bba6ad93099.png)
 
 点击图标并设置为`auto switch`：
 
-![bb4db2169fc3b9132cef21d6.png](assets/img/bb4db2169fc3b9132cef21d6.png)
+![bb4db2169fc3b9132cef21d6.png](/img/bb4db2169fc3b9132cef21d6.png)
 
 关闭当前所有Chrome窗口，不指定代理运行一个新窗口，访问`https://www.google.com`，等待`图标显示橙色数字`时，点击域名，点击`proxy`，将域名`goole.com`添加到代理规则中：
 
-![23eed0612626b1d059651de7.png](assets/img/23eed0612626b1d059651de7.png)
+![23eed0612626b1d059651de7.png](/img/23eed0612626b1d059651de7.png)
 
 再刷新页面，不出意外的话，成功访问：
 
-![d8e8dc81f24969c17334a14e.png](assets/img/d8e8dc81f24969c17334a14e.png)
+![d8e8dc81f24969c17334a14e.png](/img/d8e8dc81f24969c17334a14e.png)
 
 > 后续再补充安卓、iOS等其他客户端
 
@@ -310,23 +310,23 @@ C:\Users\（您的用户名）\AppData\Local\Google\Chrome\Application\chrome.ex
 
 您可以自己搭建服务器，或者使用朋友的服务器（也有服务商提供付费服务），V2rayNG提供了【扫描二维码】的功能，便于分享服务器配置，如下：
 
-![68318ade7f2c3e28619e638f.png](assets/img/68318ade7f2c3e28619e638f.png)
+![68318ade7f2c3e28619e638f.png](/img/68318ade7f2c3e28619e638f.png)
 
 导入成功之后，【配置文件】列表中会添加一个配置，如下：
 
-![00f2f986bc6135c0f6ee4a5a.png](assets/img/00f2f986bc6135c0f6ee4a5a.png)
+![00f2f986bc6135c0f6ee4a5a.png](/img/00f2f986bc6135c0f6ee4a5a.png)
 
 就快完成了，点击左上角的三道杠（上图蓝色圈出）呼出设置菜单栏，点击【设置】
 
-![ecab8a2864e5b8d018f344c7.png](assets/img/ecab8a2864e5b8d018f344c7.png)
+![ecab8a2864e5b8d018f344c7.png](/img/ecab8a2864e5b8d018f344c7.png)
 
 将【预定义规则】设置为「绕过局域网及大陆地址」，使得访问大陆网址和局域网地址不使用代理：
 
-![4c471ee00f340cd3fee55a53.png](assets/img/4c471ee00f340cd3fee55a53.png)
+![4c471ee00f340cd3fee55a53.png](/img/4c471ee00f340cd3fee55a53.png)
 
 再次点击左上角，回到【配置文件】，选中我们刚刚导入的配置，然后点击右下角的V字按钮，启动服务（首次启动时，系统会弹出提示框，允许即可）：
 
-![9c898636fba3070ecce9de74.png](assets/img/9c898636fba3070ecce9de74.png)
+![9c898636fba3070ecce9de74.png](/img/9c898636fba3070ecce9de74.png)
 
 好了，试试在浏览器中访问https://www.google.com/吧，如果访问成功，说明已经可以科学上网了。
 
