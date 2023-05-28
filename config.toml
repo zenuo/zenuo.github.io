@@ -12,6 +12,7 @@ summaryLength = 50
 [taxonomies]
   category = 'categories'
   tag = 'tags'
+  serie = 'series'
 
 [permalinks]
 posts = "/:sections/:year/:month/:day/:slug/"
