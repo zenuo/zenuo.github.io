@@ -1,10 +1,10 @@
 name: GitHub Pages
 
 on:
-  workflow_dispatch:
-    push:
-      branches:
-        - master
+  push:
+    branches:
+      - master 
+      - main
 
 jobs:
   deploy:
