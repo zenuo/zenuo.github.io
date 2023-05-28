@@ -1,62 +1,8 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-在macOS上使用VS Code阅读OpenJDK源码
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<div>
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/fragments>fragments</a>
-</p>
-<p>Sep 25, 2021</p>
-</div>
-<h1 class="text-3xl mb-1 font-semibold">在macOS上使用VS Code阅读OpenJDK源码</h1>
-<p class="italic text-xs">Last updated at: Sep 25, 2021</p>
-</header>
-<article class="prose serif mb-16 text-gray-800">
-<h2 id=1-本地环境>1 本地环境</h2>
-<ul>
-<li>操作系统：macOS Big Sur 11.5.2</li>
-<li>XCode: 13A5155e</li>
-<li>JDK: openjdk version &ldquo;11.0.9&rdquo;</li>
-<li>VS Code: 1.60.2</li>
-</ul>
-<h2 id=2-下载openjdk工程>2 下载OpenJDK工程</h2>
-<p>创建一个<code>不含用户名相关</code>（建议）的路径，例如<code>/opt/source</code>，将OpenJDK 11的工程克隆至本地：</p>
-<pre tabindex=0><code>cd /opt/source
-</code></pre><p>将<code>openjdk/jdk11u</code>克隆到本地，🐢需要良好的网络环境，所以使用本地的代理；若不需要代理请忽略第一行：</p>
-<pre tabindex=0><code>https_proxy=socks5://localhost:1080 \
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>在macOS上使用VS Code阅读OpenJDK源码</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><div><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/fragments>fragments</a></p><p>Sep 25, 2021</p></div><h1 class="text-3xl mb-1 font-semibold">在macOS上使用VS Code阅读OpenJDK源码</h1><p class="italic text-xs">Last updated at: Sep 25, 2021</p></header><article class="prose serif mb-16 text-gray-800"><h2 id=1-本地环境>1 本地环境</h2><ul><li>操作系统：macOS Big Sur 11.5.2</li><li>XCode: 13A5155e</li><li>JDK: openjdk version &ldquo;11.0.9&rdquo;</li><li>VS Code: 1.60.2</li></ul><h2 id=2-下载openjdk工程>2 下载OpenJDK工程</h2><p>创建一个<code>不含用户名相关</code>（建议）的路径，例如<code>/opt/source</code>，将OpenJDK 11的工程克隆至本地：</p><pre tabindex=0><code>cd /opt/source
+</code></pre><p>将<code>openjdk/jdk11u</code>克隆到本地，🐢需要良好的网络环境，所以使用本地的代理；若不需要代理请忽略第一行：</p><pre tabindex=0><code>https_proxy=socks5://localhost:1080 \
 git clone https://github.com/openjdk/jdk11u.git
-</code></pre><p>☕️建议喝杯水等会儿，等克隆完进入下个步骤。</p>
-<h2 id=3-为构建做配置>3 为构建做配置</h2>
-<p>对于文件数量大、结构复杂的工程，一般会引入构建工具，来实现日常的开发、发布流程的标准化，如<a href=https://www.gnu.org/software/make/>GNU Make</a>、<a href=https://maven.apache.org/>Apache Maven</a>等，OpenJDK 11亦然。</p>
-<p>对于开发阶段，要求构建耗时短（不进行程度高的优化）、构建结果便于调试（debug）、运行速度可以不那么快；对于发布阶段，要求可执行文件运行速度快，构建耗时可以稍微长点儿。OpenJDK的构建支持通过配置（configure脚本）参数<code>--with-debug-level=&lt;level></code>来指定构建结果的调试级别，来实现不同阶段对构建结果的debug支持程度。</p>
-<p>由于本文介绍的是搭建阅读代码环境，所以是开发阶段，执行：</p>
-<pre tabindex=0><code>cd /opt/source/jdk11u
+</code></pre><p>☕️建议喝杯水等会儿，等克隆完进入下个步骤。</p><h2 id=3-为构建做配置>3 为构建做配置</h2><p>对于文件数量大、结构复杂的工程，一般会引入构建工具，来实现日常的开发、发布流程的标准化，如<a href=https://www.gnu.org/software/make/>GNU Make</a>、<a href=https://maven.apache.org/>Apache Maven</a>等，OpenJDK 11亦然。</p><p>对于开发阶段，要求构建耗时短（不进行程度高的优化）、构建结果便于调试（debug）、运行速度可以不那么快；对于发布阶段，要求可执行文件运行速度快，构建耗时可以稍微长点儿。OpenJDK的构建支持通过配置（configure脚本）参数<code>--with-debug-level=&lt;level></code>来指定构建结果的调试级别，来实现不同阶段对构建结果的debug支持程度。</p><p>由于本文介绍的是搭建阅读代码环境，所以是开发阶段，执行：</p><pre tabindex=0><code>cd /opt/source/jdk11u
 bash ./configure \
     #指定本地的JDK，对版本有要求 \
     --with-boot-jdk=/opt/app/jdk-11.0.9+11/Contents/Home \
@@ -66,44 +12,6 @@ bash ./configure \
     --with-debug-level=slowdebug \
     #调试符号将在构建过程中生成，它们将被保存在生成的二进制文件中。 \
     --with-native-debug-symbols=internal
-</code></pre><p>若本地环境满足构建需求，脚本正常结束，否则会有报错信息。</p>
-<h2 id=4-构建>4 构建</h2>
-<p>这个步骤需要大量的CPU、内存资源，建议关掉不需要的程序，若是笔电建议接上电源（当然，壕机器请随意😎）。</p>
-<p>执行：</p>
-<pre tabindex=0><code>CONF=macosx-x86_64-normal-server-slowdebug make all
-</code></pre><p>过程需要一些时间，☕️☕️☕️多喝几杯水，等完成再进入下个步骤。</p>
-<h2 id=5-生成vs-code工作空间>5 生成VS Code工作空间</h2>
-<p>根据<a href=https://github.com/openjdk/jdk11u/blob/master/doc/ide.md>doc/ide</a>的介绍，OpenJDK 11的构建系统支持了生成<a href=https://code.visualstudio.com/>VS Code</a>工作空间，通过这种方式来支持了IDE的标准化，大项目就是不一样👏。</p>
-<p>执行：</p>
-<pre tabindex=0><code>CONF=macosx-x86_64-normal-server-slowdebug make vscode-project
-</code></pre><p>完成后，你能看到文件<code>/opt/source/jdk11u/build/macosx-x86_64-normal-server-slowdebug/jdk.code-workspace</code></p>
-<h2 id=6-使用vs-code打开工程>6 使用VS Code打开工程</h2>
-<p>在打开工程前，需要安装插件<a href=https://github.com/microsoft/vscode-cpptools>C/C++</a>：</p>
-<p><img src=/img/823311c0ba209e392d1434b9.png alt=823311c0ba209e392d1434b9.png></p>
-<p>安装完成之后，通过<code>File -> Open Workspace...</code>打开文件<code>/opt/source/jdk11u/build/macosx-x86_64-normal-server-slowdebug/jdk.code-workspace</code>。</p>
-<h2 id=7-断点调试>7 断点调试</h2>
-<p>打开文件<code>/opt/source/jdk11u/src/java.base/share/native/libjli/java.c</code>，在方法<code>JavaMain</code>的第一行代码打上断点，如图的394行：</p>
-<p><img src=/img/88a9a5b1f309789a78d6deb2.jpg alt=88a9a5b1f309789a78d6deb2.jpg></p>
-<p>在侧边栏的<code>Run and Debug</code>中选择<code>java (Build artifacts)</code>：</p>
-<p><img src=/img/ad6eec34a947569280539b6c.png alt=ad6eec34a947569280539b6c.png></p>
-<p>点击绿色三角形按钮，开始运行：</p>
-<p><img src=/img/f5d34f285e85191b06c47f5b.png alt=f5d34f285e85191b06c47f5b.png></p>
-<p>等待程序运行到断点：</p>
-<p><img src=/img/ba6eac21ed89a7b59e5940bd.png alt=ba6eac21ed89a7b59e5940bd.png></p>
-<h2 id=8-参考>8 参考</h2>
-<ul>
-<li><a href=https://last2win.com/2021/06/13/build-jdk/>win10上构建并调试openjdk 11</a></li>
-<li><a href=https://github.com/openjdk/jdk11u/blob/master/doc/building.md>doc/building.md</a></li>
-</ul>
-<div class="float-right mb-8">
-<p class="text-sm mb-4 font-gray-700 italic">(99 words)</p>
-</div>
-</article>
-</div>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+</code></pre><p>若本地环境满足构建需求，脚本正常结束，否则会有报错信息。</p><h2 id=4-构建>4 构建</h2><p>这个步骤需要大量的CPU、内存资源，建议关掉不需要的程序，若是笔电建议接上电源（当然，壕机器请随意😎）。</p><p>执行：</p><pre tabindex=0><code>CONF=macosx-x86_64-normal-server-slowdebug make all
+</code></pre><p>过程需要一些时间，☕️☕️☕️多喝几杯水，等完成再进入下个步骤。</p><h2 id=5-生成vs-code工作空间>5 生成VS Code工作空间</h2><p>根据<a href=https://github.com/openjdk/jdk11u/blob/master/doc/ide.md>doc/ide</a>的介绍，OpenJDK 11的构建系统支持了生成<a href=https://code.visualstudio.com/>VS Code</a>工作空间，通过这种方式来支持了IDE的标准化，大项目就是不一样👏。</p><p>执行：</p><pre tabindex=0><code>CONF=macosx-x86_64-normal-server-slowdebug make vscode-project
+</code></pre><p>完成后，你能看到文件<code>/opt/source/jdk11u/build/macosx-x86_64-normal-server-slowdebug/jdk.code-workspace</code></p><h2 id=6-使用vs-code打开工程>6 使用VS Code打开工程</h2><p>在打开工程前，需要安装插件<a href=https://github.com/microsoft/vscode-cpptools>C/C++</a>：</p><p><img src=/img/823311c0ba209e392d1434b9.png alt=823311c0ba209e392d1434b9.png></p><p>安装完成之后，通过<code>File -> Open Workspace...</code>打开文件<code>/opt/source/jdk11u/build/macosx-x86_64-normal-server-slowdebug/jdk.code-workspace</code>。</p><h2 id=7-断点调试>7 断点调试</h2><p>打开文件<code>/opt/source/jdk11u/src/java.base/share/native/libjli/java.c</code>，在方法<code>JavaMain</code>的第一行代码打上断点，如图的394行：</p><p><img src=/img/88a9a5b1f309789a78d6deb2.jpg alt=88a9a5b1f309789a78d6deb2.jpg></p><p>在侧边栏的<code>Run and Debug</code>中选择<code>java (Build artifacts)</code>：</p><p><img src=/img/ad6eec34a947569280539b6c.png alt=ad6eec34a947569280539b6c.png></p><p>点击绿色三角形按钮，开始运行：</p><p><img src=/img/f5d34f285e85191b06c47f5b.png alt=f5d34f285e85191b06c47f5b.png></p><p>等待程序运行到断点：</p><p><img src=/img/ba6eac21ed89a7b59e5940bd.png alt=ba6eac21ed89a7b59e5940bd.png></p><h2 id=8-参考>8 参考</h2><ul><li><a href=https://last2win.com/2021/06/13/build-jdk/>win10上构建并调试openjdk 11</a></li><li><a href=https://github.com/openjdk/jdk11u/blob/master/doc/building.md>doc/building.md</a></li></ul><div class="float-right mb-8"><p class="text-sm mb-4 font-gray-700 italic">(99 words)</p></div></article></div></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

@@ -1,108 +1,36 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-基于OpenCV的图像缩放脚本
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<div>
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/fragments>fragments</a>
-</p>
-<p>Oct 14, 2018</p>
-</div>
-<h1 class="text-3xl mb-1 font-semibold">基于OpenCV的图像缩放脚本</h1>
-<p class="italic text-xs">Last updated at: Oct 14, 2018</p>
-</header>
-<article class="prose serif mb-16 text-gray-800">
-<h1 id=1-opencv是什么>1 OpenCV是什么</h1>
-<p>摘自<a href=https://en.wikipedia.org/wiki/OpenCV>维基百科的OpenCV词条</a>：</p>
-<blockquote>
-<p>OpenCV (Open Source Computer Vision) is a library of programming functions mainly aimed at real-time computer vision. Originally developed by Intel, it was later supported by Willow Garage then Itseez (which was later acquired by Intel). The library is cross-platform and free for use under the open-source BSD license.</p>
-</blockquote>
-<p>OpenCV具有C++，Python和Java接口，并支持Windows，Linux，macOS，iOS和Android操作系统。由于本博客的一些文章需要放置图片，为了更好的排版，需要对图片进行缩放操作；<a href=https://www.gimp.org/>GIMP</a>等图像处理程序可满足需求，但图片数量较多时，手动操作效率低下，虽然大多数图像处理程序都支持批处理（比如<a href=https://www.gimp.org/tutorials/Basic_Batch/>GIMP Batch Mode</a>，但Python+OpenCV的解决方案能产出更多的学习收益；</p>
-<h1 id=2-脚本>2 脚本</h1>
-<p>首先，使用<code>pip3</code>安装<code>opencv-python</code>，执行Bash命令：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>pip3 install opencv-python
-</code></pre></div><p>其次，创建脚本文件，此处以<code>nano</code>作为文本编辑器，您可以使用您喜爱的工具；执行Bash命令：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>nano resize
-</code></pre></div><p>粘贴如下内容：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=ch>#!/usr/bin/env python3</span>
-
-<span class=kn>import</span> <span class=nn>cv2</span>
-<span class=kn>import</span> <span class=nn>argparse</span>
-
-
-<span class=k>def</span> <span class=nf>main</span><span class=p>():</span>
-    <span class=c1># 参数解析器</span>
-    <span class=n>parser</span> <span class=o>=</span> <span class=n>argparse</span><span class=o>.</span><span class=n>ArgumentParser</span><span class=p>(</span><span class=n>description</span><span class=o>=</span><span class=s1>&#39;Image resize tool&#39;</span><span class=p>)</span>
-    <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span><span class=s1>&#39;sources&#39;</span><span class=p>,</span> <span class=n>nargs</span><span class=o>=</span><span class=s1>&#39;+&#39;</span><span class=p>,</span> <span class=n>help</span><span class=o>=</span><span class=s1>&#39;path of source image&#39;</span><span class=p>)</span>
-    <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span><span class=s1>&#39;--width&#39;</span><span class=p>,</span> <span class=nb>type</span><span class=o>=</span><span class=nb>int</span><span class=p>,</span>
-                        <span class=n>default</span><span class=o>=</span><span class=mi>400</span><span class=p>,</span> <span class=n>help</span><span class=o>=</span><span class=s1>&#39;width of target image&#39;</span><span class=p>)</span>
-    <span class=n>args</span> <span class=o>=</span> <span class=n>parser</span><span class=o>.</span><span class=n>parse_args</span><span class=p>()</span>
-    <span class=k>for</span> <span class=n>source</span> <span class=ow>in</span> <span class=n>args</span><span class=o>.</span><span class=n>sources</span><span class=p>:</span>
-        <span class=c1># 读取，按原样返回加载的图像（使用Alpha通道，否则会被裁剪）。</span>
-        <span class=n>image</span> <span class=o>=</span> <span class=n>cv2</span><span class=o>.</span><span class=n>imread</span><span class=p>(</span><span class=n>source</span><span class=p>,</span> <span class=n>cv2</span><span class=o>.</span><span class=n>IMREAD_UNCHANGED</span><span class=p>)</span>
-        <span class=c1># 计算缩放比例</span>
-        <span class=n>scale</span> <span class=o>=</span> <span class=n>args</span><span class=o>.</span><span class=n>width</span> <span class=o>/</span> <span class=n>image</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span>
-        <span class=c1># 缩放</span>
-        <span class=n>output</span> <span class=o>=</span> <span class=n>cv2</span><span class=o>.</span><span class=n>resize</span><span class=p>(</span><span class=n>image</span><span class=p>,</span> <span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=mi>0</span><span class=p>),</span> <span class=n>fx</span><span class=o>=</span><span class=n>scale</span><span class=p>,</span> <span class=n>fy</span><span class=o>=</span><span class=n>scale</span><span class=p>)</span>
-        <span class=c1># 保存</span>
-        <span class=n>cv2</span><span class=o>.</span><span class=n>imwrite</span><span class=p>(</span><span class=n>source</span><span class=p>,</span> <span class=n>output</span><span class=p>)</span>
-
-
-<span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
-    <span class=n>main</span><span class=p>()</span>
-</code></pre></div><p>按<code>Ctrl + O</code>写出，按<code>回车</code>确认写至文件<code>resize</code>，按<code>Ctrl + X</code>退出；</p>
-<h1 id=3-使用>3 使用</h1>
-<p>假设您需要缩放<code>./b22dc2b9a85cd92f99123c0b.png</code>至<code>宽为600像素</code>，执行如下Bash命令：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>➜  resize --width <span class=m>800</span> b22dc2b9a85cd92f99123c0b.png
-</code></pre></div><p>可在执行前后使用<code>file</code>命令查看区别：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>➜  file b22dc2b9a85cd92f99123c0b.png 
-b22dc2b9a85cd92f99123c0b.png: PNG image data, <span class=m>2144</span> x 1396, 8-bit/color RGBA, non-interlaced
-➜  resize --width <span class=m>800</span> b22dc2b9a85cd92f99123c0b.png                                  
-➜  file b22dc2b9a85cd92f99123c0b.png              
-b22dc2b9a85cd92f99123c0b.png: PNG image data, <span class=m>800</span> x 521, 8-bit/color RGBA, non-interlaced
-</code></pre></div><h1 id=4-结语>4 结语</h1>
-<p>时间有限，本文仅涉及到很基础的OpenCV知识，如果您感兴趣的话，可以抽空学习它，祝您学习愉快～</p>
-<h1 id=5-更新>5 更新</h1>
-<p><code>cv2.imread()</code>调用时，若不添加<code>cv2.IMREAD_UNCHANGED</code>，则读取的PNG图像会缺少alpha通道，导致写出的图像也缺少，添加后即可。</p>
-<h1 id=6-参考>6 参考</h1>
-<ul>
-<li><a href=https://docs.opencv.org/4.0.1/d4/da8/group__imgcodecs.html#gga61d9b0126a3e57d9277ac48327799c80aeddd67043ed0df14f9d9a4e66d2b0708>OpenCV: Image file reading and writing</a></li>
-</ul>
-<div class="float-right mb-8">
-<p class="text-sm mb-4 font-gray-700 italic">(190 words)</p>
-</div>
-</article>
-</div>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>基于OpenCV的图像缩放脚本</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><div><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/fragments>fragments</a></p><p>Oct 14, 2018</p></div><h1 class="text-3xl mb-1 font-semibold">基于OpenCV的图像缩放脚本</h1><p class="italic text-xs">Last updated at: Oct 14, 2018</p></header><article class="prose serif mb-16 text-gray-800"><h1 id=1-opencv是什么>1 OpenCV是什么</h1><p>摘自<a href=https://en.wikipedia.org/wiki/OpenCV>维基百科的OpenCV词条</a>：</p><blockquote><p>OpenCV (Open Source Computer Vision) is a library of programming functions mainly aimed at real-time computer vision. Originally developed by Intel, it was later supported by Willow Garage then Itseez (which was later acquired by Intel). The library is cross-platform and free for use under the open-source BSD license.</p></blockquote><p>OpenCV具有C++，Python和Java接口，并支持Windows，Linux，macOS，iOS和Android操作系统。由于本博客的一些文章需要放置图片，为了更好的排版，需要对图片进行缩放操作；<a href=https://www.gimp.org/>GIMP</a>等图像处理程序可满足需求，但图片数量较多时，手动操作效率低下，虽然大多数图像处理程序都支持批处理（比如<a href=https://www.gimp.org/tutorials/Basic_Batch/>GIMP Batch Mode</a>，但Python+OpenCV的解决方案能产出更多的学习收益；</p><h1 id=2-脚本>2 脚本</h1><p>首先，使用<code>pip3</code>安装<code>opencv-python</code>，执行Bash命令：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>pip3 install opencv-python
+</span></span></code></pre></div><p>其次，创建脚本文件，此处以<code>nano</code>作为文本编辑器，您可以使用您喜爱的工具；执行Bash命令：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>nano resize
+</span></span></code></pre></div><p>粘贴如下内容：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=ch>#!/usr/bin/env python3</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>cv2</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>argparse</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>main</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=c1># 参数解析器</span>
+</span></span><span class=line><span class=cl>    <span class=n>parser</span> <span class=o>=</span> <span class=n>argparse</span><span class=o>.</span><span class=n>ArgumentParser</span><span class=p>(</span><span class=n>description</span><span class=o>=</span><span class=s1>&#39;Image resize tool&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span><span class=s1>&#39;sources&#39;</span><span class=p>,</span> <span class=n>nargs</span><span class=o>=</span><span class=s1>&#39;+&#39;</span><span class=p>,</span> <span class=n>help</span><span class=o>=</span><span class=s1>&#39;path of source image&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span><span class=s1>&#39;--width&#39;</span><span class=p>,</span> <span class=nb>type</span><span class=o>=</span><span class=nb>int</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=n>default</span><span class=o>=</span><span class=mi>400</span><span class=p>,</span> <span class=n>help</span><span class=o>=</span><span class=s1>&#39;width of target image&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=n>args</span> <span class=o>=</span> <span class=n>parser</span><span class=o>.</span><span class=n>parse_args</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>source</span> <span class=ow>in</span> <span class=n>args</span><span class=o>.</span><span class=n>sources</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 读取，按原样返回加载的图像（使用Alpha通道，否则会被裁剪）。</span>
+</span></span><span class=line><span class=cl>        <span class=n>image</span> <span class=o>=</span> <span class=n>cv2</span><span class=o>.</span><span class=n>imread</span><span class=p>(</span><span class=n>source</span><span class=p>,</span> <span class=n>cv2</span><span class=o>.</span><span class=n>IMREAD_UNCHANGED</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 计算缩放比例</span>
+</span></span><span class=line><span class=cl>        <span class=n>scale</span> <span class=o>=</span> <span class=n>args</span><span class=o>.</span><span class=n>width</span> <span class=o>/</span> <span class=n>image</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 缩放</span>
+</span></span><span class=line><span class=cl>        <span class=n>output</span> <span class=o>=</span> <span class=n>cv2</span><span class=o>.</span><span class=n>resize</span><span class=p>(</span><span class=n>image</span><span class=p>,</span> <span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=mi>0</span><span class=p>),</span> <span class=n>fx</span><span class=o>=</span><span class=n>scale</span><span class=p>,</span> <span class=n>fy</span><span class=o>=</span><span class=n>scale</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 保存</span>
+</span></span><span class=line><span class=cl>        <span class=n>cv2</span><span class=o>.</span><span class=n>imwrite</span><span class=p>(</span><span class=n>source</span><span class=p>,</span> <span class=n>output</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=n>main</span><span class=p>()</span>
+</span></span></code></pre></div><p>按<code>Ctrl + O</code>写出，按<code>回车</code>确认写至文件<code>resize</code>，按<code>Ctrl + X</code>退出；</p><h1 id=3-使用>3 使用</h1><p>假设您需要缩放<code>./b22dc2b9a85cd92f99123c0b.png</code>至<code>宽为600像素</code>，执行如下Bash命令：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>➜  resize --width <span class=m>800</span> b22dc2b9a85cd92f99123c0b.png
+</span></span></code></pre></div><p>可在执行前后使用<code>file</code>命令查看区别：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>➜  file b22dc2b9a85cd92f99123c0b.png 
+</span></span><span class=line><span class=cl>b22dc2b9a85cd92f99123c0b.png: PNG image data, <span class=m>2144</span> x 1396, 8-bit/color RGBA, non-interlaced
+</span></span><span class=line><span class=cl>➜  resize --width <span class=m>800</span> b22dc2b9a85cd92f99123c0b.png                                  
+</span></span><span class=line><span class=cl>➜  file b22dc2b9a85cd92f99123c0b.png              
+</span></span><span class=line><span class=cl>b22dc2b9a85cd92f99123c0b.png: PNG image data, <span class=m>800</span> x 521, 8-bit/color RGBA, non-interlaced
+</span></span></code></pre></div><h1 id=4-结语>4 结语</h1><p>时间有限，本文仅涉及到很基础的OpenCV知识，如果您感兴趣的话，可以抽空学习它，祝您学习愉快～</p><h1 id=5-更新>5 更新</h1><p><code>cv2.imread()</code>调用时，若不添加<code>cv2.IMREAD_UNCHANGED</code>，则读取的PNG图像会缺少alpha通道，导致写出的图像也缺少，添加后即可。</p><h1 id=6-参考>6 参考</h1><ul><li><a href=https://docs.opencv.org/4.0.1/d4/da8/group__imgcodecs.html#gga61d9b0126a3e57d9277ac48327799c80aeddd67043ed0df14f9d9a4e66d2b0708>OpenCV: Image file reading and writing</a></li></ul><div class="float-right mb-8"><p class="text-sm mb-4 font-gray-700 italic">(190 words)</p></div></article></div></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

@@ -1,87 +1,12 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-事务隔离等级提交读与可重复读的区别
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/posts>posts</a>
-</p>
-<p>Apr 20, 2019</p>
-</div>
-<h1 class="title mb-2">事务隔离等级提交读与可重复读的区别</h1>
-<p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 1 minutes (158 words) </p>
-<div id=tags>
-</div>
-</header>
-<article class="prose serif mb-12 text-gray-800">
-<blockquote>
-<p>翻译自<a href=https://www.percona.com/blog/2012/08/28/differences-between-read-committed-and-repeatable-read-transaction-isolation-levels/>Differences between READ-COMMITTED and REPEATABLE-READ transaction isolation levels</a></p>
-</blockquote>
-<p>作为<code>Percona</code>的讲师，我有时会被问及<code>已提交读</code>和<code>可重复读</code>事务隔离级别之间的区别，它们存在一些差异，但都与<code>锁定</code>有关。</p>
-<h2 id=额外锁定-非间隙锁定>额外锁定 (非间隙锁定)</h2>
-<p>请记住，<code>InnoDB</code>实际上锁定了索引条目（index entries），而不是行（rows），这很重要。在执行语句期间，InnoDB必须锁定它遍历的索引中的每个条目，以查找它正在修改的行。他必须这样做以防止死锁并保持隔离级别。</p>
-<p>若执行一句<code>未被</code>良好索引的<code>UPDATE</code>语句，则会锁定很多行：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=k>update</span><span class=w> </span><span class=n>employees</span><span class=w> </span><span class=k>set</span><span class=w> </span><span class=n>store_id</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=k>where</span><span class=w> </span><span class=n>store_id</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=mi>1</span><span class=p>;</span><span class=w>
-</span><span class=w></span><span class=c1>---TRANSACTION 1EAB04, ACTIVE 7 sec
-</span><span class=c1>-- 633 lock struct(s), &lt;strong&gt;heap size 96696&lt;/strong&gt;, 218786 row lock(s), undo log entries 1
-</span><span class=c1>-- MySQL thread id 4, OS thread handle 0x7f8dfc35d700, query id 47 localhost root
-</span><span class=c1>-- show engine innodb status
-</span></code></pre></div><p>在<code>employee</code>表中，列<code>store_id</code>没有被索引。请注意，UPDATE已经完成运行（我们现在正在运行SHOW ENGINE &mldr;）但是我们持有<code>218786</code>个行锁并且只有一个撤销条目（undo entry）。这意味着只有一行被更改，但我们仍然持有额外的锁。堆大小表示已为锁分配的内存量。</p>
-<ul>
-<li>
-<p>在<code>可重复读</code>中，在事务期间保持的每个锁都在事务期间保持。（In REPEATABLE READ <code>every lock</code> acquired during a transaction <code>is held</code> for the duration of the transaction.）</p>
-</li>
-<li>
-<p>在<code>已提交读</code>中，与扫描不匹配的锁会在<code>语句完成</code>后被释放。</p>
-</li>
-</ul>
-<p>下面是在<code>已提交读</code>下的UPDATE语句执行：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=c1>---TRANSACTION 1EAB06, ACTIVE 11 sec
-</span><span class=c1>-- 631 lock struct(s), &lt;strong&gt;heap size 96696&lt;/strong&gt;, 1 row lock(s), undo log entries 1
-</span><span class=c1>-- MySQL thread id 4, OS thread handle 0x7f8dfc35d700, query id 62 localhost root
-</span><span class=c1>-- show engine innodb status
-</span></code></pre></div><p>您会注意到堆大小是相同的，但现在只持有一个锁。在所有事物隔离级别中，InnoDB会对扫描的每个索引锁定。级别之间的差异是，一旦语句在<code>已提交读</code>模式下完成，就会针对扫描不匹配的条目释放锁。请注意，InnoDB在释放锁之后<code>不会</code>立即释放堆内存，因此堆大小与可重复读的堆大小相同，但保持的锁数量较少（仅仅一个）。</p>
-<p>这意味着在已提交读中，一旦UPDATE语句完成，其他事务可以自由更新他们在可重复读中无法更新的行。</p>
-<h2 id=一致读视图>一致读视图</h2>
-<p>可重复读中，在事务开始时创建了“读取视图（read view）”（trx_no没有看到trx_id >= ABC，看到&lt; ABB），并且此读取视图（Oracle术语中的consistent snapshot）在事务的持续时间内保持打开状态。同一个事务中，凌晨5点执行SELECT语句，与在下午5点执行的结果集相同。这称为MVCC（多版本并发控制），它使用行版本控制（row versioning）和撤销信息（undo information）来完成。</p>
-<p>在可重复读中，InnoDB还未范围扫描创建间隙锁（gap locking）：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=k>select</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=k>from</span><span class=w> </span><span class=n>some_table</span><span class=w> </span><span class=k>where</span><span class=w> </span><span class=n>id</span><span class=w> </span><span class=o>&gt;</span><span class=w> </span><span class=mi>100</span><span class=w> </span><span class=k>FOR</span><span class=w> </span><span class=k>UPDATE</span><span class=err>；</span><span class=w>
-</span></code></pre></div><p>上面这条会创建一个间隙锁，以阻止任何<code>id > 100</code>的行插入，直至事务回滚或提交。</p>
-<p>在同一事务中，若<code>SELECT ... FOR UPDATE</code>在凌晨5点运行，UPDATE在下午5点运行（<code>UPDATE some_table</code>，其中<code>id > 100</code>）则UPDATE将改变SELECT FOR UPDATE在凌晨5点锁定的相同行。不可能更改其他行，因为在<code>100之后的间隙</code>先前已被锁定。</p>
-<h2 id=不可重复读已提交读>不可重复读（已提交读）</h2>
-<p>已提交读中，在每个语句的开头创建一个读取视图。这意味着在同一个事务中，凌晨5点与下午5点执行的相同的SELECT语句结果集有可能是不同的。这是因为在已提交读中，事务的读取视图<code>只会在语句执行期间</code>持续，因此，连续执行的相同的语句可能会显示不同结果。</p>
-<p>这称为<code>幻行（phantom row）</code>问题。</p>
-<p>此外，已提交读中，永远不会创建间隙锁。由于没有间隙锁定，上面的实例SELECT &mldr; FOR UPDATE不会读之其他事务将新行插入。因此，使用SELECT &mldr; FOR UPDATE锁定行（即"where id > 100"）并随后使用"where id > 100"（即使在统一事务中）更新行可能会导致更新的行比<code>先前锁定</code>的行更多。这是因为在语句之间的表中可能插入了新行，因为没有为SELECT &mldr; FOR UPDATE创建间隙锁。</p>
-</article>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>事务隔离等级提交读与可重复读的区别</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/posts>posts</a></p><p>Apr 20, 2019</p></div><h1 class="title mb-2">事务隔离等级提交读与可重复读的区别</h1><p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 1 minutes (178 words)</p><div id=tags></div></header><article class="prose serif mb-12 text-gray-800"><blockquote><p>翻译自<a href=https://www.percona.com/blog/2012/08/28/differences-between-read-committed-and-repeatable-read-transaction-isolation-levels/>Differences between READ-COMMITTED and REPEATABLE-READ transaction isolation levels</a></p></blockquote><p>作为<code>Percona</code>的讲师，我有时会被问及<code>已提交读</code>和<code>可重复读</code>事务隔离级别之间的区别，它们存在一些差异，但都与<code>锁定</code>有关。</p><h2 id=额外锁定-非间隙锁定>额外锁定 (非间隙锁定)</h2><p>请记住，<code>InnoDB</code>实际上锁定了索引条目（index entries），而不是行（rows），这很重要。在执行语句期间，InnoDB必须锁定它遍历的索引中的每个条目，以查找它正在修改的行。他必须这样做以防止死锁并保持隔离级别。</p><p>若执行一句<code>未被</code>良好索引的<code>UPDATE</code>语句，则会锁定很多行：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=line><span class=cl><span class=k>update</span><span class=w> </span><span class=n>employees</span><span class=w> </span><span class=k>set</span><span class=w> </span><span class=n>store_id</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=k>where</span><span class=w> </span><span class=n>store_id</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=mi>1</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>---TRANSACTION 1EAB04, ACTIVE 7 sec
+</span></span></span><span class=line><span class=cl><span class=c1>-- 633 lock struct(s), &lt;strong&gt;heap size 96696&lt;/strong&gt;, 218786 row lock(s), undo log entries 1
+</span></span></span><span class=line><span class=cl><span class=c1>-- MySQL thread id 4, OS thread handle 0x7f8dfc35d700, query id 47 localhost root
+</span></span></span><span class=line><span class=cl><span class=c1>-- show engine innodb status
+</span></span></span></code></pre></div><p>在<code>employee</code>表中，列<code>store_id</code>没有被索引。请注意，UPDATE已经完成运行（我们现在正在运行SHOW ENGINE &mldr;）但是我们持有<code>218786</code>个行锁并且只有一个撤销条目（undo entry）。这意味着只有一行被更改，但我们仍然持有额外的锁。堆大小表示已为锁分配的内存量。</p><ul><li><p>在<code>可重复读</code>中，在事务期间保持的每个锁都在事务期间保持。（In REPEATABLE READ <code>every lock</code> acquired during a transaction <code>is held</code> for the duration of the transaction.）</p></li><li><p>在<code>已提交读</code>中，与扫描不匹配的锁会在<code>语句完成</code>后被释放。</p></li></ul><p>下面是在<code>已提交读</code>下的UPDATE语句执行：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=line><span class=cl><span class=c1>---TRANSACTION 1EAB06, ACTIVE 11 sec
+</span></span></span><span class=line><span class=cl><span class=c1>-- 631 lock struct(s), &lt;strong&gt;heap size 96696&lt;/strong&gt;, 1 row lock(s), undo log entries 1
+</span></span></span><span class=line><span class=cl><span class=c1>-- MySQL thread id 4, OS thread handle 0x7f8dfc35d700, query id 62 localhost root
+</span></span></span><span class=line><span class=cl><span class=c1>-- show engine innodb status
+</span></span></span></code></pre></div><p>您会注意到堆大小是相同的，但现在只持有一个锁。在所有事物隔离级别中，InnoDB会对扫描的每个索引锁定。级别之间的差异是，一旦语句在<code>已提交读</code>模式下完成，就会针对扫描不匹配的条目释放锁。请注意，InnoDB在释放锁之后<code>不会</code>立即释放堆内存，因此堆大小与可重复读的堆大小相同，但保持的锁数量较少（仅仅一个）。</p><p>这意味着在已提交读中，一旦UPDATE语句完成，其他事务可以自由更新他们在可重复读中无法更新的行。</p><h2 id=一致读视图>一致读视图</h2><p>可重复读中，在事务开始时创建了“读取视图（read view）”（trx_no没有看到trx_id >= ABC，看到&lt; ABB），并且此读取视图（Oracle术语中的consistent snapshot）在事务的持续时间内保持打开状态。同一个事务中，凌晨5点执行SELECT语句，与在下午5点执行的结果集相同。这称为MVCC（多版本并发控制），它使用行版本控制（row versioning）和撤销信息（undo information）来完成。</p><p>在可重复读中，InnoDB还未范围扫描创建间隙锁（gap locking）：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=line><span class=cl><span class=k>select</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=k>from</span><span class=w> </span><span class=n>some_table</span><span class=w> </span><span class=k>where</span><span class=w> </span><span class=n>id</span><span class=w> </span><span class=o>&gt;</span><span class=w> </span><span class=mi>100</span><span class=w> </span><span class=k>FOR</span><span class=w> </span><span class=k>UPDATE</span><span class=err>；</span><span class=w>
+</span></span></span></code></pre></div><p>上面这条会创建一个间隙锁，以阻止任何<code>id > 100</code>的行插入，直至事务回滚或提交。</p><p>在同一事务中，若<code>SELECT ... FOR UPDATE</code>在凌晨5点运行，UPDATE在下午5点运行（<code>UPDATE some_table</code>，其中<code>id > 100</code>）则UPDATE将改变SELECT FOR UPDATE在凌晨5点锁定的相同行。不可能更改其他行，因为在<code>100之后的间隙</code>先前已被锁定。</p><h2 id=不可重复读已提交读>不可重复读（已提交读）</h2><p>已提交读中，在每个语句的开头创建一个读取视图。这意味着在同一个事务中，凌晨5点与下午5点执行的相同的SELECT语句结果集有可能是不同的。这是因为在已提交读中，事务的读取视图<code>只会在语句执行期间</code>持续，因此，连续执行的相同的语句可能会显示不同结果。</p><p>这称为<code>幻行（phantom row）</code>问题。</p><p>此外，已提交读中，永远不会创建间隙锁。由于没有间隙锁定，上面的实例SELECT &mldr; FOR UPDATE不会读之其他事务将新行插入。因此，使用SELECT &mldr; FOR UPDATE锁定行（即"where id > 100"）并随后使用"where id > 100"（即使在统一事务中）更新行可能会导致更新的行比<code>先前锁定</code>的行更多。这是因为在语句之间的表中可能插入了新行，因为没有为SELECT &mldr; FOR UPDATE创建间隙锁。</p></article></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

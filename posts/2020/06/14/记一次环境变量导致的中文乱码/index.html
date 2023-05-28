@@ -1,201 +1,105 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-🧯记一次环境变量导致的中文乱码
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/posts>posts</a>
-</p>
-<p>Jun 14, 2020</p>
-</div>
-<h1 class="title mb-2">🧯记一次环境变量导致的中文乱码</h1>
-<p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (425 words) </p>
-<div id=tags>
-</div>
-</header>
-<article class="prose serif mb-12 text-gray-800">
-<h2 id=一现象>一、现象</h2>
-<ol>
-<li>使用本地<code>ssh</code>访问服务器</li>
-<li>重启应用</li>
-<li><code>查询主数据商品信息</code>的内容中文乱码</li>
-<li><code>jinfo</code>命令输出<code>file.encoding = ANSI_X3.4-1968</code></li>
-<li>使用<code>Xshell</code>访问服务器</li>
-<li>重启应用</li>
-<li><code>jinfo</code>命令输出<code>file.encoding = UTF-8</code></li>
-<li><code>查询主数据商品信息</code>的内容中文恢复正常</li>
-</ol>
-<h2 id=二为什么乱码>二、为什么乱码</h2>
-<h3 id=猜想>猜想</h3>
-<p>初步猜想是<code>本地ssh</code>和<code>Xshell</code>的<code>ssh会话</code>的<code>locale</code>会话不同，导致重启后的<code>JVM默认字符集</code>的不同导致了乱码，使用下面的代码片段来验证：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kn>import</span> <span class=nn>java.nio.charset.Charset</span><span class=o>;</span>
-
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>Main</span> <span class=o>{</span>
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kt>void</span> <span class=nf>main</span><span class=o>(</span><span class=n>String</span><span class=o>[]</span> <span class=n>args</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>System</span><span class=o>.</span><span class=na>getProperty</span><span class=o>(</span><span class=s>&#34;file.encoding&#34;</span><span class=o>));</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>Charset</span><span class=o>.</span><span class=na>defaultCharset</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
-</code></pre></div><blockquote>
-<p>思路：分别使用<code>本地ssh</code>和<code>Xshell</code>访问服务器，查看locale并执行代码片段</p>
-</blockquote>
-<p>使用<code>本地ssh</code>访问：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=o>[</span>服务器 ~<span class=o>]</span>$ locale
-locale: Cannot <span class=nb>set</span> LC_CTYPE to default locale: No such file or directory <span class=c1># 异常信息</span>
-locale: Cannot <span class=nb>set</span> LC_ALL to default locale: No such file or directory   <span class=c1># 异常信息</span>
-<span class=nv>LANG</span><span class=o>=</span>en_US.UTF-8
-<span class=nv>LC_CTYPE</span><span class=o>=</span>UTF-8
-<span class=nv>LC_NUMERIC</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_TIME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_COLLATE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_MONETARY</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_MESSAGES</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_PAPER</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_NAME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_ADDRESS</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_TELEPHONE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_MEASUREMENT</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_IDENTIFICATION</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_ALL</span><span class=o>=</span>
-<span class=o>[</span>服务器 ~<span class=o>]</span>$ java Main
-ANSI_X3.4-1968
-US-ASCII
-</code></pre></div><p>可以看到，此时JVM属性<code>file.encoding</code>的值为<code>ANSI_X3.4-1968</code>，默认字符集为<code>US-ASCII</code>；</p>
-<p>使用<code>Xshell</code>访问：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=o>[</span>服务器 ~<span class=o>]</span>$ locale
-<span class=c1># 没有异常信息</span>
-<span class=nv>LANG</span><span class=o>=</span>en_US.UTF-8
-<span class=nv>LC_CTYPE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_NUMERIC</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_TIME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_COLLATE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_MONETARY</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_MESSAGES</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_PAPER</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_NAME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_ADDRESS</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_TELEPHONE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_MEASUREMENT</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_IDENTIFICATION</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
-<span class=nv>LC_ALL</span><span class=o>=</span>
-<span class=o>[</span>服务器 ~<span class=o>]</span>$ java Main
-UTF-8
-UTF-8
-</code></pre></div><p>可以看到，此时JVM属性<code>file.encoding</code>的值为<code>UTF-8</code>，默认字符集为<code>UTF-8</code>；</p>
-<h3 id=到代码中验证猜想>到代码中验证猜想</h3>
-<p>乱码的接口核心代码如下：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>try</span> <span class=o>{</span>
-    <span class=n>result</span> <span class=o>=</span> <span class=n>httpClient</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>request</span><span class=o>);</span>
-<span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=s>&#34;查询异常&#34;</span><span class=o>,</span><span class=n>e</span><span class=o>);</span>
-<span class=o>}</span>
-</code></pre></div><p><code>httpclient</code>执行HTTP请求，execute方法代码：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>if</span><span class=o>(</span><span class=s>&#34;POST&#34;</span><span class=o>.</span><span class=na>equals</span><span class=o>(</span><span class=n>reqType</span><span class=o>)){</span>
-    <span class=n>responseStr</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>doHttpPost</span><span class=o>(</span><span class=n>reqParams</span><span class=o>,</span> <span class=n>serverUrl</span><span class=o>));</span> <span class=c1>// 注意点1：查询主数据商品信息，代码会执行此行
-</span><span class=c1></span><span class=o>}</span><span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=s>&#34;GET&#34;</span><span class=o>.</span><span class=na>equals</span><span class=o>(</span><span class=n>reqType</span><span class=o>)){</span>
-    <span class=n>responseStr</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>doHttpGet</span><span class=o>(</span><span class=n>reqParams</span><span class=o>,</span><span class=n>serverUrl</span><span class=o>));</span>
-<span class=o>}</span>
-</code></pre></div><p><code>注意点1</code>这行代码，通过调用<code>doHttpPost</code>方法：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>URIBuilder</span> <span class=n>uriBuilder</span> <span class=o>=</span> <span class=k>new</span> <span class=n>URIBuilder</span><span class=o>(</span><span class=n>serverUrl</span><span class=o>);</span>
-<span class=n>HttpPost</span> <span class=n>httpPost</span> <span class=o>=</span> <span class=k>new</span> <span class=n>HttpPost</span><span class=o>(</span><span class=n>uriBuilder</span><span class=o>.</span><span class=na>build</span><span class=o>());</span>
-<span class=n>httpPost</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;Accept&#34;</span><span class=o>,</span> <span class=s>&#34;application/json;charset=utf-8&#34;</span><span class=o>);</span> <span class=c1>// 注意点2：头部Accept指定了接受的响应字符集为utf-8，但HTTP协议并未强制服务端要根据Accept的字符集来响应，所以需要其他方法来判断响应的字符集
-</span><span class=c1></span><span class=n>httpPost</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;Content-Type&#34;</span><span class=o>,</span> <span class=s>&#34;application/json;charset=utf-8&#34;</span><span class=o>);</span>
-<span class=k>this</span><span class=o>.</span><span class=na>addHeader</span><span class=o>(</span><span class=n>httpPost</span><span class=o>);</span>
-<span class=n>StringEntity</span> <span class=n>postingString</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringEntity</span><span class=o>(</span><span class=n>JSONObject</span><span class=o>.</span><span class=na>toJSONString</span><span class=o>(</span><span class=n>params</span><span class=o>),</span> <span class=s>&#34;utf-8&#34;</span><span class=o>);</span>
-<span class=n>httpPost</span><span class=o>.</span><span class=na>setEntity</span><span class=o>(</span><span class=n>postingString</span><span class=o>);</span>
-<span class=k>return</span> <span class=n>getEntityAndRelease</span><span class=o>(</span><span class=n>httpPost</span><span class=o>);</span>
-</code></pre></div><blockquote>
-<p>接下来在开发环境，通过改变头部<code>Accept</code>的<code>charset</code>，添加JVM参数<code>-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog -Dorg.apache.commons.logging.simplelog.log.org.apache.http=DEBUG</code>，观察HTTP响应的头部<code>Content-Type</code>的方式来判断响应的编码</p>
-</blockquote>
-<ul>
-<li>charset设置为utf-8时，日志为：</li>
-</ul>
-<pre tabindex=0><code>[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;POST /winshare-center-gateway/api/item/v1/item/ec/4435922 HTTP/1.1[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Accept: application/json;charset=utf-8[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Content-Type: application/json;charset=utf-8[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Content-Length: 14[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Host: 10.100.9.202:8607[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Connection: Keep-Alive[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Accept-Encoding: gzip,deflate[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;{&quot;id&quot;:4435922}&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;HTTP/1.1 503 Service Unavailable[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;Content-Type: application/json;charset=UTF-8[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;Content-Length: 186[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;[\r][\n]&quot;
-</code></pre><ul>
-<li>charset设置为gb18030时，日志为：</li>
-</ul>
-<pre tabindex=0><code>[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;POST /winshare-center-gateway/api/item/v1/item/ec/4435922 HTTP/1.1[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Accept: application/json;charset=gb18030[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Content-Type: application/json;charset=utf-8[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Content-Length: 14[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Connection: Keep-Alive[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;Accept-Encoding: gzip,deflate[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &gt;&gt; &quot;{&quot;id&quot;:4435922}&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;HTTP/1.1 503 Service Unavailable[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;Content-Type: application/json;charset=UTF-8[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;Content-Length: 186[\r][\n]&quot;
-[DEBUG] wire - http-outgoing-0 &lt;&lt; &quot;[\r][\n]&quot;
-</code></pre><p>通过查看日志，我们发现响应的字符集都是UTF-8，也就是说该方法返回的字节数组应该被UTF-8解码；</p>
-<p>回到<code>注意点1</code>，此处使用了构造方法<code>java.lang.String#String(byte[])</code>创建String实例，此构造方法使用默认字符集解码字节数组，使用<code>本地ssh</code>重启后，默认字符集为<code>US-ASCII</code>，而不是<code>UTF-8</code>，这是此次发生乱码的编码原因。</p>
-<h2 id=三为什么本地ssh与xshell表现不同>三、为什么本地ssh与Xshell表现不同</h2>
-<p>查资料得知，本地<code>/etc/ssh/ssh_config</code>含有<code>SendEnv LANG LC_*</code>，此选项指明了创建ssh会话时，将本地的<code>LANG</code>和<code>LC_*</code>环境变量发送到服务端，使得创建的ssh会话使用本地的<code>LANG</code>和<code>LC_*</code>环境变量；</p>
-<p>但是本地的这些变量的值是：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=o>[</span>本地 ~<span class=o>]</span>$ locale
-<span class=nv>LANG</span><span class=o>=</span><span class=s2>&#34;&#34;</span>
-<span class=nv>LC_COLLATE</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
-<span class=nv>LC_CTYPE</span><span class=o>=</span><span class=s2>&#34;UTF-8&#34;</span>
-<span class=nv>LC_MESSAGES</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
-<span class=nv>LC_MONETARY</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
-<span class=nv>LC_NUMERIC</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
-<span class=nv>LC_TIME</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
-<span class=nv>LC_ALL</span><span class=o>=</span>
-</code></pre></div><p>还记得本地ssh访问服务器执行<code>locale</code>时的这两行报错吗？</p>
-<pre tabindex=0><code>locale: Cannot set LC_CTYPE to default locale: No such file or directory
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>🧯记一次环境变量导致的中文乱码</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/posts>posts</a></p><p>Jun 14, 2020</p></div><h1 class="title mb-2">🧯记一次环境变量导致的中文乱码</h1><p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (425 words)</p><div id=tags></div></header><article class="prose serif mb-12 text-gray-800"><h2 id=一现象>一、现象</h2><ol><li>使用本地<code>ssh</code>访问服务器</li><li>重启应用</li><li><code>查询主数据商品信息</code>的内容中文乱码</li><li><code>jinfo</code>命令输出<code>file.encoding = ANSI_X3.4-1968</code></li><li>使用<code>Xshell</code>访问服务器</li><li>重启应用</li><li><code>jinfo</code>命令输出<code>file.encoding = UTF-8</code></li><li><code>查询主数据商品信息</code>的内容中文恢复正常</li></ol><h2 id=二为什么乱码>二、为什么乱码</h2><h3 id=猜想>猜想</h3><p>初步猜想是<code>本地ssh</code>和<code>Xshell</code>的<code>ssh会话</code>的<code>locale</code>会话不同，导致重启后的<code>JVM默认字符集</code>的不同导致了乱码，使用下面的代码片段来验证：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kn>import</span> <span class=nn>java.nio.charset.Charset</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Main</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kd>static</span> <span class=kt>void</span> <span class=nf>main</span><span class=o>(</span><span class=n>String</span><span class=o>[]</span> <span class=n>args</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>System</span><span class=o>.</span><span class=na>getProperty</span><span class=o>(</span><span class=s>&#34;file.encoding&#34;</span><span class=o>));</span>
+</span></span><span class=line><span class=cl>        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>Charset</span><span class=o>.</span><span class=na>defaultCharset</span><span class=o>());</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><blockquote><p>思路：分别使用<code>本地ssh</code>和<code>Xshell</code>访问服务器，查看locale并执行代码片段</p></blockquote><p>使用<code>本地ssh</code>访问：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=o>[</span>服务器 ~<span class=o>]</span>$ locale
+</span></span><span class=line><span class=cl>locale: Cannot <span class=nb>set</span> LC_CTYPE to default locale: No such file or directory <span class=c1># 异常信息</span>
+</span></span><span class=line><span class=cl>locale: Cannot <span class=nb>set</span> LC_ALL to default locale: No such file or directory   <span class=c1># 异常信息</span>
+</span></span><span class=line><span class=cl><span class=nv>LANG</span><span class=o>=</span>en_US.UTF-8
+</span></span><span class=line><span class=cl><span class=nv>LC_CTYPE</span><span class=o>=</span>UTF-8
+</span></span><span class=line><span class=cl><span class=nv>LC_NUMERIC</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_TIME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_COLLATE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MONETARY</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MESSAGES</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_PAPER</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_NAME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_ADDRESS</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_TELEPHONE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MEASUREMENT</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_IDENTIFICATION</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_ALL</span><span class=o>=</span>
+</span></span><span class=line><span class=cl><span class=o>[</span>服务器 ~<span class=o>]</span>$ java Main
+</span></span><span class=line><span class=cl>ANSI_X3.4-1968
+</span></span><span class=line><span class=cl>US-ASCII
+</span></span></code></pre></div><p>可以看到，此时JVM属性<code>file.encoding</code>的值为<code>ANSI_X3.4-1968</code>，默认字符集为<code>US-ASCII</code>；</p><p>使用<code>Xshell</code>访问：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=o>[</span>服务器 ~<span class=o>]</span>$ locale
+</span></span><span class=line><span class=cl><span class=c1># 没有异常信息</span>
+</span></span><span class=line><span class=cl><span class=nv>LANG</span><span class=o>=</span>en_US.UTF-8
+</span></span><span class=line><span class=cl><span class=nv>LC_CTYPE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_NUMERIC</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_TIME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_COLLATE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MONETARY</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MESSAGES</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_PAPER</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_NAME</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_ADDRESS</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_TELEPHONE</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MEASUREMENT</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_IDENTIFICATION</span><span class=o>=</span><span class=s2>&#34;en_US.UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_ALL</span><span class=o>=</span>
+</span></span><span class=line><span class=cl><span class=o>[</span>服务器 ~<span class=o>]</span>$ java Main
+</span></span><span class=line><span class=cl>UTF-8
+</span></span><span class=line><span class=cl>UTF-8
+</span></span></code></pre></div><p>可以看到，此时JVM属性<code>file.encoding</code>的值为<code>UTF-8</code>，默认字符集为<code>UTF-8</code>；</p><h3 id=到代码中验证猜想>到代码中验证猜想</h3><p>乱码的接口核心代码如下：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>result</span> <span class=o>=</span> <span class=n>httpClient</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>request</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=s>&#34;查询异常&#34;</span><span class=o>,</span><span class=n>e</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><p><code>httpclient</code>执行HTTP请求，execute方法代码：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=k>if</span><span class=o>(</span><span class=s>&#34;POST&#34;</span><span class=o>.</span><span class=na>equals</span><span class=o>(</span><span class=n>reqType</span><span class=o>)){</span>
+</span></span><span class=line><span class=cl>    <span class=n>responseStr</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>doHttpPost</span><span class=o>(</span><span class=n>reqParams</span><span class=o>,</span> <span class=n>serverUrl</span><span class=o>));</span> <span class=c1>// 注意点1：查询主数据商品信息，代码会执行此行
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=o>}</span><span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=s>&#34;GET&#34;</span><span class=o>.</span><span class=na>equals</span><span class=o>(</span><span class=n>reqType</span><span class=o>)){</span>
+</span></span><span class=line><span class=cl>    <span class=n>responseStr</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>doHttpGet</span><span class=o>(</span><span class=n>reqParams</span><span class=o>,</span><span class=n>serverUrl</span><span class=o>));</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><p><code>注意点1</code>这行代码，通过调用<code>doHttpPost</code>方法：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>URIBuilder</span> <span class=n>uriBuilder</span> <span class=o>=</span> <span class=k>new</span> <span class=n>URIBuilder</span><span class=o>(</span><span class=n>serverUrl</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=n>HttpPost</span> <span class=n>httpPost</span> <span class=o>=</span> <span class=k>new</span> <span class=n>HttpPost</span><span class=o>(</span><span class=n>uriBuilder</span><span class=o>.</span><span class=na>build</span><span class=o>());</span>
+</span></span><span class=line><span class=cl><span class=n>httpPost</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;Accept&#34;</span><span class=o>,</span> <span class=s>&#34;application/json;charset=utf-8&#34;</span><span class=o>);</span> <span class=c1>// 注意点2：头部Accept指定了接受的响应字符集为utf-8，但HTTP协议并未强制服务端要根据Accept的字符集来响应，所以需要其他方法来判断响应的字符集
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>httpPost</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;Content-Type&#34;</span><span class=o>,</span> <span class=s>&#34;application/json;charset=utf-8&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=k>this</span><span class=o>.</span><span class=na>addHeader</span><span class=o>(</span><span class=n>httpPost</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=n>StringEntity</span> <span class=n>postingString</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringEntity</span><span class=o>(</span><span class=n>JSONObject</span><span class=o>.</span><span class=na>toJSONString</span><span class=o>(</span><span class=n>params</span><span class=o>),</span> <span class=s>&#34;utf-8&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=n>httpPost</span><span class=o>.</span><span class=na>setEntity</span><span class=o>(</span><span class=n>postingString</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=k>return</span> <span class=n>getEntityAndRelease</span><span class=o>(</span><span class=n>httpPost</span><span class=o>);</span>
+</span></span></code></pre></div><blockquote><p>接下来在开发环境，通过改变头部<code>Accept</code>的<code>charset</code>，添加JVM参数<code>-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog -Dorg.apache.commons.logging.simplelog.log.org.apache.http=DEBUG</code>，观察HTTP响应的头部<code>Content-Type</code>的方式来判断响应的编码</p></blockquote><ul><li>charset设置为utf-8时，日志为：</li></ul><pre tabindex=0><code>[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;POST /winshare-center-gateway/api/item/v1/item/ec/4435922 HTTP/1.1[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Accept: application/json;charset=utf-8[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Content-Type: application/json;charset=utf-8[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Content-Length: 14[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Host: 10.100.9.202:8607[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Connection: Keep-Alive[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Accept-Encoding: gzip,deflate[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;{&#34;id&#34;:4435922}&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;HTTP/1.1 503 Service Unavailable[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;Content-Type: application/json;charset=UTF-8[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;Content-Length: 186[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;[\r][\n]&#34;
+</code></pre><ul><li>charset设置为gb18030时，日志为：</li></ul><pre tabindex=0><code>[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;POST /winshare-center-gateway/api/item/v1/item/ec/4435922 HTTP/1.1[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Accept: application/json;charset=gb18030[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Content-Type: application/json;charset=utf-8[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Content-Length: 14[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Connection: Keep-Alive[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;Accept-Encoding: gzip,deflate[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &gt;&gt; &#34;{&#34;id&#34;:4435922}&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;HTTP/1.1 503 Service Unavailable[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;Content-Type: application/json;charset=UTF-8[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;Content-Length: 186[\r][\n]&#34;
+[DEBUG] wire - http-outgoing-0 &lt;&lt; &#34;[\r][\n]&#34;
+</code></pre><p>通过查看日志，我们发现响应的字符集都是UTF-8，也就是说该方法返回的字节数组应该被UTF-8解码；</p><p>回到<code>注意点1</code>，此处使用了构造方法<code>java.lang.String#String(byte[])</code>创建String实例，此构造方法使用默认字符集解码字节数组，使用<code>本地ssh</code>重启后，默认字符集为<code>US-ASCII</code>，而不是<code>UTF-8</code>，这是此次发生乱码的编码原因。</p><h2 id=三为什么本地ssh与xshell表现不同>三、为什么本地ssh与Xshell表现不同</h2><p>查资料得知，本地<code>/etc/ssh/ssh_config</code>含有<code>SendEnv LANG LC_*</code>，此选项指明了创建ssh会话时，将本地的<code>LANG</code>和<code>LC_*</code>环境变量发送到服务端，使得创建的ssh会话使用本地的<code>LANG</code>和<code>LC_*</code>环境变量；</p><p>但是本地的这些变量的值是：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=o>[</span>本地 ~<span class=o>]</span>$ locale
+</span></span><span class=line><span class=cl><span class=nv>LANG</span><span class=o>=</span><span class=s2>&#34;&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_COLLATE</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_CTYPE</span><span class=o>=</span><span class=s2>&#34;UTF-8&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MESSAGES</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_MONETARY</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_NUMERIC</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_TIME</span><span class=o>=</span><span class=s2>&#34;C&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>LC_ALL</span><span class=o>=</span>
+</span></span></code></pre></div><p>还记得本地ssh访问服务器执行<code>locale</code>时的这两行报错吗？</p><pre tabindex=0><code>locale: Cannot set LC_CTYPE to default locale: No such file or directory
 locale: Cannot set LC_ALL to default locale: No such file or directory
-</code></pre><p>说明当前的服务器配置是不支持<code>LC_CTYPE="UTF-8"</code>和<code>LC_ALL=</code>的，但未引起重视，一直选择的忽略；解决办法是：注释本地的<code>/etc/ssh/ssh_config</code>中的<code>SendEnv LANG LC_*</code></p>
-<h2 id=四得到的教训>四、得到的教训</h2>
-<ol>
-<li>ssh访问服务器时，不要使用本地的locale设置，避免本地环境影响服务器</li>
-<li>启动应用时通过JVM指定文件编码（<code>-Dfile.encoding=UTF-8</code>），排除启动的<code>ssh会话</code>对应用的文件编码的影响</li>
-<li>编码时不要假定任何的环境变量：解码字节数组时，指定字符集，不使用默认字符集</li>
-</ol>
-<h2 id=五参考>五、参考</h2>
-<p>1 <a href=https://tools.ietf.org/html/rfc7231#section-5.3.3>Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content</a>
+</code></pre><p>说明当前的服务器配置是不支持<code>LC_CTYPE="UTF-8"</code>和<code>LC_ALL=</code>的，但未引起重视，一直选择的忽略；解决办法是：注释本地的<code>/etc/ssh/ssh_config</code>中的<code>SendEnv LANG LC_*</code></p><h2 id=四得到的教训>四、得到的教训</h2><ol><li>ssh访问服务器时，不要使用本地的locale设置，避免本地环境影响服务器</li><li>启动应用时通过JVM指定文件编码（<code>-Dfile.encoding=UTF-8</code>），排除启动的<code>ssh会话</code>对应用的文件编码的影响</li><li>编码时不要假定任何的环境变量：解码字节数组时，指定字符集，不使用默认字符集</li></ol><h2 id=五参考>五、参考</h2><p>1 <a href=https://tools.ietf.org/html/rfc7231#section-5.3.3>Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content</a>
 2 <a href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html#%3Cinit%3E(byte%5B%5D)>String ( Java SE 11 & JDK 11 )</a>
-3 <a href=https://linux.die.net/man/5/ssh_config>man 5 ssh_config</a></p>
-</article>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+3 <a href=https://linux.die.net/man/5/ssh_config>man 5 ssh_config</a></p></article></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

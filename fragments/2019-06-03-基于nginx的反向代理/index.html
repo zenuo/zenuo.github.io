@@ -1,45 +1,5 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-基于Nginx的反向代理
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<div>
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/fragments>fragments</a>
-</p>
-<p>Jun 03, 2019</p>
-</div>
-<h1 class="text-3xl mb-1 font-semibold">基于Nginx的反向代理</h1>
-<p class="italic text-xs">Last updated at: Jun 03, 2019</p>
-</header>
-<article class="prose serif mb-16 text-gray-800">
-<p>配置文件如下：</p>
-<pre tabindex=0><code class=language-conf data-lang=conf>user  www;
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>基于Nginx的反向代理</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><div><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/fragments>fragments</a></p><p>Jun 03, 2019</p></div><h1 class="text-3xl mb-1 font-semibold">基于Nginx的反向代理</h1><p class="italic text-xs">Last updated at: Jun 03, 2019</p></header><article class="prose serif mb-16 text-gray-800"><p>配置文件如下：</p><pre tabindex=0><code class=language-conf data-lang=conf>user  www;
 worker_processes  1;
 
 pid        logs/nginx.pid;
@@ -51,9 +11,9 @@ events {
 
 http {
 
-    log_format  main  '$remote_addr - $remote_user [$time_local] &quot;$request&quot; '
-                      '$status $body_bytes_sent &quot;$http_referer&quot; '
-                      '&quot;$http_user_agent&quot; &quot;$google&quot;';
+    log_format  main  &#39;$remote_addr - $remote_user [$time_local] &#34;$request&#34; &#39;
+                      &#39;$status $body_bytes_sent &#34;$http_referer&#34; &#39;
+                      &#39;&#34;$http_user_agent&#34; &#34;$google&#34;&#39;;
 
     access_log  logs/access.log  main;
 
@@ -144,8 +104,8 @@ http {
                 proxy_redirect https://zh.m.wikipedia.org/ https://$server_name:3458/;
                 proxy_set_header X-Real_IP $remote_addr;
                 proxy_set_header User-Agent $http_user_agent;
-                proxy_set_header Accept-Encoding &quot;&quot;;
-                proxy_set_header referer &quot;https://zh.wikipedia.org$request_uri&quot;;
+                proxy_set_header Accept-Encoding &#34;&#34;;
+                proxy_set_header referer &#34;https://zh.wikipedia.org$request_uri&#34;;
 
                 #替换手机版视图为代理
                 subs_filter zh.m.wikipedia.org $server_name:3458 g;
@@ -176,7 +136,7 @@ http {
 
             proxy_set_header X-Real_IP $remote_addr;
             proxy_set_header User-Agent $http_user_agent;
-            proxy_set_header Accept-Encoding &quot;&quot;;
+            proxy_set_header Accept-Encoding &#34;&#34;;
             proxy_set_header referer https://zh.m.wikipedia.org$request_uri;
 
                 #替换桌面版视图为代理
@@ -192,173 +152,173 @@ http {
         listen 5001 ssl;
         server_name 176.122.157.73;
 
-        set $google &quot;&quot;;
-        rewrite_by_lua '
+        set $google &#34;&#34;;
+        rewrite_by_lua &#39;
                         local googles = {
-                                &quot;www.google.is&quot;,
-                                &quot;www.google.dk&quot;,
-                                &quot;www.google.no&quot;,
-                                &quot;www.google.se&quot;,
-                                &quot;www.google.fi&quot;,
-                                &quot;www.google.ee&quot;,
-                                &quot;www.google.lv&quot;,
-                                &quot;www.google.lt&quot;,
-                                &quot;www.google.ie&quot;,
-                                &quot;www.google.co.uk&quot;,
-                                &quot;www.google.gg&quot;,
-                                &quot;www.google.je&quot;,
-                                &quot;www.google.im&quot;,
-                                &quot;www.google.fr&quot;,
-                                &quot;www.google.nl&quot;,
-                                &quot;www.google.be&quot;,
-                                &quot;www.google.lu&quot;,
-                                &quot;www.google.de&quot;,
-                                &quot;www.google.at&quot;,
-                                &quot;www.google.ch&quot;,
-                                &quot;www.google.li&quot;,
-                                &quot;www.google.pt&quot;,
-                                &quot;www.google.es&quot;,
-                                &quot;www.google.com.gi&quot;,
-                                &quot;www.google.ad&quot;,
-                                &quot;www.google.it&quot;,
-                                &quot;www.google.com.mt&quot;,
-                                &quot;www.google.sm&quot;,
-                                &quot;www.google.gr&quot;,
-                                &quot;www.google.ru&quot;,
-                                &quot;www.google.com.by&quot;,
-                                &quot;www.google.com.ua&quot;,
-                                &quot;www.google.pl&quot;,
-                                &quot;www.google.cz&quot;,
-                                &quot;www.google.sk&quot;,
-                                &quot;www.google.hu&quot;,
-                                &quot;www.google.si&quot;,
-                                &quot;www.google.hr&quot;,
-                                &quot;www.google.ba&quot;,
-                                &quot;www.google.me&quot;,
-                                &quot;www.google.rs&quot;,
-                                &quot;www.google.mk&quot;,
-                                &quot;www.google.bg&quot;,
-                                &quot;www.google.ro&quot;,
-                                &quot;www.google.md&quot;,
-                                &quot;www.google.mn&quot;,
-                                &quot;www.google.co.kr&quot;,
-                                &quot;www.google.co.jp&quot;,
-                                &quot;www.google.com.vn&quot;,
-                                &quot;www.google.la&quot;,
-                                &quot;www.google.com.kh&quot;,
-                                &quot;www.google.co.th&quot;,
-                                &quot;www.google.com.my&quot;,
-                                &quot;www.google.com.sg&quot;,
-                                &quot;www.google.com.bn&quot;,
-                                &quot;www.google.com.ph&quot;,
-                                &quot;www.google.co.id&quot;,
-                                &quot;www.google.kz&quot;,
-                                &quot;www.google.kg&quot;,
-                                &quot;www.google.com.tj&quot;,
-                                &quot;www.google.co.uz&quot;,
-                                &quot;www.google.tm&quot;,
-                                &quot;www.google.com.af&quot;,
-                                &quot;www.google.com.pk&quot;,
-                                &quot;www.google.com.np&quot;,
-                                &quot;www.google.co.in&quot;,
-                                &quot;www.google.com.bd&quot;,
-                                &quot;www.google.lk&quot;,
-                                &quot;www.google.mv&quot;,
-                                &quot;www.google.com.kw&quot;,
-                                &quot;www.google.com.sa&quot;,
-                                &quot;www.google.com.bh&quot;,
-                                &quot;www.google.ae&quot;,
-                                &quot;www.google.com.om&quot;,
-                                &quot;www.google.jo&quot;,
-                                &quot;www.google.co.il&quot;,
-                                &quot;www.google.com.lb&quot;,
-                                &quot;www.google.com.tr&quot;,
-                                &quot;www.google.az&quot;,
-                                &quot;www.google.am&quot;,
-                                &quot;www.google.co.ls&quot;,
-                                &quot;www.google.com.eg&quot;,
-                                &quot;www.google.com.ly&quot;,
-                                &quot;www.google.dz&quot;,
-                                &quot;www.google.co.ma&quot;,
-                                &quot;www.google.sn&quot;,
-                                &quot;www.google.gm&quot;,
-                                &quot;www.google.ml&quot;,
-                                &quot;www.google.bf&quot;,
-                                &quot;www.google.com.sl&quot;,
-                                &quot;www.google.ci&quot;,
-                                &quot;www.google.com.gh&quot;,
-                                &quot;www.google.tg&quot;,
-                                &quot;www.google.bj&quot;,
-                                &quot;www.google.ne&quot;,
-                                &quot;www.google.com.ng&quot;,
-                                &quot;www.google.sh&quot;,
-                                &quot;www.google.cm&quot;,
-                                &quot;www.google.td&quot;,
-                                &quot;www.google.cf&quot;,
-                                &quot;www.google.ga&quot;,
-                                &quot;www.google.cg&quot;,
-                                &quot;www.google.cd&quot;,
-                                &quot;www.google.it.ao&quot;,
-                                &quot;www.google.com.et&quot;,
-                                &quot;www.google.dj&quot;,
-                                &quot;www.google.co.ke&quot;,
-                                &quot;www.google.co.ug&quot;,
-                                &quot;www.google.co.tz&quot;,
-                                &quot;www.google.rw&quot;,
-                                &quot;www.google.bi&quot;,
-                                &quot;www.google.mw&quot;,
-                                &quot;www.google.co.mz&quot;,
-                                &quot;www.google.mg&quot;,
-                                &quot;www.google.sc&quot;,
-                                &quot;www.google.mu&quot;,
-                                &quot;www.google.co.zm&quot;,
-                                &quot;www.google.co.zw&quot;,
-                                &quot;www.google.co.bw&quot;,
-                                &quot;www.google.com.na&quot;,
-                                &quot;www.google.co.za&quot;,
-                                &quot;www.google.com.au&quot;,
-                                &quot;www.google.com.nf&quot;,
-                                &quot;www.google.co.nz&quot;,
-                                &quot;www.google.com.sb&quot;,
-                                &quot;www.google.com.fj&quot;,
-                                &quot;www.google.fm&quot;,
-                                &quot;www.google.ki&quot;,
-                                &quot;www.google.nr&quot;,
-                                &quot;www.google.tk&quot;,
-                                &quot;www.google.ws&quot;,
-                                &quot;www.google.as&quot;,
-                                &quot;www.google.to&quot;,
-                                &quot;www.google.nu&quot;,
-                                &quot;www.google.co.ck&quot;,
-                                &quot;www.google.com.do&quot;,
-                                &quot;www.google.tt&quot;,
-                                &quot;www.google.com.co&quot;,
-                                &quot;www.google.com.ec&quot;,
-                                &quot;www.google.co.ve&quot;,
-                                &quot;www.google.gy&quot;,
-                                &quot;www.google.com.pe&quot;,
-                                &quot;www.google.com.bo&quot;,
-                                &quot;www.google.com.py&quot;,
-                                &quot;www.google.com.br&quot;,
-                                &quot;www.google.com.uy&quot;,
-                                &quot;www.google.com.ar&quot;,
-                                &quot;www.google.cl&quot;,
-                                &quot;www.google.gl&quot;,
-                                &quot;www.google.ca&quot;,
-                                &quot;www.google.com&quot;,
-                                &quot;www.google.com.mx&quot;,
-                                &quot;www.google.com.gt&quot;,
-                                &quot;www.google.com.bz&quot;,
-                                &quot;www.google.com.sv&quot;,
-                                &quot;www.google.hn&quot;,
-                                &quot;www.google.com.ni&quot;,
-                                &quot;www.google.co.cr&quot;,
-                                &quot;www.google.com.pa&quot;,
-                                &quot;www.google.bs&quot;,
-                                &quot;www.google.com.cu&quot;,
-                                &quot;www.google.com.jm&quot;,
-                                &quot;www.google.ht&quot;}
-                        ngx.var.google = googles[ math.random( #googles )]';
+                                &#34;www.google.is&#34;,
+                                &#34;www.google.dk&#34;,
+                                &#34;www.google.no&#34;,
+                                &#34;www.google.se&#34;,
+                                &#34;www.google.fi&#34;,
+                                &#34;www.google.ee&#34;,
+                                &#34;www.google.lv&#34;,
+                                &#34;www.google.lt&#34;,
+                                &#34;www.google.ie&#34;,
+                                &#34;www.google.co.uk&#34;,
+                                &#34;www.google.gg&#34;,
+                                &#34;www.google.je&#34;,
+                                &#34;www.google.im&#34;,
+                                &#34;www.google.fr&#34;,
+                                &#34;www.google.nl&#34;,
+                                &#34;www.google.be&#34;,
+                                &#34;www.google.lu&#34;,
+                                &#34;www.google.de&#34;,
+                                &#34;www.google.at&#34;,
+                                &#34;www.google.ch&#34;,
+                                &#34;www.google.li&#34;,
+                                &#34;www.google.pt&#34;,
+                                &#34;www.google.es&#34;,
+                                &#34;www.google.com.gi&#34;,
+                                &#34;www.google.ad&#34;,
+                                &#34;www.google.it&#34;,
+                                &#34;www.google.com.mt&#34;,
+                                &#34;www.google.sm&#34;,
+                                &#34;www.google.gr&#34;,
+                                &#34;www.google.ru&#34;,
+                                &#34;www.google.com.by&#34;,
+                                &#34;www.google.com.ua&#34;,
+                                &#34;www.google.pl&#34;,
+                                &#34;www.google.cz&#34;,
+                                &#34;www.google.sk&#34;,
+                                &#34;www.google.hu&#34;,
+                                &#34;www.google.si&#34;,
+                                &#34;www.google.hr&#34;,
+                                &#34;www.google.ba&#34;,
+                                &#34;www.google.me&#34;,
+                                &#34;www.google.rs&#34;,
+                                &#34;www.google.mk&#34;,
+                                &#34;www.google.bg&#34;,
+                                &#34;www.google.ro&#34;,
+                                &#34;www.google.md&#34;,
+                                &#34;www.google.mn&#34;,
+                                &#34;www.google.co.kr&#34;,
+                                &#34;www.google.co.jp&#34;,
+                                &#34;www.google.com.vn&#34;,
+                                &#34;www.google.la&#34;,
+                                &#34;www.google.com.kh&#34;,
+                                &#34;www.google.co.th&#34;,
+                                &#34;www.google.com.my&#34;,
+                                &#34;www.google.com.sg&#34;,
+                                &#34;www.google.com.bn&#34;,
+                                &#34;www.google.com.ph&#34;,
+                                &#34;www.google.co.id&#34;,
+                                &#34;www.google.kz&#34;,
+                                &#34;www.google.kg&#34;,
+                                &#34;www.google.com.tj&#34;,
+                                &#34;www.google.co.uz&#34;,
+                                &#34;www.google.tm&#34;,
+                                &#34;www.google.com.af&#34;,
+                                &#34;www.google.com.pk&#34;,
+                                &#34;www.google.com.np&#34;,
+                                &#34;www.google.co.in&#34;,
+                                &#34;www.google.com.bd&#34;,
+                                &#34;www.google.lk&#34;,
+                                &#34;www.google.mv&#34;,
+                                &#34;www.google.com.kw&#34;,
+                                &#34;www.google.com.sa&#34;,
+                                &#34;www.google.com.bh&#34;,
+                                &#34;www.google.ae&#34;,
+                                &#34;www.google.com.om&#34;,
+                                &#34;www.google.jo&#34;,
+                                &#34;www.google.co.il&#34;,
+                                &#34;www.google.com.lb&#34;,
+                                &#34;www.google.com.tr&#34;,
+                                &#34;www.google.az&#34;,
+                                &#34;www.google.am&#34;,
+                                &#34;www.google.co.ls&#34;,
+                                &#34;www.google.com.eg&#34;,
+                                &#34;www.google.com.ly&#34;,
+                                &#34;www.google.dz&#34;,
+                                &#34;www.google.co.ma&#34;,
+                                &#34;www.google.sn&#34;,
+                                &#34;www.google.gm&#34;,
+                                &#34;www.google.ml&#34;,
+                                &#34;www.google.bf&#34;,
+                                &#34;www.google.com.sl&#34;,
+                                &#34;www.google.ci&#34;,
+                                &#34;www.google.com.gh&#34;,
+                                &#34;www.google.tg&#34;,
+                                &#34;www.google.bj&#34;,
+                                &#34;www.google.ne&#34;,
+                                &#34;www.google.com.ng&#34;,
+                                &#34;www.google.sh&#34;,
+                                &#34;www.google.cm&#34;,
+                                &#34;www.google.td&#34;,
+                                &#34;www.google.cf&#34;,
+                                &#34;www.google.ga&#34;,
+                                &#34;www.google.cg&#34;,
+                                &#34;www.google.cd&#34;,
+                                &#34;www.google.it.ao&#34;,
+                                &#34;www.google.com.et&#34;,
+                                &#34;www.google.dj&#34;,
+                                &#34;www.google.co.ke&#34;,
+                                &#34;www.google.co.ug&#34;,
+                                &#34;www.google.co.tz&#34;,
+                                &#34;www.google.rw&#34;,
+                                &#34;www.google.bi&#34;,
+                                &#34;www.google.mw&#34;,
+                                &#34;www.google.co.mz&#34;,
+                                &#34;www.google.mg&#34;,
+                                &#34;www.google.sc&#34;,
+                                &#34;www.google.mu&#34;,
+                                &#34;www.google.co.zm&#34;,
+                                &#34;www.google.co.zw&#34;,
+                                &#34;www.google.co.bw&#34;,
+                                &#34;www.google.com.na&#34;,
+                                &#34;www.google.co.za&#34;,
+                                &#34;www.google.com.au&#34;,
+                                &#34;www.google.com.nf&#34;,
+                                &#34;www.google.co.nz&#34;,
+                                &#34;www.google.com.sb&#34;,
+                                &#34;www.google.com.fj&#34;,
+                                &#34;www.google.fm&#34;,
+                                &#34;www.google.ki&#34;,
+                                &#34;www.google.nr&#34;,
+                                &#34;www.google.tk&#34;,
+                                &#34;www.google.ws&#34;,
+                                &#34;www.google.as&#34;,
+                                &#34;www.google.to&#34;,
+                                &#34;www.google.nu&#34;,
+                                &#34;www.google.co.ck&#34;,
+                                &#34;www.google.com.do&#34;,
+                                &#34;www.google.tt&#34;,
+                                &#34;www.google.com.co&#34;,
+                                &#34;www.google.com.ec&#34;,
+                                &#34;www.google.co.ve&#34;,
+                                &#34;www.google.gy&#34;,
+                                &#34;www.google.com.pe&#34;,
+                                &#34;www.google.com.bo&#34;,
+                                &#34;www.google.com.py&#34;,
+                                &#34;www.google.com.br&#34;,
+                                &#34;www.google.com.uy&#34;,
+                                &#34;www.google.com.ar&#34;,
+                                &#34;www.google.cl&#34;,
+                                &#34;www.google.gl&#34;,
+                                &#34;www.google.ca&#34;,
+                                &#34;www.google.com&#34;,
+                                &#34;www.google.com.mx&#34;,
+                                &#34;www.google.com.gt&#34;,
+                                &#34;www.google.com.bz&#34;,
+                                &#34;www.google.com.sv&#34;,
+                                &#34;www.google.hn&#34;,
+                                &#34;www.google.com.ni&#34;,
+                                &#34;www.google.co.cr&#34;,
+                                &#34;www.google.com.pa&#34;,
+                                &#34;www.google.bs&#34;,
+                                &#34;www.google.com.cu&#34;,
+                                &#34;www.google.com.jm&#34;,
+                                &#34;www.google.ht&#34;}
+                        ngx.var.google = googles[ math.random( #googles )]&#39;;
 
         ssl_certificate cert/176.122.157.73.crt;
         ssl_certificate_key cert/176.122.157.73.key;
@@ -371,24 +331,24 @@ http {
             #设定转发后端服务器的header
             proxy_set_header Host $google;
             proxy_set_header User-Agent $http_user_agent;
-            #proxy_set_header User-Agent &quot;Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)&quot;;
+            #proxy_set_header User-Agent &#34;Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)&#34;;
             proxy_set_header Referer https://$google;
             proxy_set_header X-Real_IP $remote_addr;
-            proxy_set_header Accept-Encoding &quot;&quot;;
+            proxy_set_header Accept-Encoding &#34;&#34;;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto https;
             #重定向
             proxy_redirect https://$google Https://$server_name:$server_port;
             #设定语言为大陆中文
-            proxy_set_header Accept-Language &quot;zh-CN&quot;;
+            proxy_set_header Accept-Language &#34;zh-CN&#34;;
             proxy_set_header referer https://$google$request_uri;
             #去除跟踪
-            subs_filter ping=\&quot;(.+?)\&quot; '' ir;
-            subs_filter oncontextmenu=\&quot;google.ctpacw.cm\(this\)\&quot; '' ir;
-            subs_filter onmousedown=\&quot;(.+?)\&quot; '' ir;
+            subs_filter ping=\&#34;(.+?)\&#34; &#39;&#39; ir;
+            subs_filter oncontextmenu=\&#34;google.ctpacw.cm\(this\)\&#34; &#39;&#39; ir;
+            subs_filter onmousedown=\&#34;(.+?)\&#34; &#39;&#39; ir;
 
             #去除定位消息
-            subs_filter &quot;&lt;div class=\&quot;smiUbb(.*?)&lt;\/div&gt;&quot; '' ir;
+            subs_filter &#34;&lt;div class=\&#34;smiUbb(.*?)&lt;\/div&gt;&#34; &#39;&#39; ir;
             #替换中文维基为代理
             subs_filter zh.wikipedia.org $server_name:3457 g;
             subs_filter zh.m.wikipedia.org $server_name:3458 g;
@@ -417,8 +377,8 @@ http {
                 proxy_redirect https://en.m.wikipedia.org/ https://$server_name:5005/;
                 proxy_set_header X-Real_IP $remote_addr;
                 proxy_set_header User-Agent $http_user_agent;
-                proxy_set_header Accept-Encoding &quot;&quot;;
-                proxy_set_header referer &quot;https://en.wikipedia.org$request_uri&quot;;
+                proxy_set_header Accept-Encoding &#34;&#34;;
+                proxy_set_header referer &#34;https://en.wikipedia.org$request_uri&#34;;
                 #替换手机版视图为代理
                 subs_filter en.m.wikipedia.org $server_name:5005 g;
                 subs_filter en.wikipedia.org $server_name:$server_port g;
@@ -445,7 +405,7 @@ http {
             proxy_cookie_domain en.m.wikipedia.org $server_name:$server_port;
             proxy_set_header X-Real_IP $remote_addr;
             proxy_set_header User-Agent $http_user_agent;
-            proxy_set_header Accept-Encoding &quot;&quot;;
+            proxy_set_header Accept-Encoding &#34;&#34;;
             proxy_set_header referer https://en.m.wikipedia.org$request_uri;
             #替换桌面版视图为代理
             subs_filter en.wikipedia.org $server_name:5004 g;
@@ -468,7 +428,7 @@ http {
             proxy_pass http://127.0.0.1:53513;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection &quot;upgrade&quot;;
+            proxy_set_header Connection &#34;upgrade&#34;;
             proxy_set_header Host $http_host;
 
             # Show realip in v2ray access.log
@@ -478,16 +438,4 @@ http {
         }
     }
 }
-</code></pre>
-<div class="float-right mb-8">
-<p class="text-sm mb-4 font-gray-700 italic">(773 words)</p>
-</div>
-</article>
-</div>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+</code></pre><div class="float-right mb-8"><p class="text-sm mb-4 font-gray-700 italic">(773 words)</p></div></article></div></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

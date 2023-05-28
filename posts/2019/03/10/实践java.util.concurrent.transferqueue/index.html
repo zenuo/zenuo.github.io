@@ -1,228 +1,159 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-实践java.util.concurrent.TransferQueue
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/posts>posts</a>
-</p>
-<p>Mar 10, 2019</p>
-</div>
-<h1 class="title mb-2">实践java.util.concurrent.TransferQueue</h1>
-<p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 3 minutes (528 words) </p>
-<div id=tags>
-</div>
-</header>
-<article class="prose serif mb-12 text-gray-800">
-<h2 id=综述>综述</h2>
-<p><a href=https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TransferQueue.html>java.util.concurrent.TransferQueue</a>是<a href=https://docs.oracle.com/javase/8/docs/technotes/guides/collections/overview.html>Java Collections Framework</a>的成员之一，允许我们根据<strong>生产者-消费者模式</strong>创建程序，并协调从生产者传递给消费者的消息，其JDK内的实现是<code>java.util.concurrent.LinkedTransferQueue</code>。</p>
-<p>实现实际上类似于<code>BlockingQueue</code> - 但是为我们提供了实现<code>backpressure</code>形式的新功能。这意味着，当生产者使用<code>transfer()</code>方法向使用者发送消息时，生产者将保持阻塞状态，直到消息被消耗为止（<code>tryTransfer()</code>是非阻塞的）。</p>
-<p>可以通过<code>hasWaitingConsumer()</code>查询是否有任何消费者在等待，与<code>peek()</code>操作相反。</p>
-<h2 id=一个生产者无消费者>一个生产者——无消费者</h2>
-<p>首先，设计一个生产者来测试<code>transfer()</code>方法 - 预期是生产者将被<strong>阻塞</strong>，直到消费者使用<code>take()</code>方法从队列接收消息。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>Producer</span> <span class=kd>implements</span> <span class=n>Runnable</span> <span class=o>{</span>
-    <span class=kd>private</span> <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span><span class=o>;</span>
-  
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
-  
-    <span class=kd>private</span> <span class=n>Integer</span> <span class=n>numberOfMessagesToProduce</span><span class=o>;</span>
-  
-    <span class=kd>public</span> <span class=n>AtomicInteger</span> <span class=n>numberOfProducedMessages</span>
-      <span class=o>=</span> <span class=k>new</span> <span class=n>AtomicInteger</span><span class=o>();</span>
-
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>run</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>numberOfMessagesToProduce</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=k>try</span> <span class=o>{</span>
-                <span class=kt>boolean</span> <span class=n>added</span>
-                  <span class=o>=</span> <span class=n>transferQueue</span><span class=o>.</span><span class=na>tryTransfer</span><span class=o>(</span><span class=s>&#34;A&#34;</span> <span class=o>+</span> <span class=n>i</span><span class=o>,</span> <span class=n>4000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
-                <span class=k>if</span><span class=o>(</span><span class=n>added</span><span class=o>){</span>
-                    <span class=n>numberOfProducedMessages</span><span class=o>.</span><span class=na>incrementAndGet</span><span class=o>();</span>
-                <span class=o>}</span>
-            <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>InterruptedException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-                <span class=n>e</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>();</span>
-            <span class=o>}</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=c1>// standard constructors
-</span><span class=c1></span><span class=o>}</span>
-</code></pre></div><p>我们将<code>一个TransferQueue实例</code>与我们<code>想要为生产者提供的名称</code>以及<code>应该传输到队列的元素数</code>一起传递给构造函数。</p>
-<p>请注意，我们使用的是<code>tryTransfer()</code>方法，并且<strong>具有给定的超时</strong>。我们正在等待<code>四秒钟</code>，如果生产者无法在给定的超时内传输消息，则返回<code>false</code>并继续执行下一条消息。生产者有一个<code>numberOfProducedMessages</code>变量来跟踪生成的消息数量。</p>
-<p>然后，消费者设计如下：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>Consumer</span> <span class=kd>implements</span> <span class=n>Runnable</span> <span class=o>{</span>
-  
-    <span class=kd>private</span> <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span><span class=o>;</span>
-  
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
-  
-    <span class=kd>private</span> <span class=kt>int</span> <span class=n>numberOfMessagesToConsume</span><span class=o>;</span>
-  
-    <span class=kd>public</span> <span class=n>AtomicInteger</span> <span class=n>numberOfConsumedMessages</span>
-     <span class=o>=</span> <span class=k>new</span> <span class=n>AtomicInteger</span><span class=o>();</span>
-
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>run</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>numberOfMessagesToConsume</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=k>try</span> <span class=o>{</span>
-                <span class=n>String</span> <span class=n>element</span> <span class=o>=</span> <span class=n>transferQueue</span><span class=o>.</span><span class=na>take</span><span class=o>();</span>
-                <span class=n>longProcessing</span><span class=o>(</span><span class=n>element</span><span class=o>);</span>
-            <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>InterruptedException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-                <span class=n>e</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>();</span>
-            <span class=o>}</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-
-    <span class=kd>private</span> <span class=kt>void</span> <span class=nf>longProcessing</span><span class=o>(</span><span class=n>String</span> <span class=n>element</span><span class=o>)</span>
-      <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
-        <span class=n>numberOfConsumedMessages</span><span class=o>.</span><span class=na>incrementAndGet</span><span class=o>();</span>
-        <span class=n>Thread</span><span class=o>.</span><span class=na>sleep</span><span class=o>(</span><span class=n>500</span><span class=o>);</span>
-    <span class=o>}</span>
-
-    <span class=c1>// standard constructors
-</span><span class=c1></span><span class=o>}</span>
-</code></pre></div><p>它与生产者类似，但我们使用<code>take()</code>方法从队列中接收元素。我们还通过使用<code>longProcessing()</code>方法模拟一些长时间运行的操作，在该方法中我们递增<code>numberOfConsumedMessages</code>变量，该变量是接收消息的计数器。</p>
-<p>现在，让我们只用一个生产者开始我们的程序：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Test</span>
-<span class=kd>public</span> <span class=kt>void</span> <span class=nf>whenUseOneProducerAndNoConsumers_thenShouldFailWithTimeout</span><span class=o>()</span>
-  <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
-    <span class=c1>// given
-</span><span class=c1></span>    <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LinkedTransferQueue</span><span class=o>&lt;&gt;();</span>
-    <span class=n>ExecutorService</span> <span class=n>exService</span> <span class=o>=</span> <span class=n>Executors</span><span class=o>.</span><span class=na>newFixedThreadPool</span><span class=o>(</span><span class=n>2</span><span class=o>);</span>
-    <span class=n>Producer</span> <span class=n>producer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-
-    <span class=c1>// when
-</span><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer</span><span class=o>);</span>
-
-    <span class=c1>// then
-</span><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>awaitTermination</span><span class=o>(</span><span class=n>5000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>shutdown</span><span class=o>();</span>
-
-    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=n>0</span><span class=o>);</span>
-<span class=o>}</span>
-</code></pre></div><p>我们希望向队列发送三个元素，但生成器在第一个元素上被阻塞，并且没有消费者从队列中获取该元素。我们正在使用<code>tryTransfer()</code>方法，该方法将阻塞，直到消息被消耗或达到超时。超时后，它将返回<code>false</code>以指示传输失败，它将尝试传输下一个。这是上一个示例的输出：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain>Producer: 1 is waiting to transfer...
-can not add an element due to the timeout
-Producer: 1 is waiting to transfer...
-</code></pre></div><h2 id=一个生产者一个消费者>一个生产者——一个消费者</h2>
-<p>让我们测试一个生产者和一个消费者的情况：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Test</span>
-<span class=kd>public</span> <span class=kt>void</span> <span class=nf>whenUseOneConsumerAndOneProducer_thenShouldProcessAllMessages</span><span class=o>()</span>
-  <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
-    <span class=c1>// given
-</span><span class=c1></span>    <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LinkedTransferQueue</span><span class=o>&lt;&gt;();</span>
-    <span class=n>ExecutorService</span> <span class=n>exService</span> <span class=o>=</span> <span class=n>Executors</span><span class=o>.</span><span class=na>newFixedThreadPool</span><span class=o>(</span><span class=n>2</span><span class=o>);</span>
-    <span class=n>Producer</span> <span class=n>producer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-    <span class=n>Consumer</span> <span class=n>consumer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Consumer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-
-    <span class=c1>// when
-</span><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>consumer</span><span class=o>);</span>
-
-    <span class=c1>// then
-</span><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>awaitTermination</span><span class=o>(</span><span class=n>5000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>shutdown</span><span class=o>();</span>
-
-    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=n>3</span><span class=o>);</span>
-    <span class=n>assertEquals</span><span class=o>(</span><span class=n>consumer</span><span class=o>.</span><span class=na>numberOfConsumedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=n>3</span><span class=o>);</span>
-<span class=o>}</span>
-</code></pre></div><p>TransferQueue用作<code>交换点</code>，并且在<code>消费者使用队列中的元素</code>之前，生产者<strong>不能</strong>继续向其添加另一个元素。我们来看看程序输出：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain>Producer: 1 is waiting to transfer...
-Consumer: 1 is waiting to take element...
-Producer: 1 transferred element: A0
-Producer: 1 is waiting to transfer...
-Consumer: 1 received element: A0
-Consumer: 1 is waiting to take element...
-Producer: 1 transferred element: A1
-Producer: 1 is waiting to transfer...
-Consumer: 1 received element: A1
-Consumer: 1 is waiting to take element...
-Producer: 1 transferred element: A2
-Consumer: 1 received element: A2
-</code></pre></div><p>我们看到，由于TransferQueue的规范，生成和消耗队列中的元素是顺序的。</p>
-<h2 id=多个生产者多个消费者>多个生产者——多个消费者</h2>
-<p>在最后一个例子中，我们将考虑拥有多个消费者和多个生产者：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Test</span>
-<span class=kd>public</span> <span class=kt>void</span> <span class=nf>whenMultipleConsumersAndProducers_thenProcessAllMessages</span><span class=o>()</span>
-  <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
-    <span class=c1>// given
-</span><span class=c1></span>    <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LinkedTransferQueue</span><span class=o>&lt;&gt;();</span>
-    <span class=n>ExecutorService</span> <span class=n>exService</span> <span class=o>=</span> <span class=n>Executors</span><span class=o>.</span><span class=na>newFixedThreadPool</span><span class=o>(</span><span class=n>3</span><span class=o>);</span>
-    <span class=n>Producer</span> <span class=n>producer1</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-    <span class=n>Producer</span> <span class=n>producer2</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;2&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-    <span class=n>Consumer</span> <span class=n>consumer1</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Consumer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-    <span class=n>Consumer</span> <span class=n>consumer2</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Consumer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;2&#34;</span><span class=o>,</span> <span class=n>3</span><span class=o>);</span>
-
-    <span class=c1>// when
-</span><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer1</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer2</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>consumer1</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>consumer2</span><span class=o>);</span>
-
-    <span class=c1>// then
-</span><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>awaitTermination</span><span class=o>(</span><span class=n>10_000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
-    <span class=n>exService</span><span class=o>.</span><span class=na>shutdown</span><span class=o>();</span>
-
-    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer1</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=n>3</span><span class=o>);</span>
-    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer2</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=n>3</span><span class=o>);</span>
-<span class=o>}</span>
-</code></pre></div><p>在这个例子中，我们有两个消费者和两个生产者。当程序启动时，我们看到两个生产者都可以生成一个元素，然后，它们将阻塞，直到其中一个消费者从队列中获取该元素：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain>Producer: 1 is waiting to transfer...
-Consumer: 1 is waiting to take element...
-Producer: 2 is waiting to transfer...
-Producer: 1 transferred element: A0
-Producer: 1 is waiting to transfer...
-Consumer: 1 received element: A0
-Consumer: 1 is waiting to take element...
-Producer: 2 transferred element: A0
-Producer: 2 is waiting to transfer...
-Consumer: 1 received element: A0
-Consumer: 1 is waiting to take element...
-Producer: 1 transferred element: A1
-Producer: 1 is waiting to transfer...
-Consumer: 1 received element: A1
-Consumer: 2 is waiting to take element...
-Producer: 2 transferred element: A1
-Producer: 2 is waiting to transfer...
-Consumer: 2 received element: A1
-Consumer: 2 is waiting to take element...
-Producer: 1 transferred element: A2
-Consumer: 2 received element: A2
-Consumer: 2 is waiting to take element...
-Producer: 2 transferred element: A2
-Consumer: 2 received element: A2
-</code></pre></div><h2 id=总结>总结</h2>
-<p>我们看到了如何使用该构造实现生产者 - 消费者计划。我们使用<code>transfer()</code>方法创建一种backpressure形式，其中生产者在消费者从队列中检索元素之前<strong>不能</strong>发布另一个元素。</p>
-<p>当我们不希望过度生成的生产者使用消息填充队列，从而导致OutOfMemory错误时，TransferQueue会非常有用。在这种设计中，<strong>消费者将决定生产者产生消息的速度</strong>。</p>
-</article>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>实践java.util.concurrent.TransferQueue</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/posts>posts</a></p><p>Mar 10, 2019</p></div><h1 class="title mb-2">实践java.util.concurrent.TransferQueue</h1><p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 3 minutes (528 words)</p><div id=tags></div></header><article class="prose serif mb-12 text-gray-800"><h2 id=综述>综述</h2><p><a href=https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TransferQueue.html>java.util.concurrent.TransferQueue</a>是<a href=https://docs.oracle.com/javase/8/docs/technotes/guides/collections/overview.html>Java Collections Framework</a>的成员之一，允许我们根据<strong>生产者-消费者模式</strong>创建程序，并协调从生产者传递给消费者的消息，其JDK内的实现是<code>java.util.concurrent.LinkedTransferQueue</code>。</p><p>实现实际上类似于<code>BlockingQueue</code> - 但是为我们提供了实现<code>backpressure</code>形式的新功能。这意味着，当生产者使用<code>transfer()</code>方法向使用者发送消息时，生产者将保持阻塞状态，直到消息被消耗为止（<code>tryTransfer()</code>是非阻塞的）。</p><p>可以通过<code>hasWaitingConsumer()</code>查询是否有任何消费者在等待，与<code>peek()</code>操作相反。</p><h2 id=一个生产者无消费者>一个生产者——无消费者</h2><p>首先，设计一个生产者来测试<code>transfer()</code>方法 - 预期是生产者将被<strong>阻塞</strong>，直到消费者使用<code>take()</code>方法从队列接收消息。</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>class</span> <span class=nc>Producer</span> <span class=kd>implements</span> <span class=n>Runnable</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>Integer</span> <span class=n>numberOfMessagesToProduce</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=n>AtomicInteger</span> <span class=n>numberOfProducedMessages</span>
+</span></span><span class=line><span class=cl>      <span class=o>=</span> <span class=k>new</span> <span class=n>AtomicInteger</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>run</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>numberOfMessagesToProduce</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=kt>boolean</span> <span class=n>added</span>
+</span></span><span class=line><span class=cl>                  <span class=o>=</span> <span class=n>transferQueue</span><span class=o>.</span><span class=na>tryTransfer</span><span class=o>(</span><span class=s>&#34;A&#34;</span> <span class=o>+</span> <span class=n>i</span><span class=o>,</span> <span class=mi>4000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>                <span class=k>if</span><span class=o>(</span><span class=n>added</span><span class=o>){</span>
+</span></span><span class=line><span class=cl>                    <span class=n>numberOfProducedMessages</span><span class=o>.</span><span class=na>incrementAndGet</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>                <span class=o>}</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>InterruptedException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>e</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// standard constructors
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=o>}</span>
+</span></span></code></pre></div><p>我们将<code>一个TransferQueue实例</code>与我们<code>想要为生产者提供的名称</code>以及<code>应该传输到队列的元素数</code>一起传递给构造函数。</p><p>请注意，我们使用的是<code>tryTransfer()</code>方法，并且<strong>具有给定的超时</strong>。我们正在等待<code>四秒钟</code>，如果生产者无法在给定的超时内传输消息，则返回<code>false</code>并继续执行下一条消息。生产者有一个<code>numberOfProducedMessages</code>变量来跟踪生成的消息数量。</p><p>然后，消费者设计如下：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>class</span> <span class=nc>Consumer</span> <span class=kd>implements</span> <span class=n>Runnable</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kt>int</span> <span class=n>numberOfMessagesToConsume</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=n>AtomicInteger</span> <span class=n>numberOfConsumedMessages</span>
+</span></span><span class=line><span class=cl>     <span class=o>=</span> <span class=k>new</span> <span class=n>AtomicInteger</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>run</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>numberOfMessagesToConsume</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>String</span> <span class=n>element</span> <span class=o>=</span> <span class=n>transferQueue</span><span class=o>.</span><span class=na>take</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>                <span class=n>longProcessing</span><span class=o>(</span><span class=n>element</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>InterruptedException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>e</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kt>void</span> <span class=nf>longProcessing</span><span class=o>(</span><span class=n>String</span> <span class=n>element</span><span class=o>)</span>
+</span></span><span class=line><span class=cl>      <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>numberOfConsumedMessages</span><span class=o>.</span><span class=na>incrementAndGet</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>        <span class=n>Thread</span><span class=o>.</span><span class=na>sleep</span><span class=o>(</span><span class=mi>500</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// standard constructors
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=o>}</span>
+</span></span></code></pre></div><p>它与生产者类似，但我们使用<code>take()</code>方法从队列中接收元素。我们还通过使用<code>longProcessing()</code>方法模拟一些长时间运行的操作，在该方法中我们递增<code>numberOfConsumedMessages</code>变量，该变量是接收消息的计数器。</p><p>现在，让我们只用一个生产者开始我们的程序：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Test</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>whenUseOneProducerAndNoConsumers_thenShouldFailWithTimeout</span><span class=o>()</span>
+</span></span><span class=line><span class=cl>  <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// given
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LinkedTransferQueue</span><span class=o>&lt;&gt;();</span>
+</span></span><span class=line><span class=cl>    <span class=n>ExecutorService</span> <span class=n>exService</span> <span class=o>=</span> <span class=n>Executors</span><span class=o>.</span><span class=na>newFixedThreadPool</span><span class=o>(</span><span class=mi>2</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Producer</span> <span class=n>producer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// when
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// then
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>awaitTermination</span><span class=o>(</span><span class=mi>5000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>shutdown</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=mi>0</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><p>我们希望向队列发送三个元素，但生成器在第一个元素上被阻塞，并且没有消费者从队列中获取该元素。我们正在使用<code>tryTransfer()</code>方法，该方法将阻塞，直到消息被消耗或达到超时。超时后，它将返回<code>false</code>以指示传输失败，它将尝试传输下一个。这是上一个示例的输出：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>can not add an element due to the timeout
+</span></span><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span></code></pre></div><h2 id=一个生产者一个消费者>一个生产者——一个消费者</h2><p>让我们测试一个生产者和一个消费者的情况：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Test</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>whenUseOneConsumerAndOneProducer_thenShouldProcessAllMessages</span><span class=o>()</span>
+</span></span><span class=line><span class=cl>  <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// given
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LinkedTransferQueue</span><span class=o>&lt;&gt;();</span>
+</span></span><span class=line><span class=cl>    <span class=n>ExecutorService</span> <span class=n>exService</span> <span class=o>=</span> <span class=n>Executors</span><span class=o>.</span><span class=na>newFixedThreadPool</span><span class=o>(</span><span class=mi>2</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Producer</span> <span class=n>producer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Consumer</span> <span class=n>consumer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Consumer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// when
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>consumer</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// then
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>awaitTermination</span><span class=o>(</span><span class=mi>5000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>shutdown</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>assertEquals</span><span class=o>(</span><span class=n>consumer</span><span class=o>.</span><span class=na>numberOfConsumedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><p>TransferQueue用作<code>交换点</code>，并且在<code>消费者使用队列中的元素</code>之前，生产者<strong>不能</strong>继续向其添加另一个元素。我们来看看程序输出：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 1 transferred element: A0
+</span></span><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 received element: A0
+</span></span><span class=line><span class=cl>Consumer: 1 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 1 transferred element: A1
+</span></span><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 received element: A1
+</span></span><span class=line><span class=cl>Consumer: 1 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 1 transferred element: A2
+</span></span><span class=line><span class=cl>Consumer: 1 received element: A2
+</span></span></code></pre></div><p>我们看到，由于TransferQueue的规范，生成和消耗队列中的元素是顺序的。</p><h2 id=多个生产者多个消费者>多个生产者——多个消费者</h2><p>在最后一个例子中，我们将考虑拥有多个消费者和多个生产者：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Test</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>whenMultipleConsumersAndProducers_thenProcessAllMessages</span><span class=o>()</span>
+</span></span><span class=line><span class=cl>  <span class=kd>throws</span> <span class=n>InterruptedException</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// given
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>TransferQueue</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>transferQueue</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LinkedTransferQueue</span><span class=o>&lt;&gt;();</span>
+</span></span><span class=line><span class=cl>    <span class=n>ExecutorService</span> <span class=n>exService</span> <span class=o>=</span> <span class=n>Executors</span><span class=o>.</span><span class=na>newFixedThreadPool</span><span class=o>(</span><span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Producer</span> <span class=n>producer1</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Producer</span> <span class=n>producer2</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Producer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;2&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Consumer</span> <span class=n>consumer1</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Consumer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;1&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>Consumer</span> <span class=n>consumer2</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Consumer</span><span class=o>(</span><span class=n>transferQueue</span><span class=o>,</span> <span class=s>&#34;2&#34;</span><span class=o>,</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// when
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer1</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>producer2</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>consumer1</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>execute</span><span class=o>(</span><span class=n>consumer2</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// then
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exService</span><span class=o>.</span><span class=na>awaitTermination</span><span class=o>(</span><span class=mi>10_000</span><span class=o>,</span> <span class=n>TimeUnit</span><span class=o>.</span><span class=na>MILLISECONDS</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>exService</span><span class=o>.</span><span class=na>shutdown</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer1</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>assertEquals</span><span class=o>(</span><span class=n>producer2</span><span class=o>.</span><span class=na>numberOfProducedMessages</span><span class=o>.</span><span class=na>intValue</span><span class=o>(),</span> <span class=mi>3</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></div><p>在这个例子中，我们有两个消费者和两个生产者。当程序启动时，我们看到两个生产者都可以生成一个元素，然后，它们将阻塞，直到其中一个消费者从队列中获取该元素：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 2 is waiting to transfer...
+</span></span><span class=line><span class=cl>Producer: 1 transferred element: A0
+</span></span><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 received element: A0
+</span></span><span class=line><span class=cl>Consumer: 1 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 2 transferred element: A0
+</span></span><span class=line><span class=cl>Producer: 2 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 received element: A0
+</span></span><span class=line><span class=cl>Consumer: 1 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 1 transferred element: A1
+</span></span><span class=line><span class=cl>Producer: 1 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 1 received element: A1
+</span></span><span class=line><span class=cl>Consumer: 2 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 2 transferred element: A1
+</span></span><span class=line><span class=cl>Producer: 2 is waiting to transfer...
+</span></span><span class=line><span class=cl>Consumer: 2 received element: A1
+</span></span><span class=line><span class=cl>Consumer: 2 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 1 transferred element: A2
+</span></span><span class=line><span class=cl>Consumer: 2 received element: A2
+</span></span><span class=line><span class=cl>Consumer: 2 is waiting to take element...
+</span></span><span class=line><span class=cl>Producer: 2 transferred element: A2
+</span></span><span class=line><span class=cl>Consumer: 2 received element: A2
+</span></span></code></pre></div><h2 id=总结>总结</h2><p>我们看到了如何使用该构造实现生产者 - 消费者计划。我们使用<code>transfer()</code>方法创建一种backpressure形式，其中生产者在消费者从队列中检索元素之前<strong>不能</strong>发布另一个元素。</p><p>当我们不希望过度生成的生产者使用消息填充队列，从而导致OutOfMemory错误时，TransferQueue会非常有用。在这种设计中，<strong>消费者将决定生产者产生消息的速度</strong>。</p></article></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

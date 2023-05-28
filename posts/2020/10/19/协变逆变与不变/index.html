@@ -1,93 +1,22 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-🏎协变、逆变与不变
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/posts>posts</a>
-</p>
-<p>Oct 19, 2020</p>
-</div>
-<h1 class="title mb-2">🏎协变、逆变与不变</h1>
-<p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (322 words) </p>
-<div id=tags>
-</div>
-</header>
-<article class="prose serif mb-12 text-gray-800">
-<h2 id=formal-definition>Formal definition</h2>
-<p>摘自<a href=https://176.122.157.231:5004/wiki/Covariance_and_contravariance_(computer_science)>Covariance_and_contravariance_(computer_science)</a>：</p>
-<blockquote>
-<p>Within the type system of a programming language, a <code>typing rule</code> or a<code> type constructor</code> is:</p>
-</blockquote>
-<ul>
-<li><em>covariant</em> if it preserves the <a href=https://176.122.157.231:5004/wiki/Subtype>rdering of types (≤)</a>, which orders types from more specific to more generic;</li>
-<li><em>contravariant</em> if it reverses this ordering;</li>
-<li>bivariant if both of these apply (i.e., both <code>I&lt;A></code> ≤ <code>I&lt;B></code> and <code>I&lt;B></code> ≤ <code>I&lt;A></code> at the same time);[1]</li>
-<li>variant if covariant, contravariant or bivariant;</li>
-<li>invariant or nonvariant if not variant.</li>
-</ul>
-<h2 id=协变>协变</h2>
-<p>首先考虑数组类型构造器： 从Animal类型，可以得到<code>Animal[]</code>（“animal数组”）。 是否可以把它当作</p>
-<ul>
-<li>协变：a <code>Cat[]</code> is an <code>Animal[]</code></li>
-<li>逆变：an <code>Animal[]</code> is a <code>Cat[]</code></li>
-<li>不变：an <code>Animal[]</code> is not a <code>Cat[]</code> and a <code>Cat[]</code> is not an <code>Animal[]</code></li>
-</ul>
-<h3 id=java中的协变数组>Java中的协变数组</h3>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// a 是单元素的 String 数组
-</span><span class=c1></span><span class=n>String</span><span class=o>[]</span> <span class=n>a</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>[</span><span class=n>1</span><span class=o>];</span>
-
-<span class=c1>// b 是 Object 的数组
-</span><span class=c1></span><span class=n>Object</span><span class=o>[]</span> <span class=n>b</span> <span class=o>=</span> <span class=n>a</span><span class=o>;</span>
-
-<span class=c1>// 向 b 中赋一个整数。如果 b 确实是 Object 的数组，这是可能的；然而它其实是个 String 的数组，因此会发生 java.lang.ArrayStoreException
-</span><span class=c1></span><span class=n>b</span><span class=o>[</span><span class=n>0</span><span class=o>]</span> <span class=o>=</span> <span class=n>1</span><span class=o>;</span>
-</code></pre></div><h2 id=oop中的继承>OOP中的继承</h2>
-<blockquote>
-<p>当一个子类<a href=https://176.122.157.231:3457/wiki/%E9%87%8D%E5%86%99>重写</a>一个超类的方法时，编译器必须检查重写方法是否具有正确的类型。虽然一些语言要求类型必须与超类相同，但允许重写方法有一个“更好的”类型也是类型安全的。对于大部分的方法子类化规则来说，这要求返回值的类型必须更具体，也就是<code>协变</code>，而且接受更宽泛的参数类型，也就是<code>逆变</code>。</p>
-</blockquote>
-<p><img src=/img/be914bff8d5611a54aa47597.png alt=be914bff8d5611a54aa47597.png></p>
-<p>以下讨论基于Java语法，<code>抽象类C</code>如下：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>jshell</span><span class=o>&gt;</span> <span class=kd>abstract</span> <span class=kd>class</span> <span class=nc>C</span> <span class=o>{</span>
-   <span class=o>...&gt;</span> <span class=kd>abstract</span> <span class=n>C</span> <span class=nf>foo</span><span class=o>(</span><span class=n>C</span> <span class=n>c</span><span class=o>);</span>
-   <span class=o>...&gt;</span> <span class=o>}</span>
-<span class=o>|</span>  <span class=n>replaced</span> <span class=kd>class</span> <span class=nc>C</span>
-</code></pre></div><h3 id=返回值的协变>返回值的协变</h3>
-<p>在允许协变返回值的语言中, 子类可以重写<code>foo</code>方法返回一个更具体的类型：</p>
-<pre tabindex=0><code>jshell&gt; class D extends C {
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>🏎协变、逆变与不变</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/posts>posts</a></p><p>Oct 19, 2020</p></div><h1 class="title mb-2">🏎协变、逆变与不变</h1><p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (322 words)</p><div id=tags></div></header><article class="prose serif mb-12 text-gray-800"><h2 id=formal-definition>Formal definition</h2><p>摘自<a href=https://176.122.157.231:5004/wiki/Covariance_and_contravariance_(computer_science)>Covariance_and_contravariance_(computer_science)</a>：</p><blockquote><p>Within the type system of a programming language, a <code>typing rule</code> or a<code> type constructor</code> is:</p></blockquote><ul><li><em>covariant</em> if it preserves the <a href=https://176.122.157.231:5004/wiki/Subtype>rdering of types (≤)</a>, which orders types from more specific to more generic;</li><li><em>contravariant</em> if it reverses this ordering;</li><li>bivariant if both of these apply (i.e., both <code>I&lt;A></code> ≤ <code>I&lt;B></code> and <code>I&lt;B></code> ≤ <code>I&lt;A></code> at the same time);[1]</li><li>variant if covariant, contravariant or bivariant;</li><li>invariant or nonvariant if not variant.</li></ul><h2 id=协变>协变</h2><p>首先考虑数组类型构造器： 从Animal类型，可以得到<code>Animal[]</code>（“animal数组”）。 是否可以把它当作</p><ul><li>协变：a <code>Cat[]</code> is an <code>Animal[]</code></li><li>逆变：an <code>Animal[]</code> is a <code>Cat[]</code></li><li>不变：an <code>Animal[]</code> is not a <code>Cat[]</code> and a <code>Cat[]</code> is not an <code>Animal[]</code></li></ul><h3 id=java中的协变数组>Java中的协变数组</h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// a 是单元素的 String 数组
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>String</span><span class=o>[]</span> <span class=n>a</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>[</span><span class=mi>1</span><span class=o>];</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// b 是 Object 的数组
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>Object</span><span class=o>[]</span> <span class=n>b</span> <span class=o>=</span> <span class=n>a</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 向 b 中赋一个整数。如果 b 确实是 Object 的数组，这是可能的；然而它其实是个 String 的数组，因此会发生 java.lang.ArrayStoreException
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>b</span><span class=o>[</span><span class=mi>0</span><span class=o>]</span> <span class=o>=</span> <span class=mi>1</span><span class=o>;</span>
+</span></span></code></pre></div><h2 id=oop中的继承>OOP中的继承</h2><blockquote><p>当一个子类<a href=https://176.122.157.231:3457/wiki/%E9%87%8D%E5%86%99>重写</a>一个超类的方法时，编译器必须检查重写方法是否具有正确的类型。虽然一些语言要求类型必须与超类相同，但允许重写方法有一个“更好的”类型也是类型安全的。对于大部分的方法子类化规则来说，这要求返回值的类型必须更具体，也就是<code>协变</code>，而且接受更宽泛的参数类型，也就是<code>逆变</code>。</p></blockquote><p><img src=/img/be914bff8d5611a54aa47597.png alt=be914bff8d5611a54aa47597.png></p><p>以下讨论基于Java语法，<code>抽象类C</code>如下：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>jshell</span><span class=o>&gt;</span> <span class=kd>abstract</span> <span class=kd>class</span> <span class=nc>C</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>   <span class=o>...&gt;</span> <span class=kd>abstract</span> <span class=n>C</span> <span class=nf>foo</span><span class=o>(</span><span class=n>C</span> <span class=n>c</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>   <span class=o>...&gt;</span> <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>|</span>  <span class=n>replaced</span> <span class=kd>class</span> <span class=nc>C</span>
+</span></span></code></pre></div><h3 id=返回值的协变>返回值的协变</h3><p>在允许协变返回值的语言中, 子类可以重写<code>foo</code>方法返回一个更具体的类型：</p><pre tabindex=0><code>jshell&gt; class D extends C {
    ...&gt; @Override
    ...&gt; D foo(C c) {return this;}
    ...&gt; }
 |  created class D
-</code></pre><h3 id=方法参数的协变与逆变>方法参数的协变与逆变</h3>
-<p>允许参数协变、逆变的面向对象语言并不多——Java会把它当成一个函数重载：</p>
-<p>协变：</p>
-<pre tabindex=0><code>jshell&gt; class E extends C {
+</code></pre><h3 id=方法参数的协变与逆变>方法参数的协变与逆变</h3><p>允许参数协变、逆变的面向对象语言并不多——Java会把它当成一个函数重载：</p><p>协变：</p><pre tabindex=0><code>jshell&gt; class E extends C {
    ...&gt; @Override
    ...&gt; C foo(E e) {return this;}
    ...&gt; }
@@ -99,8 +28,7 @@
 |  method does not override or implement a method from a supertype
 |  @Override
 |  ^-------^
-</code></pre><p>逆变：</p>
-<pre tabindex=0><code>jshell&gt; class F extends C {
+</code></pre><p>逆变：</p><pre tabindex=0><code>jshell&gt; class F extends C {
    ...&gt; @Override
    ...&gt; C foo(Object o) {return this;}
    ...&gt; }
@@ -112,37 +40,4 @@
 |  method does not override or implement a method from a supertype
 |  @Override
 |  ^-------^
-</code></pre><h4 id=summary-of-variance-and-inheritance>Summary of variance and inheritance</h4>
-<table>
-<thead>
-<tr>
-<th style=text-align:left>语言</th>
-<th style=text-align:right>Parameter type</th>
-<th style=text-align:center>Return type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style=text-align:left>C++ （自1998年）, Java (自J2SE 5.0), D</td>
-<td style=text-align:right>不变</td>
-<td style=text-align:center>协变</td>
-</tr>
-<tr>
-<td style=text-align:left>C#</td>
-<td style=text-align:right>不变</td>
-<td style=text-align:center>不变</td>
-</tr>
-</tbody>
-</table>
-<h2 id=参考>参考</h2>
-<ul>
-<li><a href=https://176.122.157.231:5004/wiki/Covariance_and_contravariance_(computer_science)>Covariance and contravariance</a></li>
-</ul>
-</article>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+</code></pre><h4 id=summary-of-variance-and-inheritance>Summary of variance and inheritance</h4><table><thead><tr><th style=text-align:left>语言</th><th style=text-align:right>Parameter type</th><th style=text-align:center>Return type</th></tr></thead><tbody><tr><td style=text-align:left>C++ （自1998年）, Java (自J2SE 5.0), D</td><td style=text-align:right>不变</td><td style=text-align:center>协变</td></tr><tr><td style=text-align:left>C#</td><td style=text-align:right>不变</td><td style=text-align:center>不变</td></tr></tbody></table><h2 id=参考>参考</h2><ul><li><a href=https://176.122.157.231:5004/wiki/Covariance_and_contravariance_(computer_science)>Covariance and contravariance</a></li></ul></article></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>

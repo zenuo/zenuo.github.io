@@ -1,76 +1,11 @@
-<!doctype html><html><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<title>
-📝基于xeCJK的TeX中文书写
-</title>
-<meta name=generator content="Hugo 0.91.2">
-<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
-<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
-<link rel=preconnect href=https://fonts.googleapis.com>
-<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
-<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
-<ul id=nav-menu class="w-full flex items-center list-reset">
-<li>
-<a href=https://zenuo.github.io/>Home</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/fragments/>Fragments</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/about/>About</a>
-</li>
-<li>
-<a href=https://zenuo.github.io/tags/>Tags</a>
-</li>
-</ul>
-</nav>
-<main class="flex-1 mt-10 sm:mt-12">
-<div>
-<header class="mb-8 font-sans-serif">
-<div class="text-sm font-gray-700 mb-8">
-<p class="uppercase font-semibold">
-<a class=text-gray-700 href=/fragments>fragments</a>
-</p>
-<p>Jul 19, 2020</p>
-</div>
-<h1 class="text-3xl mb-1 font-semibold">📝基于xeCJK的TeX中文书写</h1>
-<p class="italic text-xs">Last updated at: Jul 19, 2020</p>
-</header>
-<article class="prose serif mb-16 text-gray-800">
-<h3 id=1-安装环境>1 安装环境</h3>
-<p>首先，您需要在本地安装一个TeX发行版，您可以选择大而全的<a href=https://tug.org/mactex/mactex-download.html>MacTeX</a>，为了节省本地空间，此处选择更小的发行版<a href=http://tug.org/cgi-bin/mactex-download/BasicTeX.pkg>BasicTeX</a>；若网速过慢，你可以选择国内院校提供的镜像，比如<a href=https://mirrors.tuna.tsinghua.edu.cn/ctan/systems/mac/mactex/>tuna（清华大学开源软件镜像站）</a>；下载完成之后，运行程序，一路<code>continue</code>即可：</p>
-<p><img src=/img/63e8f062441750449249892f.png alt=63e8f062441750449249892f.png></p>
-<p>其次，使用<code>tlmgr(the native TeX Live Manager)</code>安装<code>ctex</code>和<code>xecjk</code>：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ sudo tlmgr install ctex xecjk
-</code></pre></div><h3 id=2-hello-world>2 Hello World</h3>
-<p>创建一个纯文本文件<code>hello_world.tex</code>，内容为：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-tex data-lang=tex><span class=k>\documentclass</span><span class=nb>{</span>article<span class=nb>}</span>
-<span class=k>\usepackage</span><span class=nb>{</span>xeCJK<span class=nb>}</span>
-<span class=k>\setCJKmainfont</span><span class=nb>{</span>STSong<span class=nb>}</span>
-<span class=k>\begin</span><span class=nb>{</span>document<span class=nb>}</span>
-Hello World!<span class=k>\\</span>
-天地玄黃宇宙洪荒日月盈仄
-<span class=k>\end</span><span class=nb>{</span>document<span class=nb>}</span>
-</code></pre></div><p>保存文件，使用<code>xelatex</code>命令，输出pdf文件：</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ xelatex hello_world.tex
-</code></pre></div><p>如果不出问题的话，输出的<code>hello_world.pdf</code>文件将会是：</p>
-<p><img src=/img/9a2750e5d182f628673ee7f6.png alt=9a2750e5d182f628673ee7f6.png></p>
-<h3 id=3-参考>3 参考</h3>
-<ol>
-<li><a href=https://tug.org/mactex/morepackages.html>** Smaller Download **</a></li>
-<li><a href=https://jdhao.github.io/2018/03/29/latex-chinese.zh/>全面总结如何在 LaTeX 中使用中文 (2020 最新版) - jdhao&rsquo;s blog</a></li>
-<li><a href=https://tex.stackexchange.com/questions/376420/include-chinese-characters-into-article-in-xelatex>Include Chinese characters into article in Xelatex</a></li>
-</ol>
-<div class="float-right mb-8">
-<p class="text-sm mb-4 font-gray-700 italic">(52 words)</p>
-</div>
-</article>
-</div>
-</main>
-<hr>
-<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
-<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
-</footer>
-</body>
-</html>
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>📝基于xeCJK的TeX中文书写</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><div><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/fragments>fragments</a></p><p>Jul 19, 2020</p></div><h1 class="text-3xl mb-1 font-semibold">📝基于xeCJK的TeX中文书写</h1><p class="italic text-xs">Last updated at: Jul 19, 2020</p></header><article class="prose serif mb-16 text-gray-800"><h3 id=1-安装环境>1 安装环境</h3><p>首先，您需要在本地安装一个TeX发行版，您可以选择大而全的<a href=https://tug.org/mactex/mactex-download.html>MacTeX</a>，为了节省本地空间，此处选择更小的发行版<a href=http://tug.org/cgi-bin/mactex-download/BasicTeX.pkg>BasicTeX</a>；若网速过慢，你可以选择国内院校提供的镜像，比如<a href=https://mirrors.tuna.tsinghua.edu.cn/ctan/systems/mac/mactex/>tuna（清华大学开源软件镜像站）</a>；下载完成之后，运行程序，一路<code>continue</code>即可：</p><p><img src=/img/63e8f062441750449249892f.png alt=63e8f062441750449249892f.png></p><p>其次，使用<code>tlmgr(the native TeX Live Manager)</code>安装<code>ctex</code>和<code>xecjk</code>：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>$ sudo tlmgr install ctex xecjk
+</span></span></code></pre></div><h3 id=2-hello-world>2 Hello World</h3><p>创建一个纯文本文件<code>hello_world.tex</code>，内容为：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-tex data-lang=tex><span class=line><span class=cl><span class=k>\documentclass</span><span class=nb>{</span>article<span class=nb>}</span>
+</span></span><span class=line><span class=cl><span class=k>\usepackage</span><span class=nb>{</span>xeCJK<span class=nb>}</span>
+</span></span><span class=line><span class=cl><span class=k>\setCJKmainfont</span><span class=nb>{</span>STSong<span class=nb>}</span>
+</span></span><span class=line><span class=cl><span class=k>\begin</span><span class=nb>{</span>document<span class=nb>}</span>
+</span></span><span class=line><span class=cl>Hello World!<span class=k>\\</span>
+</span></span><span class=line><span class=cl>天地玄黃宇宙洪荒日月盈仄
+</span></span><span class=line><span class=cl><span class=k>\end</span><span class=nb>{</span>document<span class=nb>}</span>
+</span></span></code></pre></div><p>保存文件，使用<code>xelatex</code>命令，输出pdf文件：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>$ xelatex hello_world.tex
+</span></span></code></pre></div><p>如果不出问题的话，输出的<code>hello_world.pdf</code>文件将会是：</p><p><img src=/img/9a2750e5d182f628673ee7f6.png alt=9a2750e5d182f628673ee7f6.png></p><h3 id=3-参考>3 参考</h3><ol><li><a href=https://tug.org/mactex/morepackages.html>** Smaller Download **</a></li><li><a href=https://jdhao.github.io/2018/03/29/latex-chinese.zh/>全面总结如何在 LaTeX 中使用中文 (2020 最新版) - jdhao&rsquo;s blog</a></li><li><a href=https://tex.stackexchange.com/questions/376420/include-chinese-characters-into-article-in-xelatex>Include Chinese characters into article in Xelatex</a></li></ol><div class="float-right mb-8"><p class="text-sm mb-4 font-gray-700 italic">(52 words)</p></div></article></div></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>
