@@ -1,0 +1,75 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+一个Shell管道的题目
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>May 17, 2019</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">一个Shell管道的题目</h1>
+<p class="italic text-xs">Last updated at: May 17, 2019</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>有如下<code>a文件</code>和<code>b文件</code>，请使用shell管道命令实现根据<code>a文件</code>中<code>17:20~17:35</code>期间<code>doValidate</code>的<code>traceId</code>找寻<code>b文件</code>中对应的日志信息：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ cat a
+2019-03-04 17:20:16 doValidate <span class=o>[</span>traceId12<span class=o>]</span>
+2019-03-04 17:21:17 doValidate <span class=o>[</span>traceId13<span class=o>]</span>
+2019-03-04 17:35:16 doValidate <span class=o>[</span>traceId13<span class=o>]</span>
+2019-03-04 18:20:16 doValidate <span class=o>[</span>traceId14<span class=o>]</span>
+2019-03-04 19:20:16 doValidate <span class=o>[</span>traceId14<span class=o>]</span>
+$ cat b
+2019-03-04 17:20:17 xxxxxx2    <span class=o>[</span>traceId12<span class=o>]</span>
+2019-03-04 17:21:18 xxxx22dd   <span class=o>[</span>traceId13<span class=o>]</span>
+2019-03-04 17:35:18 xxxx22dd   <span class=o>[</span>traceId13<span class=o>]</span>
+2019-03-04 18:20:17 xxxxed     <span class=o>[</span>traceId14<span class=o>]</span>
+2019-03-04 19:20:17 xxxsdsdfs  <span class=o>[</span>traceId14<span class=o>]</span>
+</code></pre></div><p>答案：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ sed -n <span class=s1>&#39;/2019-03-04 17:20:*/,/2019-03-04 17:35:*/p&#39;</span> a<span class=p>|</span>grep doValidate<span class=p>|</span>awk  <span class=s1>&#39;{print $4}&#39;</span><span class=p>|</span>uniq<span class=p>|</span> xargs -I <span class=s1>&#39;{}&#39;</span> grep -F <span class=s1>&#39;{}&#39;</span> b
+2019-03-04 17:20:17 xxxxxx2    <span class=o>[</span>traceId12<span class=o>]</span>
+2019-03-04 17:21:18 xxxx22dd   <span class=o>[</span>traceId13<span class=o>]</span>
+2019-03-04 17:35:18 xxxx22dd   <span class=o>[</span>traceId13<span class=o>]</span>
+</code></pre></div><h2 id=参考>参考</h2>
+<ul>
+<li><a href=http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-4.html>BASH Programming - Introduction HOW-TO: Pipes</a></li>
+<li><a href=https://stackoverflow.com/questions/199266/make-xargs-execute-the-command-once-for-each-line-of-input>Make xargs execute the command once for each line of input - Stack Overflow</a></li>
+</ul>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(98 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

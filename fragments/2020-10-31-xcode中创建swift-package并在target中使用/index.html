@@ -1,0 +1,72 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+🧰Xcode中创建Swift Package并在Target中使用
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Oct 31, 2020</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">🧰Xcode中创建Swift Package并在Target中使用</h1>
+<p class="italic text-xs">Last updated at: Oct 31, 2020</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>首先在Xcode上创建一个<code>Swift Package</code>，菜单是<code>File</code> / <code>New</code> / <code>Swift Package</code>：</p>
+<p><img src=/img/9e9f613125350f50b735061e.jpg alt=保存></p>
+<p>选择保存路径：</p>
+<p><img src=/img/7d3e86e2675b37316f5ba398.png alt=7d3e86e2675b37316f5ba398.png></p>
+<p>注意选择<code>Add to</code>：</p>
+<p><img src=/img/ab0e51ad624bc743d84f5cb4.jpg alt=ab0e51ad624bc743d84f5cb4.jpg></p>
+<ol>
+<li>选择<code>Project</code> / <code>TARGETS</code>，然后选择需要使用我们刚才创建的<code>Swift Package</code>的<code>Target</code>，然后选择<code>General</code>栏，在<code>Framworks, Libraries, and Embedded Content</code>中添加Package，如图：</li>
+</ol>
+<p><img src=/img/481c498dde6159ffedb050a9.png alt=481c498dde6159ffedb050a9.png></p>
+<ol start=2>
+<li>选择<code>Build Phases</code>，在<code>Dependencies</code>添加Package，如图：</li>
+</ol>
+<p><img src=/img/724df656b457426f5f214ecd.png alt=724df656b457426f5f214ecd.png></p>
+<p>没有其他问题的话，您的Target能成功构建了。</p>
+<h2 id=reference>Reference</h2>
+<ol>
+<li><a href=https://developer.apple.com/documentation/swift_packages/organizing_your_code_with_local_packages>Organizing Your Code with Local Packages</a></li>
+<li><a href=https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app>Adding Package Dependencies to Your App</a></li>
+</ol>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(34 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

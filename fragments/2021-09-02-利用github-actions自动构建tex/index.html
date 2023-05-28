@@ -1,0 +1,74 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+📦利用GitHub Actions自动构建TeX
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Sep 02, 2021</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">📦利用GitHub Actions自动构建TeX</h1>
+<p class="italic text-xs">Last updated at: Sep 02, 2021</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>笔者维护的一些TeX文档（简历等）通常是在<code>安装好TeX发行版</code>的主机上进行编辑和构建，当无法访问这些主机的时候，该怎么操作呢？🤔</p>
+<p>联想到GitHub的Actions功能，可以用来做CI/CD，也许有戏。通过搜索，找到了<a href=https://github.com/xu-cheng/latex-action>xu-cheng/latex-action</a>，可以达到通过<code>git push</code>操作来触发构建，并将构建的pdf文件打包放置到<code>Workflow</code>的<code>Artifacts</code>中。</p>
+<p>假设需要被编译的TeX文件的相对路径为<code>resume.tex</code>，编译器是<code>XeLaTeX</code>，那么可以用下面的workflow描述文件来达到目的：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-yml data-lang=yml><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Build LaTeX document</span><span class=w>
+</span><span class=w></span><span class=nt>on</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>push]</span><span class=w>
+</span><span class=w></span><span class=nt>jobs</span><span class=p>:</span><span class=w>
+</span><span class=w>  </span><span class=nt>build_latex</span><span class=p>:</span><span class=w>
+</span><span class=w>    </span><span class=nt>runs-on</span><span class=p>:</span><span class=w> </span><span class=l>ubuntu-latest</span><span class=w>
+</span><span class=w>    </span><span class=nt>steps</span><span class=p>:</span><span class=w>
+</span><span class=w>      </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Set up Git repository</span><span class=w>
+</span><span class=w>        </span><span class=nt>uses</span><span class=p>:</span><span class=w> </span><span class=l>actions/checkout@v2</span><span class=w>
+</span><span class=w>      </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Compile LaTeX document</span><span class=w>
+</span><span class=w>        </span><span class=nt>uses</span><span class=p>:</span><span class=w> </span><span class=l>xu-cheng/latex-action@v2</span><span class=w>
+</span><span class=w>        </span><span class=nt>with</span><span class=p>:</span><span class=w>
+</span><span class=w>          </span><span class=nt>root_file</span><span class=p>:</span><span class=w> </span><span class=l>resume.tex</span><span class=w>
+</span><span class=w>          </span><span class=nt>pre_compile</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;fc-list :lang=zh&#34;</span><span class=w>
+</span><span class=w>          </span><span class=nt>latexmk_use_xelatex</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span><span class=w>      </span>- <span class=nt>uses</span><span class=p>:</span><span class=w> </span><span class=l>actions/upload-artifact@v2</span><span class=w>
+</span><span class=w>        </span><span class=nt>with</span><span class=p>:</span><span class=w>
+</span><span class=w>          </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>PDF</span><span class=w>
+</span><span class=w>          </span><span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>resume.pdf</span><span class=w>
+</span></code></pre></div><p>放置到仓库的<code>.github/workflows/</code>路径，再触发push即可。</p>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(16 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

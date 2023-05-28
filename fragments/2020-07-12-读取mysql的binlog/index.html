@@ -1,0 +1,108 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+📜读取MySQL的binlog
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Jul 12, 2020</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">📜读取MySQL的binlog</h1>
+<p class="italic text-xs">Last updated at: Jul 12, 2020</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>配置<code>~/.my.cnf</code>，开启binlog:</p>
+<pre tabindex=0><code>[mysqld]
+server-id=master-01
+log-bin=mysql-bin
+</code></pre><p>假设需要读取的binlog的文件是<code>mysql-bin.000001</code>，那么用下面命令即可根据开始结束时间输出可读日志：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>mysqlbinlog --base64-output<span class=o>=</span>DECODE-ROWS <span class=se>\
+</span><span class=se></span>-v <span class=se>\
+</span><span class=se></span>--start-datetime<span class=o>=</span><span class=s1>&#39;2020-07-12 21:33:10&#39;</span> <span class=se>\
+</span><span class=se></span>--stop-datetime<span class=o>=</span><span class=s1>&#39;2020-07-12 21:40:10&#39;</span> <span class=se>\
+</span><span class=se></span>mysql-bin.000001
+</code></pre></div><p>输出如下：</p>
+<pre tabindex=0><code>/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#200712 21:24:18 server id 0  end_log_pos 123 CRC32 0x0d383a89 	Start: binlog v 4, server v 5.7.29-log created 200712 21:24:18 at startup
+ROLLBACK/*!*/;
+# at 672
+#200712 21:33:44 server id 0  end_log_pos 737 CRC32 0x71a595ed 	Anonymous_GTID	last_committed=2	sequence_number=3	rbr_only=yes
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 737
+#200712 21:33:44 server id 0  end_log_pos 809 CRC32 0xb207c15c 	Query	thread_id=2	exec_time=0	error_code=0
+SET TIMESTAMP=1594560824/*!*/;
+SET @@session.pseudo_thread_id=2/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1436549152/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=45,@@session.collation_connection=45,@@session.collation_server=45/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+BEGIN
+/*!*/;
+# at 809
+#200712 21:33:44 server id 0  end_log_pos 860 CRC32 0x6aa48d0d 	Table_map: `test`.`int_test` mapped to number 107
+# at 860
+#200712 21:33:44 server id 0  end_log_pos 900 CRC32 0xb6d5df66 	Write_rows: table id 107 flags: STMT_END_F
+### INSERT INTO `test`.`int_test`
+### SET
+###   @1=8
+# at 900
+#200712 21:33:44 server id 0  end_log_pos 931 CRC32 0x5b5c9d33 	Xid = 15
+COMMIT/*!*/;
+# at 931
+#200712 21:35:32 server id 0  end_log_pos 954 CRC32 0x95c3815f 	Stop
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;
+</code></pre><h1 id=参考>参考</h1>
+<ol>
+<li><a href=https://dev.mysql.com/doc/refman/5.7/en/replication-howto-masterbaseconfig.html>16.1.2.1 Setting the Replication Master Configuration</a></li>
+<li><a href=https://dev.mysql.com/doc/refman/5.7/en/mysqlbinlog-row-events.html>4.6.7.2 mysqlbinlog Row Event Display</a></li>
+</ol>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(225 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+关于Java语言的finally语句
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/posts>posts</a>
+</p>
+<p>May 05, 2019</p>
+</div>
+<h1 class="title mb-2">关于Java语言的finally语句</h1>
+<p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (320 words) </p>
+<div id=tags>
+</div>
+</header>
+<article class="prose serif mb-12 text-gray-800">
+<h2 id=是否一定执行执行时机>是否一定执行、执行时机</h2>
+<p>一切要从这道题目说起：</p>
+<p>Java语言中的<code>finally</code>语句（块）一定会被执行吗？是在<code>try</code>语句返回<strong>之前</strong>还是<strong>之后</strong>执行？</p>
+<p>由于对这个问题的一知半解，当时只回答了前半个问题<code>是的，一定会执行</code>，没有回答后半个问题；笔试结束后查资料&mldr;才发现事情没那么简单🤯</p>
+<p>诚然，我的回答是<strong>错误</strong>的，以下两种情况的finally语句不会被执行：</p>
+<ol>
+<li><code>try</code>语句没有被执行；也说明了finally语句被执行的<code>必要非充分</code>条件是<code>对应try语句被执行</code></li>
+<li><code>try</code>语句中有<code>停止JVM</code>的语句；</li>
+</ol>
+<p>后半个问题的答案是<code>之前</code>，即在<code>try</code>语句<code>返回</code>之前执行，可通过一个简单的例子来说明：</p>
+<pre tabindex=0><code class=language-jshell data-lang=jshell>jshell&gt; String test1() {
+   ...&gt;     System.out.println(&quot;return statement&quot;);
+   ...&gt;
+   ...&gt;     return &quot;after return&quot;;
+   ...&gt; }
+|  created method test1()
+
+jshell&gt; String test2() {
+   ...&gt;     try {
+   ...&gt;         System.out.println(&quot;try block&quot;);
+   ...&gt;
+   ...&gt;         return test1();
+   ...&gt;     } finally {
+   ...&gt;         System.out.println(&quot;finally block&quot;);
+   ...&gt;     }
+   ...&gt; }
+|  created method test2()
+
+jshell&gt; test2()
+try block
+return statement
+finally block
+$1 ==&gt; &quot;after return&quot;
+</code></pre><p>更详细地说明：执行return语句<strong>之后</strong>，再执行<code>finally语句</code>，再<strong>返回</strong>调用者；</p>
+<h2 id=执行的影响>执行的影响</h2>
+<h3 id=finally语句中的return语句>finally语句中的return语句</h3>
+<pre tabindex=0><code class=language-jshell data-lang=jshell>jshell&gt; int test() {
+   ...&gt;     int b = 20;
+   ...&gt;     try {
+   ...&gt;         System.out.println(&quot;try block&quot;);
+   ...&gt; 
+   ...&gt;         return b += 80;
+   ...&gt;     } catch (Exception e) {
+   ...&gt; 
+   ...&gt;         System.out.println(&quot;catch block&quot;);
+   ...&gt;     } finally {
+   ...&gt; 
+   ...&gt;         System.out.println(&quot;finally block&quot;);
+   ...&gt; 
+   ...&gt;         if (b &gt; 25) {
+   ...&gt;             System.out.println(&quot;b&gt;25, b = &quot; + b);
+   ...&gt;         }
+   ...&gt; 
+   ...&gt;         return 200;
+   ...&gt;     }
+   ...&gt; }
+|  modified method test()
+
+jshell&gt; test()
+try block
+finally block
+b&gt;25, b = 100
+$2 ==&gt; 200
+</code></pre><p>说明finally的return语句的值被<strong>返回</strong>给调用者，即finally块中的return语句会<strong>覆盖</strong>try块中的return返回；</p>
+<h2 id=finally语句中对try语句返回值的修改>finally语句中对try语句返回值的修改</h2>
+<p>这里要分为两种情况，返回值是<code>基本类型</code>还是<code>引用类型</code>：</p>
+<ol>
+<li>若是<strong>基本类型</strong>，修改无效；</li>
+<li>若是<strong>引用类型</strong>，也要分为两种情况：
+<ol>
+<li>若是修改<strong>引用</strong>，则无效；</li>
+<li>若是修改<strong>被引用的对象的内容</strong>，则有效；</li>
+</ol>
+</li>
+</ol>
+<p>通过两个例子来演示：</p>
+<h3 id=基本类型>基本类型</h3>
+<pre tabindex=0><code class=language-jshell data-lang=jshell>jshell&gt; int test() {
+   ...&gt;     int b = 20;
+   ...&gt; 
+   ...&gt;     try {
+   ...&gt;         System.out.println(&quot;try block&quot;);
+   ...&gt; 
+   ...&gt;         return b += 80;
+   ...&gt;     } catch (Exception e) {
+   ...&gt;         System.out.println(&quot;catch block&quot;);
+   ...&gt;     } finally {
+   ...&gt;         System.out.println(&quot;finally block&quot;);
+   ...&gt; 
+   ...&gt;         if (b &gt; 25) {
+   ...&gt;             System.out.println(&quot;b&gt;25, b = &quot; + b);
+   ...&gt;         }
+   ...&gt; 
+   ...&gt;         b = 150;
+   ...&gt;     }
+   ...&gt; 
+   ...&gt;     return 2000;
+   ...&gt; }
+|  modified method test()
+
+jshell&gt; test()
+try block
+finally block
+b&gt;25, b = 100
+$3 ==&gt; 100
+</code></pre><p>让我们来探究一下这个例子的<a href=/attachment/finally-primitive-type-example.tgz>字节码</a>：</p>
+<blockquote>
+<p>截图自<a href=https://github.com/ingokegel/jclasslib>jclasslib</a>工具</p>
+</blockquote>
+<p><img src=/img/afcd7098269159ba07bf670a.png alt=afcd7098269159ba07bf670a.png></p>
+<ul>
+<li><code>6-8</code>行，将<strong>本地变量数组（local variable array）<strong>的第<code>0</code>个值（即20）加80，并被压入</strong>操作数栈</strong>，保存在第<code>1</code>个int值中</li>
+<li><code>19-22</code>行，将<code>150</code>压入操作数栈，保存在<code>本地变量数组的第0个值</code>中，将<code>本地变量数组的第1个值</code>即（100）压入操作数栈，返回</li>
+</ul>
+<p>故而语句<code>b = 150;</code>并没有影响到返回值；</p>
+<h3 id=引用类型>引用类型</h3>
+<pre tabindex=0><code class=language-jshell data-lang=jshell>jshell&gt; Map&lt;String, String&gt; test() {
+   ...&gt;     Map&lt;String, String&gt; map = new HashMap&lt;String, String&gt;();
+   ...&gt;     map.put(&quot;KEY&quot;, &quot;INIT&quot;);
+   ...&gt;     try {
+   ...&gt;         map.put(&quot;KEY&quot;, &quot;TRY&quot;);
+   ...&gt;         return map;
+   ...&gt;     } catch (Exception e) {
+   ...&gt;         map.put(&quot;KEY&quot;, &quot;CATCH&quot;);
+   ...&gt;     } finally {
+   ...&gt;         map.put(&quot;KEY&quot;, &quot;FINALLY&quot;);
+   ...&gt;         map = null;
+   ...&gt;     }
+   ...&gt;     return map;
+   ...&gt; }
+|  replaced method test()
+
+jshell&gt; test()
+$4 ==&gt; {KEY=FINALLY}
+</code></pre><p>这个例子的<a href=/attachment/finally-reference-type-example.tgz>字节码</a>如图：</p>
+<p><img src=/img/2cb3134765477ad23e79d035.png alt=2cb3134765477ad23e79d035.png></p>
+<p>与上同理。</p>
+<h2 id=参考>参考</h2>
+<ol>
+<li><a href=https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.istore_n>istore_n</a></li>
+<li><a href=https://www.cnblogs.com/lanxuezaipiao/p/3440471.html>Java finally语句到底是在return之前还是之后执行？</a></li>
+</ol>
+</article>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

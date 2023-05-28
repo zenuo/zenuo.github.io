@@ -1,0 +1,113 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+在树莓派上安装Arch Linux ARM
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Aug 08, 2018</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">在树莓派上安装Arch Linux ARM</h1>
+<p class="italic text-xs">Last updated at: Aug 08, 2018</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<blockquote>
+<p>来自https://archlinuxarm.org/platforms/armv6/raspberry-pi</p>
+</blockquote>
+<p>请将下面指令中的<code>sdX</code>替换为SD卡在您电脑中的设备名称。</p>
+<ol>
+<li>使用fdisk为SD卡分区:</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># fdisk /dev/sdX</span>
+</code></pre></div><ol start=2>
+<li>在fdisk的提示符中，删除原有的分区，然后新建分区：
+<ol>
+<li>按<code>o</code>，清除此设备上所有的分区；</li>
+<li>按<code>p</code>来列出所有分区，当前设备应该没有任何分区存在；</li>
+<li>按<code>n</code>，然后按<code>p</code>（主分区），然后按<code>1</code>（设备上第一个分区），然后按<code>回车</code>键接受默认的第一个扇区，然后为最后一个扇区输入<code>+100M</code>；</li>
+<li>按<code>t</code>，然后按<code>c</code>设置第一个分区类型为<code>W95 FAT32(LBA)</code>；</li>
+<li>按<code>n</code>，然后按<code>p</code>（主分区），按<code>2</code>（设备上第二个分区），然后按两次<code>回车</code>来接受默认的第一个和最后一个扇区；</li>
+<li>按<code>w</code>，写入分区表后退出；</li>
+</ol>
+</li>
+<li>创建FAT文件系统并装载</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># mkfs.vfat /dev/sdX1</span>
+<span class=c1># mkdir boot</span>
+<span class=c1># mount /dev/sdX1 boot</span>
+</code></pre></div><ol start=4>
+<li>创建ext4文件系统并装载:</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># mkfs.ext4 /dev/sdX2</span>
+<span class=c1># mkdir root</span>
+<span class=c1># mount /dev/sdX2 root</span>
+</code></pre></div><ol start=5>
+<li>下载系统镜像文件，并且提取到<code>root</code>文件系统（注，作为<code>root用户</code>，而不是通过<code>sudo</code>）:</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz</span>
+<span class=c1># bsdtar -xpf ArchLinuxARM-rpi-latest.tar.gz -C root</span>
+<span class=c1># sync # 此命令比较耗时</span>
+</code></pre></div><ol start=6>
+<li>移动boot文件到第一个分区：</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># mv root/boot/* boot</span>
+</code></pre></div><ol start=7>
+<li>卸载两个分区</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># umount boot root</span>
+</code></pre></div><ol start=8>
+<li>将SD卡插入到树莓派，连接以太网，并且连接电源</li>
+<li>使用<code>串行控制台(serial console)</code>或者<code>SSH</code>连接</li>
+</ol>
+<ul>
+<li>使用默认用户<code>alarm</code>，密码<code>alarm</code></li>
+<li><code>root</code>用户的密码默认是<code>root</code></li>
+</ul>
+<blockquote>
+<p>注：为了安全，请强化用户密码</p>
+</blockquote>
+<ol start=10>
+<li>初始化pacman密钥环并填充Arch Linux ARM包签名密钥:</li>
+</ol>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># pacman-key --init</span>
+<span class=c1># pacman-key --populate archlinuxarm</span>
+</code></pre></div><p>至此，树莓派安装完成，您可以使用包管理器<code>pacman</code>安装sudo/ufw等工具，强化安全，也可以当作一个家用的服务器，祝玩得开心🥳~</p>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(77 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

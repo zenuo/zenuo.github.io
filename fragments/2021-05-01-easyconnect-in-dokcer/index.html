@@ -1,0 +1,124 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+🧰EasyConnect in Dokcer
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>May 01, 2021</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">🧰EasyConnect in Dokcer</h1>
+<p class="italic text-xs">Last updated at: May 01, 2021</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p><a href=https://www.sangfor.com/en/products/infrastructure/easyconnect>Sangfor EasyConnect</a>是一款专有的VPN解决方案，官方支持多种平台的客户端；但该软件目前存在以下的几种行为：</p>
+<ol>
+<li>配置一个开机自动启动的守护进程<code>EasyMonitor</code></li>
+<li>安装CA根证书</li>
+</ol>
+<p>为了避免上述两种情况对本地系统造成不良影响，尝试寻找方法将EasyConnect运行在受控的容器内。所幸在<a href=https://github.com/Hagb/docker-easyconnect>Hagb/docker-easyconnect</a>找到了，该仓库介绍了一种在Docker内运行EasyConnect的方案。通过该方案，在此记录下我的实践过程。</p>
+<h2 id=1-运行容器>1 运行容器</h2>
+<blockquote>
+<p>在<code>Docker宿主机</code>为<a href=https://alpinelinux.org/>Alpine Linux</a>时，映射到<code>Docker宿主机</code>的端口，无法在宿主机的外部网络（例如宿主机所在的局域网）访问，但可以在宿主机本地访问；</p>
+</blockquote>
+<p>创建文件用于保存登录凭证，以实现auto login：</p>
+<pre tabindex=0><code>$ touch ~/.easyconn
+</code></pre><p>从Docker镜像<code>hagb/docker-easyconnect:cli</code>创建一个名称为<code>easyconnect</code>的容器，并且将<code>容器的1080端口</code>映射到<code>Docker宿主机的1080端口</code>（1080只是一个示例值，可以是其他的；敲黑板，后续会用到）：</p>
+<pre tabindex=0><code>$ docker run --name easyconnect --device /dev/net/tun --cap-add NET_ADMIN -ti -v $HOME/.easyconn:/root/.easyconn -e EC_VER=7.6.8 -e EXIT=1 -p 1080:1080 hagb/docker-easyconnect:cli
+</code></pre><p>根据提示输入<code>服务器URL</code>、<code>用户名</code>、<code>密码</code>。</p>
+<p>注意服务器URL末尾不需要反斜线（<code>/</code>），例如正确的<code>https://vpn_host</code>。</p>
+<p>如果成功登入，则会提示：</p>
+<pre tabindex=0><code>user &quot;xx&quot; login successfully!
+</code></pre><h2 id=2-浏览器over-proxy>2 浏览器over proxy</h2>
+<ol>
+<li>
+<p>浏览器运行时动态配置代理，可以通过<a href=https://github.com/FelisCatus/SwitchyOmega>SwitchyOmega</a>来实现，须将Proxy设置为<code>Docker宿主机的1080端口</code></p>
+</li>
+<li>
+<p>浏览器启动时指定代理，若您是使用<code>Chromium</code>相关（比如Chrome），则可通过命令行启动：</p>
+</li>
+</ol>
+<pre tabindex=0><code>$ chromium —proxy-server=socks5://${Docker宿主机IP}:1080
+</code></pre><h2 id=3-ssh-over-proxy>3 ssh over proxy</h2>
+<blockquote>
+<p>若您是使用Arch Linux，需要安装openbsd-netcat，而不是gnu-netcat</p>
+</blockquote>
+<p>编辑ssh配置文件<code>~/.ssh/config</code>，添加内容：</p>
+<pre tabindex=0><code>Host 10.1.*
+    ProxyCommand /usr/bin/nc -x ${Docker宿主机IP}:1080 %h %p
+</code></pre><p>使得在通过ssh访问匹配<code>10.1.*</code>（仅仅是示例，需要根据您的实际使用情况调整）的主机时，通过代理<code>${Docker宿主机IP}:1080</code></p>
+<h2 id=4-git-over-proxy>4 git over proxy</h2>
+<p>分为两种情况：</p>
+<ol>
+<li>
+<p>若git仓库的remote是<code>ssh</code>协议，编辑ssh配置文件<code>~/.ssh/config</code>，添加内容：</p>
+<pre tabindex=0><code>Host ${git仓库域名}
+    ProxyCommand /usr/bin/nc -x ${Docker宿主机IP}:1080 %h %p
+</code></pre></li>
+<li>
+<p>若git仓库的remote是<code>http</code>或者<code>https</code>协议，那么在与remote交互时，为git命令指定变量<code>http_proxy</code>，例如：</p>
+<pre tabindex=0><code>$ https_proxy=socks5://localhost:1080 git clone http://${git仓库域名}/x/x.git
+</code></pre></li>
+</ol>
+<h2 id=5-mysql-client-over-proxy>5 MySQL client over proxy</h2>
+<p>因为<a href=https://dev.mysql.com/doc/refman/8.0/en/mysql.html>原生MySQL client</a>不支持socks5代理，可通过其他客户端来达到目的；例如<a href=https://www.mycli.net/>mycli</a>，但mycli目前没有支持socks5代理，所以也需要采取一些额外的措施。</p>
+<p>因为mycli基于Python实现，故可通过<a href=https://pypi.org/project/PySocks/>PySocks</a>来对整个标准库进行猴补丁(Monkey patch)，使所有的socket都通过一个代理建立。</p>
+<p>假设您是通过brew安装的mycli，那么需要修改<code>/usr/local/bin/mycli</code>，添加内容：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=kn>import</span> <span class=nn>socket</span>
+<span class=kn>import</span> <span class=nn>socks</span>
+
+<span class=n>ip</span> <span class=o>=</span> <span class=s1>&#39;$</span><span class=si>{Docker宿主机IP}</span><span class=s1>&#39;</span>
+<span class=n>port</span> <span class=o>=</span> <span class=mi>1080</span>
+<span class=n>socks</span><span class=o>.</span><span class=n>setdefaultproxy</span><span class=p>(</span><span class=n>socks</span><span class=o>.</span><span class=n>PROXY_TYPE_SOCKS5</span><span class=p>,</span> <span class=n>ip</span><span class=p>,</span> <span class=n>port</span><span class=p>)</span>
+<span class=n>socket</span><span class=o>.</span><span class=n>socket</span> <span class=o>=</span> <span class=n>socks</span><span class=o>.</span><span class=n>socksocket</span>
+</code></pre></div><p>保存即可使用。</p>
+<h2 id=6-参考>6 参考</h2>
+<ol>
+<li><a href=https://zhuanlan.zhihu.com/p/259634641>https://zhuanlan.zhihu.com/p/259634641</a></li>
+<li><a href=https://www.sangfor.com/en/products/infrastructure/easyconnect>https://www.sangfor.com/en/products/infrastructure/easyconnect</a></li>
+<li><a href=https://github.com/Hagb/docker-easyconnect>https://github.com/Hagb/docker-easyconnect</a></li>
+<li><a href=https://docs.docker.com/config/containers/container-networking/>https://docs.docker.com/config/containers/container-networking/</a></li>
+<li><a href=https://superuser.com/questions/454210/how-can-i-use-ssh-with-a-socks-5-proxy>https://superuser.com/questions/454210/how-can-i-use-ssh-with-a-socks-5-proxy</a></li>
+<li><a href=https://pypi.org/project/PySocks/>https://pypi.org/project/PySocks/</a></li>
+<li><a href=https://www.mycli.net/>https://www.mycli.net/</a></li>
+<li><a href=https://dev.mysql.com/doc/refman/8.0/en/mysql.html>https://dev.mysql.com/doc/refman/8.0/en/mysql.html</a></li>
+</ol>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(122 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

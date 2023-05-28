@@ -1,0 +1,140 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+基于Wine使用QQ轻聊版
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Jun 15, 2019</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">基于Wine使用QQ轻聊版</h1>
+<p class="italic text-xs">Last updated at: Jun 15, 2019</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p><a href=https://www.winehq.org/>wine</a>是用于在其他操作系统上运行Windows应用程序的开源软件，我们可以用它来在Linux操作系统上使用QQ轻聊版客户端，满足日常的通信需求。当然，你还可以使用微信等客户端，操作流程与本文所述<strong>大同小异</strong>。</p>
+<h2 id=安装wine>安装wine</h2>
+<p>执行命令：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># 安装wine和winetrick，我们用后者来安装一些依赖库</span>
+sudo pacman -S wine winetrick
+<span class=c1># 设置环境变量WINEARCH为win32</span>
+<span class=nb>echo</span> <span class=s2>&#34;\nexport WINEARCH=win32&#34;</span> &gt;&gt; ~/.profile <span class=o>&amp;&amp;</span> <span class=nb>source</span> ~/.profile
+<span class=c1># 安装依赖库，此步骤需要下载一些文件，您可以设置http_proxy和https_proxy来使用代理，达到加速的目的</span>
+winetricks msxml3 gdiplus riched20 riched30 ie6 vcrun6 vcrun2005sp1 vcrun6sp6
+<span class=c1># 追加配置到~/.wine/drive_c/windows/win.ini</span>
+<span class=nb>echo</span> <span class=s2>&#34;\n[Desktop]
+</span><span class=s2>menufontsize=13
+</span><span class=s2>messagefontsize=13
+</span><span class=s2>statusfontsize=13
+</span><span class=s2>IconTitleSize=13&#34;</span> &gt;&gt; ~/.wine/drive_c/windows/win.ini
+</code></pre></div><p>创建文件<code>font.reg</code>：</p>
+<pre tabindex=0><code class=language-regedit data-lang=regedit>REGEDIT4
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes]
+&quot;Arial&quot;=&quot;simsun&quot;
+&quot;Arial CE,238&quot;=&quot;simsun&quot;
+&quot;Arial CYR,204&quot;=&quot;simsun&quot;
+&quot;Arial Greek,161&quot;=&quot;simsun&quot;
+&quot;Arial TUR,162&quot;=&quot;simsun&quot;
+&quot;Courier New&quot;=&quot;simsun&quot;
+&quot;Courier New CE,238&quot;=&quot;simsun&quot;
+&quot;Courier New CYR,204&quot;=&quot;simsun&quot;
+&quot;Courier New Greek,161&quot;=&quot;simsun&quot;
+&quot;Courier New TUR,162&quot;=&quot;simsun&quot;
+&quot;FixedSys&quot;=&quot;simsun&quot;
+&quot;Helv&quot;=&quot;simsun&quot;
+&quot;Helvetica&quot;=&quot;simsun&quot;
+&quot;MS Sans Serif&quot;=&quot;simsun&quot;
+&quot;MS Shell Dlg&quot;=&quot;simsun&quot;
+&quot;MS Shell Dlg 2&quot;=&quot;simsun&quot;
+&quot;System&quot;=&quot;simsun&quot;
+&quot;Tahoma&quot;=&quot;simsun&quot;
+&quot;Times&quot;=&quot;simsun&quot;
+&quot;Times New Roman CE,238&quot;=&quot;simsun&quot;
+&quot;Times New Roman CYR,204&quot;=&quot;simsun&quot;
+&quot;Times New Roman Greek,161&quot;=&quot;simsun&quot;
+&quot;Times New Roman TUR,162&quot;=&quot;simsun&quot;
+&quot;Tms Rmn&quot;=&quot;simsun&quot;
+</code></pre><p>根据该文件修改注册表，执行：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>regedit font.reg
+</code></pre></div><p>将<code>Windows</code>操作系统的**<code>C:\Windows\Fonts</code><strong>下的文件复制到</strong><code>~/.wine/drive_c/windows/Fonts/</code>**中，(此步骤无命令提示)。</p>
+<p>执行<code>winecfg</code>；选择<code>Applications</code>，将wine的Windows版本修改为<code>Windows 10</code>，如图：</p>
+<p><img src=/img/287f7e1138d0bcf7904e0e98.png alt=287f7e1138d0bcf7904e0e98.png></p>
+<p>选择<code>Libraries</code>，在<code>New override for library</code>中输入<code>ntoskrnl.exe</code>，点击<code>Add</code>，在<code>Existing overrides</code>中选择<code>ntoskrnl.exe</code>，点击<code>Edit</code>，选择<code>Disable</code>，点击小窗口的<code>OK</code>，如图：</p>
+<p><img src=/img/5446e25e6b1de029224bab58.png alt=5446e25e6b1de029224bab58.png>
+<img src=/img/23ac73ab1c0e5e9987e71af8.png alt=23ac73ab1c0e5e9987e71af8.png></p>
+<p>对<code>txplatform.exe</code>执行同样的操作后，点击<code>OK</code>，保存修改，如同：</p>
+<p><img src=/img/08d9527e3cd5c9dc079c7788.png alt=08d9527e3cd5c9dc079c7788.png></p>
+<h2 id=安装qq轻聊版>安装QQ轻聊版</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># 下载QQ轻聊版7.9安装包</span>
+curl -O -L http://dldir1.qq.com/qqfile/qq/QQ7.9Light/14308/QQ7.9Light.exe
+<span class=c1># 执行安装包，安装QQ</span>
+wine QQ7.9Light.exe
+</code></pre></div><p>创建启动器文件<code>~/.local/share/applications/QQ.desktop</code>，内容为：</p>
+<pre tabindex=0><code class=language-desktop data-lang=desktop>[Desktop Entry]
+Name=QQ轻聊版
+Type=Application
+Exec=env LC_ALL=zh_CN.UTF-8 WINEPREFIX=&quot;/home/{您的用户名}/.wine&quot; wine &quot;/home/{您的用户名}/.wine/drive_c/Program Files/Tencent/QQLite/Bin/QQ.exe&quot;
+</code></pre><blockquote>
+<p>请将<code>{您的用户名}</code>修改为您的用户名，因为启动器中不支持<code>~</code>表示家目录</p>
+</blockquote>
+<p>您现在可以在启动器中启动<code>QQ轻聊版</code>，如图：</p>
+<p><img src=/img/066c1767f22134ce7d1581c8.png alt=066c1767f22134ce7d1581c8.png></p>
+<p>也可以执行命令启动：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>wine ~/.wine/drive_c/Program<span class=se>\ </span>Files/Tencent/QQLite/Bin/QQ.exe
+</code></pre></div><h2 id=粘贴板不同步>粘贴板不同步</h2>
+<p>若出现wine的粘贴板与操作系统的粘贴板不同步，则编辑如下注册表文件<code>UsePrimarySelection.reg</code>，内容：</p>
+<pre tabindex=0><code class=language-regedit data-lang=regedit>REGEDIT4
+[HKEY_CURRENT_USER\Software\Wine\X11 Driver]
+&quot;UsePrimarySelection&quot;=&quot;Y&quot;
+</code></pre><p>根据该文件修改注册表，执行：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>regedit UsePrimarySelection.reg
+</code></pre></div><p>重启操作系统，即可生效。</p>
+<blockquote>
+<p>注：使注册表在应用程序启动时生效的方法，不必须是重启操作系统，这个先不深究。</p>
+</blockquote>
+<h2 id=参考>参考</h2>
+<ul>
+<li><a href=https://wiki.archlinux.org/index.php/Wine_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#%E5%90%AF%E5%8A%A8%E5%99%A8%E5%92%8C%E8%8F%9C%E5%8D%95>启动器和菜单</a></li>
+<li><a href=https://blog.51cto.com/binuu/1982241>QQ各版本下载地址</a></li>
+<li><a href=https://www.xuecaijie.com/linux/141.html>wine中软件中文乱码出现方框问题解决方案</a></li>
+<li><a href=https://askubuntu.com/questions/433739/clipboard-syncronization-between-wine-and-x11>[Bug 31216] Cut and paste: gnome terminal overrides Wine clipboard?</a></li>
+<li><a href=https://wiki.archlinux.org/index.php/desktop_entries>Desktop entries</a></li>
+</ul>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(169 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+使用Javac日志分析工程依赖
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Jul 02, 2022</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">使用Javac日志分析工程依赖</h1>
+<p class="italic text-xs">Last updated at: Jul 02, 2022</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>最近的工作是迁移一个历史遗留的工件（本文称之为工件A），首先需要梳理这个工件的消费者。初步计划按照下面步骤进行：</p>
+<ol>
+<li>在代码搜索引擎（例如<a href=https://github.com/sourcegraph/zoekt>zoekt</a>）里搜索：
+<ul>
+<li>关键词：工件A的java文件头部的import包名</li>
+<li>文件类型：java
+然后将所有结果的工程名进行排重，得到工件A的所有消费者工程。</li>
+</ul>
+<blockquote>
+<p>Q:为什么不能直接搜索<code>pom.xml</code>文件中搜索工件A的名称呢？</p>
+<p>A:因为存在工件A的消费者工件传递依赖工件A的情况，此种方法不能覆盖传递依赖的场景🥹</p>
+</blockquote>
+</li>
+<li>使用<code>Intellij IDEA</code>打开每个消费者工程，依次查看工件A中的服务接口（interface）的使用，菜单<code>Navigatie>Declaration or Usages</code></li>
+<li>记录工件A的服务接口存在被使用的方法（后续实现对应的替换接口）</li>
+</ol>
+<p>🤨不过看第2、3个步骤看起来挺花时间的，还有其他办法吗？</p>
+<p>目前想到的其他办法就是从编译器日志下手，<a href=https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html>查得</a>可以使用<code>-verbose</code>选项，来实现：</p>
+<blockquote>
+<p>Uses verbose output, which includes information about each class loaded and each source file compiled.</p>
+</blockquote>
+<p>下面通过一个demo来演示：</p>
+<ol>
+<li>
+<p>使用maven创建工件A：</p>
+<pre tabindex=0><code>➜ mvn archetype:generate \
+        -DarchetypeGroupId=org.apache.maven.archetypes \
+        -DarchetypeArtifactId=maven-archetype-quickstart \
+        -DarchetypeVersion=RELEASE \
+        -DgroupId=demo.a \
+        -DartifactId=demo-a \
+        -Dversion=0.0.1-SNAPSHOT \
+        -DinteractiveMode=false
+</code></pre><p>然后添加dto、service类：</p>
+<pre tabindex=0><code>➜ tree src/main/java/
+src/main/java/
+└── demo
+    └── a
+        ├── dto
+        │   ├── ProductDto.java
+        │   └── StockDto.java
+        └── service
+            ├── IProductService.java
+            └── impl
+                └── ProductServiceImpl.java
+
+5 directories, 4 files
+</code></pre><p>install 到本地仓库：</p>
+<pre tabindex=0><code>➜ mvn install
+</code></pre></li>
+<li>
+<p>使用maven创建消费者工件：</p>
+<pre tabindex=0><code>➜ mvn archetype:generate \
+        -DarchetypeGroupId=org.apache.maven.archetypes \
+        -DarchetypeArtifactId=maven-archetype-quickstart \
+        -DarchetypeVersion=RELEASE \
+        -DgroupId=demo.consumer \
+        -DartifactId=demo-consumer \
+        -Dversion=0.0.1-SNAPSHOT \
+        -DinteractiveMode=false
+</code></pre><p>在pom.xml添加<code>工件A的依赖</code>：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=nt>&lt;dependency&gt;</span>
+  <span class=nt>&lt;groupId&gt;</span>demo<span class=nt>&lt;/groupId&gt;</span>
+  <span class=nt>&lt;artifactId&gt;</span>demo-a<span class=nt>&lt;/artifactId&gt;</span>
+  <span class=nt>&lt;version&gt;</span>0.0.1-SNAPSHOT<span class=nt>&lt;/version&gt;</span>
+<span class=nt>&lt;/dependency&gt;</span>
+</code></pre></div><p>在App类main方法使用<code>demo.a.service.IProductService</code>：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kn>package</span> <span class=nn>demo.consumer</span><span class=o>;</span>
+
+<span class=kn>import</span> <span class=nn>demo.a.dto.ProductDto</span><span class=o>;</span>
+<span class=kn>import</span> <span class=nn>demo.a.service.IProductService</span><span class=o>;</span>
+<span class=kn>import</span> <span class=nn>demo.a.service.impl.ProductServiceImpl</span><span class=o>;</span>
+
+<span class=cm>/**
+</span><span class=cm>* Hello world!
+</span><span class=cm>*/</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>App</span> <span class=o>{</span>
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kt>void</span> <span class=nf>main</span><span class=o>(</span><span class=n>String</span><span class=o>[]</span> <span class=n>args</span><span class=o>)</span> <span class=o>{</span>
+        <span class=kd>final</span> <span class=n>IProductService</span> <span class=n>productService</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ProductServiceImpl</span><span class=o>();</span>
+        <span class=kd>final</span> <span class=n>ProductDto</span> <span class=n>productDto</span> <span class=o>=</span> <span class=n>productService</span><span class=o>.</span><span class=na>getProductById</span><span class=o>(</span><span class=s>&#34;1&#34;</span><span class=o>);</span> <span class=c1>// 注意点1
+</span><span class=c1></span>        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>productDto</span><span class=o>.</span><span class=na>price</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>在pom.xml的<code>maven-compiler-plugin</code>配置javac参数<code>-verbose</code>：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=nt>&lt;plugin&gt;</span>
+    <span class=nt>&lt;artifactId&gt;</span>maven-compiler-plugin<span class=nt>&lt;/artifactId&gt;</span>
+    <span class=nt>&lt;version&gt;</span>3.8.0<span class=nt>&lt;/version&gt;</span>
+    <span class=nt>&lt;configuration&gt;</span>
+    <span class=nt>&lt;compilerArgs&gt;</span>
+        <span class=nt>&lt;arg&gt;</span>-verbose<span class=nt>&lt;/arg&gt;</span>
+    <span class=nt>&lt;/compilerArgs&gt;</span>
+    <span class=nt>&lt;/configuration&gt;</span>
+<span class=nt>&lt;/plugin&gt;</span>
+</code></pre></div><p>构建并且将javac日志重定向到文件<code>javac.log</code>：</p>
+<pre tabindex=0><code>➜ mvn clean compile 2&gt;javac.log
+</code></pre></li>
+<li>
+<p>查看文件<a href=/file/2d30214fc6d4d32d22cf9563/javac.log>javac.log</a>，不难发现使用到的服务接口类及dto类都在日志中：</p>
+<pre tabindex=0><code>➜ grep -nF /demo/a/ javac.log 
+5:[loading /Users/zenuo/.m2/repository/demo/demo-a/0.0.1-SNAPSHOT/demo-a-0.0.1-SNAPSHOT.jar(/demo/a/dto/ProductDto.class)]
+6:[loading /Users/zenuo/.m2/repository/demo/demo-a/0.0.1-SNAPSHOT/demo-a-0.0.1-SNAPSHOT.jar(/demo/a/service/IProductService.class)]
+7:[loading /Users/zenuo/.m2/repository/demo/demo-a/0.0.1-SNAPSHOT/demo-a-0.0.1-SNAPSHOT.jar(/demo/a/service/impl/ProductServiceImpl.class)]
+</code></pre></li>
+</ol>
+<p>🧐回到java代码中的<code>注意点1</code>：这种写法显式import了<code>demo.a.dto.ProductDto</code>，若换成不显式import的写法，日志中是否仍然存在<code>demo.a.dto.ProductDto</code>呢？现在将代码改为如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kn>package</span> <span class=nn>demo.consumer</span><span class=o>;</span>
+
+<span class=kn>import</span> <span class=nn>demo.a.service.IProductService</span><span class=o>;</span>
+<span class=kn>import</span> <span class=nn>demo.a.service.impl.ProductServiceImpl</span><span class=o>;</span>
+
+<span class=cm>/**
+</span><span class=cm> * Hello world!
+</span><span class=cm> */</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>App</span> <span class=o>{</span>
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kt>void</span> <span class=nf>main</span><span class=o>(</span><span class=n>String</span><span class=o>[]</span> <span class=n>args</span><span class=o>)</span> <span class=o>{</span>
+        <span class=kd>final</span> <span class=n>IProductService</span> <span class=n>productService</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ProductServiceImpl</span><span class=o>();</span>
+        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>productService</span><span class=o>.</span><span class=na>getProductById</span><span class=o>(</span><span class=s>&#34;1&#34;</span><span class=o>).</span><span class=na>price</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>构建并且将javac日志重定向到文件<code>javac.log.1</code>：</p>
+<pre tabindex=0><code>➜ mvn clean compile 2&gt;javac.log.1
+</code></pre><p>查看<a href=/file/2d30214fc6d4d32d22cf9563/javac.log.1>javac.log.1</a>，是仍然存在的，只是位置不同：</p>
+<pre tabindex=0><code>➜ grep -nF /demo/a/ javac.log.1  
+5:[loading /Users/zenuo/.m2/repository/demo/demo-a/0.0.1-SNAPSHOT/demo-a-0.0.1-SNAPSHOT.jar(/demo/a/service/IProductService.class)]
+6:[loading /Users/zenuo/.m2/repository/demo/demo-a/0.0.1-SNAPSHOT/demo-a-0.0.1-SNAPSHOT.jar(/demo/a/service/impl/ProductServiceImpl.class)]
+17:[loading /Users/zenuo/.m2/repository/demo/demo-a/0.0.1-SNAPSHOT/demo-a-0.0.1-SNAPSHOT.jar(/demo/a/dto/ProductDto.class)]
+</code></pre><p>实例代码<a href=/file/2d30214fc6d4d32d22cf9563/demo.zip>demo.zip</a></p>
+<h2 id=参考>参考</h2>
+<ul>
+<li><a href=https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html>Java Platform, Standard Edition Tools Reference</a></li>
+<li><a href=https://stackoverflow.com/questions/317733/trying-to-capture-javac-output-in-bash-shell>trying to capture javac output in bash shell</a></li>
+<li><a href=https://stackoverflow.com/questions/6328778/how-to-create-an-empty-multi-module-maven-project>How to create an empty multi module Maven project?</a></li>
+</ul>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(248 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <!doctype html><html><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>
-404 Page not found
+MySQL的mysqldump例子
 </title>
 <meta name=generator content="Hugo 0.91.2">
 <link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
@@ -26,7 +26,31 @@
 </ul>
 </nav>
 <main class="flex-1 mt-10 sm:mt-12">
-<p>404 - page not found</p>
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>May 27, 2018</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">MySQL的mysqldump例子</h1>
+<p class="italic text-xs">Last updated at: May 27, 2018</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ mysqldump <span class=se>\
+</span><span class=se></span>--result-file<span class=o>=</span>SQL_FILE_PATH <span class=se>\
+</span><span class=se></span>--complete-insert SCHEMA_NAME <span class=o>[</span>TABLE_NAME<span class=o>]</span> <span class=se>\
+</span><span class=se></span>-uYOUR_USERNAME <span class=se>\
+</span><span class=se></span>-pYOUR_PASSWORD <span class=se>\
+</span><span class=se></span>--host<span class=o>=</span>HOST <span class=se>\
+</span><span class=se></span>--port<span class=o>=</span>PORT
+</code></pre></div>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(16 words)</p>
+</div>
+</article>
+</div>
 </main>
 <hr>
 <footer class="w-full text-center p-4 pin-b text-xs text-gray-400">

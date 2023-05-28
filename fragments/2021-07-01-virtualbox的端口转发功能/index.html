@@ -1,7 +1,7 @@
 <!doctype html><html><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>
-404 Page not found
+📦VirtualBox的端口转发功能
 </title>
 <meta name=generator content="Hugo 0.91.2">
 <link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
@@ -26,7 +26,27 @@
 </ul>
 </nav>
 <main class="flex-1 mt-10 sm:mt-12">
-<p>404 - page not found</p>
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Jul 01, 2021</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">📦VirtualBox的端口转发功能</h1>
+<p class="italic text-xs">Last updated at: Jul 01, 2021</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>在使用VirtualBox时，若需要从<strong>主机</strong>访问<strong>虚拟机</strong>，我通常的做法是添加一个<strong>host only</strong>的网络适配器，然后通过这个适配器的IP访问。</p>
+<p>但同样的需求也可通过配置<strong>NAT</strong>适配器上的端口转发规则来实现，更加轻量化。</p>
+<p>例如，我需要访问虚拟机的22和53124端口，配置如下，即可通过访问<code>127.0.0.1的53124端口</code>来访问<code>虚拟机的53124</code>端口，通过访问<code>127.0.0.1的53125端口</code>来访问<code>虚拟机的22端口</code>。</p>
+<p><img src=/img/9968ed5620001956b15127d9.png alt=9968ed5620001956b15127d9.png></p>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(4 words)</p>
+</div>
+</article>
+</div>
 </main>
 <hr>
 <footer class="w-full text-center p-4 pin-b text-xs text-gray-400">

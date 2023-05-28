@@ -1,0 +1,75 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+MySQL源码初探
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Apr 25, 2022</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">MySQL源码初探</h1>
+<p class="italic text-xs">Last updated at: Apr 25, 2022</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>首先需要本地编译，启用debug：</p>
+<pre tabindex=0><code>curl -o mysql-server-8.0.zip https://codeload.github.com/mysql/mysql-server/zip/refs/heads/8.0
+mkdir /opt/source/mysql-server-8.0
+unzip -d /opt/source/mysql-server-8.0 mysql-server-8.0.zip
+cd /opt/source/mysql-server-8.0/
+mkdir bld
+cd bld
+cmake -DWITH_DEBUG=ON -DWITH_BOOST=/opt/source/boost_1_73_0 -DWITH_SSL=/usr/local/Cellar/openssl@1.1/1.1.1k/ -DADD_GDB_INDEX=ON -DCMAKE_BUILD_TYPE=Debug -DWITH_ARCHIVE_STORAGE_ENGINE=0 -DWITH_FEDERATED_STORAGE_ENGINE=0 -DSYSCONFDIR=/opt/app/mysql8/ ..
+make
+</code></pre><pre tabindex=0><code>mysqld.exe!Per_thread_connection_handler::add_connection(Channel_info * channel_info) Line 394
+	at D:\opt\source\mysql-server\sql\conn_handler\connection_handler_per_thread.cc(394)
+mysqld.exe!Connection_handler_manager::process_new_connection(Channel_info * channel_info) Line 259
+	at D:\opt\source\mysql-server\sql\conn_handler\connection_handler_manager.cc(259)
+mysqld.exe!Connection_acceptor&lt;Mysqld_socket_listener&gt;::connection_event_loop() Line 66
+	at D:\opt\source\mysql-server\sql\conn_handler\connection_acceptor.h(66)
+mysqld.exe!socket_conn_event_handler(void * arg) Line 3228
+	at D:\opt\source\mysql-server\sql\mysqld.cc(3228)
+mysqld.exe!pfs_spawn_thread(void * arg) Line 2949
+	at D:\opt\source\mysql-server\storage\perfschema\pfs.cc(2949)
+mysqld.exe!win_thread_start(void * p) Line 73
+	at D:\opt\source\mysql-server\mysys\my_thread.cc(73)
+[External Code]
+</code></pre>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(70 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+🔍如何比较两个Collection含有相同的元素——来自Apache Commons Collections的实现
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Jul 20, 2019</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">🔍如何比较两个Collection含有相同的元素——来自Apache Commons Collections的实现</h1>
+<p class="italic text-xs">Last updated at: Jul 20, 2019</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<blockquote>
+<p>您可以在<a href=https://github.com/apache/commons-collections/blob/master/src/main/java/org/apache/commons/collections4/CollectionUtils.java>org.apache.commons.collections4.CollectionUtils</a>查看源代码。</p>
+</blockquote>
+<p><code>Apache Commons Collections</code>中的<code>CollectionUtils#isEqualCollection(java.util.Collection&lt;?>, java.util.Collection&lt;?>)</code>方法（及其<a href=https://github.com/apache/commons-collections/blob/master/src/main/java/org/apache/commons/collections4/CollectionUtils.java#L595>重载</a>），提供了比较两个Collection含有相同的元素的实现，其源代码如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=cm>/**
+</span><span class=cm> * Returns {@code true} iff the given {@link Collection}s contain
+</span><span class=cm> * exactly the same elements with exactly the same cardinalities.
+</span><span class=cm> * &lt;p&gt;
+</span><span class=cm> * That is, iff the cardinality of &lt;i&gt;e&lt;/i&gt; in &lt;i&gt;a&lt;/i&gt; is
+</span><span class=cm> * equal to the cardinality of &lt;i&gt;e&lt;/i&gt; in &lt;i&gt;b&lt;/i&gt;,
+</span><span class=cm> * for each element &lt;i&gt;e&lt;/i&gt; in &lt;i&gt;a&lt;/i&gt; or &lt;i&gt;b&lt;/i&gt;.
+</span><span class=cm> * &lt;/p&gt;
+</span><span class=cm> *
+</span><span class=cm> * @param a  the first collection, must not be null
+</span><span class=cm> * @param b  the second collection, must not be null
+</span><span class=cm> * @return &lt;code&gt;true&lt;/code&gt; iff the collections contain the same elements with the same cardinalities.
+</span><span class=cm> */</span>
+<span class=kd>public</span> <span class=kd>static</span> <span class=kt>boolean</span> <span class=nf>isEqualCollection</span><span class=o>(</span><span class=kd>final</span> <span class=n>Collection</span><span class=o>&lt;?&gt;</span> <span class=n>a</span><span class=o>,</span> <span class=kd>final</span> <span class=n>Collection</span><span class=o>&lt;?&gt;</span> <span class=n>b</span><span class=o>)</span> <span class=o>{</span>
+    <span class=k>if</span><span class=o>(</span><span class=n>a</span><span class=o>.</span><span class=na>size</span><span class=o>()</span> <span class=o>!=</span> <span class=n>b</span><span class=o>.</span><span class=na>size</span><span class=o>())</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=kc>false</span><span class=o>;</span>
+    <span class=o>}</span>
+    <span class=kd>final</span> <span class=n>CardinalityHelper</span><span class=o>&lt;</span><span class=n>Object</span><span class=o>&gt;</span> <span class=n>helper</span> <span class=o>=</span> <span class=k>new</span> <span class=n>CardinalityHelper</span><span class=o>&lt;&gt;(</span><span class=n>a</span><span class=o>,</span> <span class=n>b</span><span class=o>);</span>
+    <span class=k>if</span><span class=o>(</span><span class=n>helper</span><span class=o>.</span><span class=na>cardinalityA</span><span class=o>.</span><span class=na>size</span><span class=o>()</span> <span class=o>!=</span> <span class=n>helper</span><span class=o>.</span><span class=na>cardinalityB</span><span class=o>.</span><span class=na>size</span><span class=o>())</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=kc>false</span><span class=o>;</span>
+    <span class=o>}</span>
+    <span class=k>for</span><span class=o>(</span> <span class=kd>final</span> <span class=n>Object</span> <span class=n>obj</span> <span class=o>:</span> <span class=n>helper</span><span class=o>.</span><span class=na>cardinalityA</span><span class=o>.</span><span class=na>keySet</span><span class=o>())</span> <span class=o>{</span>
+        <span class=k>if</span><span class=o>(</span><span class=n>helper</span><span class=o>.</span><span class=na>freqA</span><span class=o>(</span><span class=n>obj</span><span class=o>)</span> <span class=o>!=</span> <span class=n>helper</span><span class=o>.</span><span class=na>freqB</span><span class=o>(</span><span class=n>obj</span><span class=o>))</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=kc>false</span><span class=o>;</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+    <span class=k>return</span> <span class=kc>true</span><span class=o>;</span>
+<span class=o>}</span>
+</code></pre></div><p>在比较大小之后，以两个集合实例为入参，创建了一个<code>CardinalityHelper</code>实例，其源代码如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=cm>/**
+</span><span class=cm> * Helper class to easily access cardinality properties of two collections.
+</span><span class=cm> * @param &lt;O&gt;  the element type
+</span><span class=cm> */</span>
+<span class=kd>private</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>CardinalityHelper</span><span class=o>&lt;</span><span class=n>O</span><span class=o>&gt;</span> <span class=o>{</span>
+
+    <span class=cm>/** Contains the cardinality for each object in collection A. */</span>
+    <span class=kd>final</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>O</span><span class=o>,</span> <span class=n>Integer</span><span class=o>&gt;</span> <span class=n>cardinalityA</span><span class=o>;</span>
+
+    <span class=cm>/** Contains the cardinality for each object in collection B. */</span>
+    <span class=kd>final</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>O</span><span class=o>,</span> <span class=n>Integer</span><span class=o>&gt;</span> <span class=n>cardinalityB</span><span class=o>;</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * Create a new CardinalityHelper for two collections.
+</span><span class=cm>     * @param a  the first collection
+</span><span class=cm>     * @param b  the second collection
+</span><span class=cm>     */</span>
+    <span class=kd>public</span> <span class=nf>CardinalityHelper</span><span class=o>(</span><span class=kd>final</span> <span class=n>Iterable</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>O</span><span class=o>&gt;</span> <span class=n>a</span><span class=o>,</span> <span class=kd>final</span> <span class=n>Iterable</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>O</span><span class=o>&gt;</span> <span class=n>b</span><span class=o>)</span> <span class=o>{</span>
+        <span class=n>cardinalityA</span> <span class=o>=</span> <span class=n>CollectionUtils</span><span class=o>.</span><span class=na>getCardinalityMap</span><span class=o>(</span><span class=n>a</span><span class=o>);</span>
+        <span class=n>cardinalityB</span> <span class=o>=</span> <span class=n>CollectionUtils</span><span class=o>.</span><span class=na>getCardinalityMap</span><span class=o>(</span><span class=n>b</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * Returns the maximum frequency of an object.
+</span><span class=cm>     * @param obj  the object
+</span><span class=cm>     * @return the maximum frequency of the object
+</span><span class=cm>     */</span>
+    <span class=kd>public</span> <span class=kd>final</span> <span class=kt>int</span> <span class=nf>max</span><span class=o>(</span><span class=kd>final</span> <span class=n>Object</span> <span class=n>obj</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>Math</span><span class=o>.</span><span class=na>max</span><span class=o>(</span><span class=n>freqA</span><span class=o>(</span><span class=n>obj</span><span class=o>),</span> <span class=n>freqB</span><span class=o>(</span><span class=n>obj</span><span class=o>));</span>
+    <span class=o>}</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * Returns the minimum frequency of an object.
+</span><span class=cm>     * @param obj  the object
+</span><span class=cm>     * @return the minimum frequency of the object
+</span><span class=cm>     */</span>
+    <span class=kd>public</span> <span class=kd>final</span> <span class=kt>int</span> <span class=nf>min</span><span class=o>(</span><span class=kd>final</span> <span class=n>Object</span> <span class=n>obj</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>Math</span><span class=o>.</span><span class=na>min</span><span class=o>(</span><span class=n>freqA</span><span class=o>(</span><span class=n>obj</span><span class=o>),</span> <span class=n>freqB</span><span class=o>(</span><span class=n>obj</span><span class=o>));</span>
+    <span class=o>}</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * Returns the frequency of this object in collection A.
+</span><span class=cm>     * @param obj  the object
+</span><span class=cm>     * @return the frequency of the object in collection A
+</span><span class=cm>     */</span>
+    <span class=kd>public</span> <span class=kt>int</span> <span class=nf>freqA</span><span class=o>(</span><span class=kd>final</span> <span class=n>Object</span> <span class=n>obj</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>getFreq</span><span class=o>(</span><span class=n>obj</span><span class=o>,</span> <span class=n>cardinalityA</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * Returns the frequency of this object in collection B.
+</span><span class=cm>     * @param obj  the object
+</span><span class=cm>     * @return the frequency of the object in collection B
+</span><span class=cm>     */</span>
+    <span class=kd>public</span> <span class=kt>int</span> <span class=nf>freqB</span><span class=o>(</span><span class=kd>final</span> <span class=n>Object</span> <span class=n>obj</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>getFreq</span><span class=o>(</span><span class=n>obj</span><span class=o>,</span> <span class=n>cardinalityB</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=kd>private</span> <span class=kt>int</span> <span class=nf>getFreq</span><span class=o>(</span><span class=kd>final</span> <span class=n>Object</span> <span class=n>obj</span><span class=o>,</span> <span class=kd>final</span> <span class=n>Map</span><span class=o>&lt;?,</span> <span class=n>Integer</span><span class=o>&gt;</span> <span class=n>freqMap</span><span class=o>)</span> <span class=o>{</span>
+        <span class=kd>final</span> <span class=n>Integer</span> <span class=n>count</span> <span class=o>=</span> <span class=n>freqMap</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>obj</span><span class=o>);</span>
+        <span class=k>if</span> <span class=o>(</span><span class=n>count</span> <span class=o>!=</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=n>count</span><span class=o>.</span><span class=na>intValue</span><span class=o>();</span>
+        <span class=o>}</span>
+        <span class=k>return</span> <span class=n>0</span><span class=o>;</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>其构造方法内，调用<code>org.apache.commons.collections4.CollectionUtils#getCardinalityMap</code>，创建了两个集合的基数映射，其源代码如下：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=cm>/**
+</span><span class=cm> * Returns a {@link Map} mapping each unique element in the given
+</span><span class=cm> * {@link Collection} to an {@link Integer} representing the number
+</span><span class=cm> * of occurrences of that element in the {@link Collection}.
+</span><span class=cm> * &lt;p&gt;
+</span><span class=cm> * Only those elements present in the collection will appear as
+</span><span class=cm> * keys in the map.
+</span><span class=cm> * &lt;/p&gt;
+</span><span class=cm> *
+</span><span class=cm> * @param &lt;O&gt;  the type of object in the returned {@link Map}. This is a super type of &amp;lt;I&amp;gt;.
+</span><span class=cm> * @param coll  the collection to get the cardinality map for, must not be null
+</span><span class=cm> * @return the populated cardinality map
+</span><span class=cm> */</span>
+<span class=kd>public</span> <span class=kd>static</span> <span class=o>&lt;</span><span class=n>O</span><span class=o>&gt;</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>O</span><span class=o>,</span> <span class=n>Integer</span><span class=o>&gt;</span> <span class=nf>getCardinalityMap</span><span class=o>(</span><span class=kd>final</span> <span class=n>Iterable</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>O</span><span class=o>&gt;</span> <span class=n>coll</span><span class=o>)</span> <span class=o>{</span>
+    <span class=kd>final</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>O</span><span class=o>,</span> <span class=n>Integer</span><span class=o>&gt;</span> <span class=n>count</span> <span class=o>=</span> <span class=k>new</span> <span class=n>HashMap</span><span class=o>&lt;&gt;();</span>
+    <span class=k>for</span> <span class=o>(</span><span class=kd>final</span> <span class=n>O</span> <span class=n>obj</span> <span class=o>:</span> <span class=n>coll</span><span class=o>)</span> <span class=o>{</span>
+        <span class=kd>final</span> <span class=n>Integer</span> <span class=n>c</span> <span class=o>=</span> <span class=n>count</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>obj</span><span class=o>);</span>
+        <span class=k>if</span> <span class=o>(</span><span class=n>c</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>count</span><span class=o>.</span><span class=na>put</span><span class=o>(</span><span class=n>obj</span><span class=o>,</span> <span class=n>Integer</span><span class=o>.</span><span class=na>valueOf</span><span class=o>(</span><span class=n>1</span><span class=o>));</span>
+        <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+            <span class=n>count</span><span class=o>.</span><span class=na>put</span><span class=o>(</span><span class=n>obj</span><span class=o>,</span> <span class=n>Integer</span><span class=o>.</span><span class=na>valueOf</span><span class=o>(</span><span class=n>c</span><span class=o>.</span><span class=na>intValue</span><span class=o>()</span> <span class=o>+</span> <span class=n>1</span><span class=o>));</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+    <span class=k>return</span> <span class=n>count</span><span class=o>;</span>
+<span class=o>}</span>
+</code></pre></div><p>然后，遍历某个集合基数映射的键集合，比较其基数是否与另一个集合中相同；若存在某个键不同，则判定两个集合不含有相同的元素。</p>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(555 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

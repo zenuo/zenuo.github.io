@@ -1,0 +1,153 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+🔦如何使用GDB调试Nginx
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Feb 28, 2021</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">🔦如何使用GDB调试Nginx</h1>
+<p class="italic text-xs">Last updated at: Feb 28, 2021</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>本文主要描述在<code>CentOS 7</code>下，使用<a href=https://www.gnu.org/s/gdb/>gdb</a>调试Nginx</p>
+<h1 id=1-准备>1 准备</h1>
+<p>下载nginx及其依赖项目源码，并解压：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>curl -OL https://mirrors.sohu.com/nginx/nginx-1.19.7.tar.gz
+tar zxf nginx-1.19.7.tar.gz
+curl -OL https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz
+tar zxf pcre-8.44.tar.gz
+curl -OL http://zlib.net/zlib-1.2.11.tar.gz
+tar zxf zlib-1.2.11.tar.gz
+</code></pre></div><p>安装构建工具：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>yum install gcc make
+</code></pre></div><p>构建nginx:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=nb>cd</span> /opt/app/nginx-1.19.7
+./configure --with-debug --with-cc-opt<span class=o>=</span><span class=s1>&#39;-O0 -g&#39;</span> --with-pcre<span class=o>=</span>/opt/app/pcre-8.44 --with-zlib<span class=o>=</span>/opt/app/zlib-1.2.11 --prefix<span class=o>=</span>/opt/app/nginx
+make <span class=o>&amp;&amp;</span> make install
+</code></pre></div><p>修改nginx配置文件<code>/opt/app/nginx/conf/nginx.conf</code>:</p>
+<pre tabindex=0><code># 最好是1，便于断点调试
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+    server {
+        listen       8000;
+        server_name  localhost;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+}
+</code></pre><p>启动：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>/opt/app/nginx/sbin/nginx
+</code></pre></div><p>使用curl访问:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>curl -v localhost:8080
+</code></pre></div><p>若能返回<code>200 OK</code>，则已准备好调试环境</p>
+<h1 id=2-调试>2 调试</h1>
+<p>安装调试工具</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>yum install gdb
+</code></pre></div><p>找到nginx worker的进程号：</p>
+<blockquote>
+<p>为什么是<code>worker</code>进程号呢？因为在nginx架构中，进程类型主要是<code>master</code>和<code>worker</code>两类，前者主要负责配置解析、重载配置、维护work进程组等职责，而后者才是接收、处理来自客户端的连接。更多<a href=2019/01/31/nginx%E6%9E%B6%E6%9E%84.html>移步</a></p>
+</blockquote>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>ps -ef <span class=p>|</span> grep <span class=s1>&#39;nginx: worker process&#39;</span> <span class=p>|</span> grep -v grep
+</code></pre></div><p>例如:</p>
+<pre tabindex=0><code>[newad@localhost nginx]$ ps -ef | grep 'nginx: worker process' | grep -v grep
+newad    12362 12361  0 17:55 ?        00:00:00 nginx: worker process
+</code></pre><p>可知进程号是<code>12362</code></p>
+<p>用gdb连接上nginx worker进程：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>gdb -p <span class=m>12362</span>
+</code></pre></div><p>若输出的末尾是<code>(gdb)</code>字样，则连接成功</p>
+<p>在文件<code>ngx_http_core_module.c</code>的<code>1816</code>行设置断点：</p>
+<pre tabindex=0><code>(gdb) break src/http/ngx_http_core_module.c:1816
+Breakpoint 1 at 0x4d4944: file src/http/ngx_http_core_module.c, line 1816.
+</code></pre><p>继续运行进程：</p>
+<pre tabindex=0><code>(gdb) continue
+Continuing.
+</code></pre><p>新开一个ssh会话，使用curl发起访问：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>curl -v localhost:8080
+</code></pre></div><p>回到gdb的会话，可以发现程序在刚刚设置的断点停住了：</p>
+<pre tabindex=0><code>Breakpoint 1, ngx_http_send_header (r=0x1f7db20) at src/http/ngx_http_core_module.c:1816
+1816	    if (r-&gt;post_action) {
+</code></pre><p>可以通过组合键<code>ctrl x</code>和<code>ctrl a</code>进入<a href=http://www.cs.fsu.edu/~baker/ada/gnat/html/gdb_23.html>TUI模式</a>，实现同时查看源代码和控制台，如图：</p>
+<p><img src=/img/a8287077f7adc3f2f39b8f2b.png alt=a8287077f7adc3f2f39b8f2b.png></p>
+<p>使用<code>p</code>命令，求值（打印）表达式：</p>
+<pre tabindex=0><code>(gdb) p r-&gt;request_line
+$2 = {len = 14, data = 0x1f844d8 &quot;GET / HTTP/1.1\r\nHost&quot;}
+</code></pre><p>使用<code>ptype</code>命令，打印struct或者class的定义：</p>
+<pre tabindex=0><code>(gdb) ptype ngx_http_request_body_t
+type = struct {
+    ngx_temp_file_t *temp_file;
+    ngx_chain_t *bufs;
+    ngx_buf_t *buf;
+    off_t rest;
+    off_t received;
+    ngx_chain_t *free;
+    ngx_chain_t *busy;
+    ngx_http_chunked_t *chunked;
+    ngx_http_client_body_handler_pt post_handler;
+}
+</code></pre><p>使用<code>continue</code>命令，继续运行进程。</p>
+<h1 id=3-参考>3 参考</h1>
+<ul>
+<li><a href=http://www.cs.fsu.edu/~baker/ada/gnat/html/gdb_23.html>http://www.cs.fsu.edu/~baker/ada/gnat/html/gdb_23.html</a></li>
+<li><a href=https://stackoverflow.com/questions/10115540/gdb-split-view-with-code>https://stackoverflow.com/questions/10115540/gdb-split-view-with-code</a></li>
+<li><a href=https://docs.nginx.com/nginx/admin-guide/monitoring/debugging/#nginx-and-debugging-symbols>https://docs.nginx.com/nginx/admin-guide/monitoring/debugging/#nginx-and-debugging-symbols</a></li>
+<li><a href=https://stackoverflow.com/questions/1768620/how-do-i-show-what-fields-a-struct-has-in-gdb>https://stackoverflow.com/questions/1768620/how-do-i-show-what-fields-a-struct-has-in-gdb</a></li>
+</ul>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(234 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

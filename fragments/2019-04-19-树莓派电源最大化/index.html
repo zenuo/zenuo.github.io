@@ -1,7 +1,7 @@
 <!doctype html><html><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>
-404 Page not found
+树莓派电源最大化
 </title>
 <meta name=generator content="Hugo 0.91.2">
 <link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
@@ -26,7 +26,31 @@
 </ul>
 </nav>
 <main class="flex-1 mt-10 sm:mt-12">
-<p>404 - page not found</p>
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Apr 19, 2019</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">树莓派电源最大化</h1>
+<p class="italic text-xs">Last updated at: Apr 19, 2019</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>在将<code>无电源</code>的USB移动硬盘连接在树莓派上时，会发现无法正常驱动，在移动硬盘无故障的前提下是树莓派<code>默认没有允许USB电流最大</code>，经过谷歌🦴，找到如下解决办法：</p>
+<p>在文件<code>/boot/config.txt</code>中添加：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-plain data-lang=plain>max_usb_current=1
+</code></pre></div><p>重启即可。</p>
+<p>参考：</p>
+<ul>
+<li><a href="https://www.raspberrypi.org/forums/viewtopic.php?t=105502">https://www.raspberrypi.org/forums/viewtopic.php?t=105502</a></li>
+</ul>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(6 words)</p>
+</div>
+</article>
+</div>
 </main>
 <hr>
 <footer class="w-full text-center p-4 pin-b text-xs text-gray-400">

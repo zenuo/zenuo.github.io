@@ -1,0 +1,61 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+MySQL查询数据并插入
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>May 27, 2019</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">MySQL查询数据并插入</h1>
+<p class="italic text-xs">Last updated at: May 27, 2019</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<p>查询user表中的type不为1的数据并插入employee表：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=c1>-- 查询字段列表的字符串
+</span><span class=c1></span><span class=k>select</span><span class=w> </span><span class=n>GROUP_CONCAT</span><span class=p>(</span><span class=k>COLUMN_NAME</span><span class=w> </span><span class=n>SEPARATOR</span><span class=w> </span><span class=s1>&#39;,&#39;</span><span class=p>)</span><span class=w> </span><span class=k>from</span><span class=w> </span><span class=o>`</span><span class=n>information_schema</span><span class=o>`</span><span class=p>.</span><span class=o>`</span><span class=n>COLUMNS</span><span class=o>`</span><span class=w> </span><span class=k>WHERE</span><span class=w> </span><span class=k>TABLE_NAME</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s1>&#39;employee&#39;</span><span class=p>;</span><span class=w>
+</span><span class=w>
+</span><span class=w></span><span class=c1>-- 查询并插入
+</span><span class=c1></span><span class=k>insert</span><span class=w> </span><span class=k>into</span><span class=w> </span><span class=n>employee</span><span class=p>(</span><span class=n>id</span><span class=p>,</span><span class=n>mobile</span><span class=p>,</span><span class=n>school_id</span><span class=p>,</span><span class=n>school_limit</span><span class=p>,</span><span class=n>nick_name</span><span class=p>,</span><span class=n>sex</span><span class=p>,</span><span class=n>picture_url</span><span class=p>,</span><span class=k>type</span><span class=p>,</span><span class=n>active</span><span class=p>,</span><span class=n>contact_mobile</span><span class=p>,</span><span class=n>password</span><span class=p>,</span><span class=n>salt</span><span class=p>,</span><span class=n>token</span><span class=p>,</span><span class=n>old_access_token_md5</span><span class=p>,</span><span class=n>forum_vest</span><span class=p>,</span><span class=n>forum_nickname</span><span class=p>,</span><span class=n>forum_head_portrait_url</span><span class=p>,</span><span class=n>status</span><span class=p>,</span><span class=n>create_time</span><span class=p>,</span><span class=n>update_time</span><span class=p>,</span><span class=n>delete_time</span><span class=p>)</span><span class=w> 
+</span><span class=w></span><span class=k>select</span><span class=w> </span><span class=n>id</span><span class=p>,</span><span class=n>mobile</span><span class=p>,</span><span class=n>school_id</span><span class=p>,</span><span class=n>school_limit</span><span class=p>,</span><span class=n>nick_name</span><span class=p>,</span><span class=n>sex</span><span class=p>,</span><span class=n>picture_url</span><span class=p>,</span><span class=k>type</span><span class=p>,</span><span class=n>active</span><span class=p>,</span><span class=n>contact_mobile</span><span class=p>,</span><span class=n>password</span><span class=p>,</span><span class=n>salt</span><span class=p>,</span><span class=n>token</span><span class=p>,</span><span class=n>old_access_token_md5</span><span class=p>,</span><span class=n>forum_vest</span><span class=p>,</span><span class=n>forum_nickname</span><span class=p>,</span><span class=n>forum_head_portrait_url</span><span class=p>,</span><span class=n>status</span><span class=p>,</span><span class=n>create_time</span><span class=p>,</span><span class=n>update_time</span><span class=p>,</span><span class=n>delete_time</span><span class=w> </span><span class=k>from</span><span class=w> </span><span class=k>user</span><span class=w>
+</span><span class=w></span><span class=k>where</span><span class=w> </span><span class=k>type</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=mi>1</span><span class=p>;</span><span class=w>
+</span></code></pre></div>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(6 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>

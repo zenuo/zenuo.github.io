@@ -1,0 +1,108 @@
+<!doctype html><html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>
+MySQL随机查询一条记录
+</title>
+<meta name=generator content="Hugo 0.91.2">
+<link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg=">
+<script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com>
+<link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet>
+<body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8>
+<ul id=nav-menu class="w-full flex items-center list-reset">
+<li>
+<a href=https://zenuo.github.io/>Home</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/fragments/>Fragments</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/about/>About</a>
+</li>
+<li>
+<a href=https://zenuo.github.io/tags/>Tags</a>
+</li>
+</ul>
+</nav>
+<main class="flex-1 mt-10 sm:mt-12">
+<div>
+<header class="mb-8 font-sans-serif">
+<div class="text-sm font-gray-700 mb-8">
+<p class="uppercase font-semibold">
+<a class=text-gray-700 href=/fragments>fragments</a>
+</p>
+<p>Jun 04, 2019</p>
+</div>
+<h1 class="text-3xl mb-1 font-semibold">MySQL随机查询一条记录</h1>
+<p class="italic text-xs">Last updated at: Jun 04, 2019</p>
+</header>
+<article class="prose serif mb-16 text-gray-800">
+<h2 id=表结构>表结构</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=k>CREATE</span><span class=w> </span><span class=k>TABLE</span><span class=w> </span><span class=o>`</span><span class=n>poet</span><span class=o>`</span><span class=w> </span><span class=p>(</span><span class=w>
+</span><span class=w>  </span><span class=o>`</span><span class=n>id</span><span class=o>`</span><span class=w> </span><span class=nb>bigint</span><span class=p>(</span><span class=mi>20</span><span class=p>)</span><span class=w> </span><span class=n>unsigned</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=w> </span><span class=n>AUTO_INCREMENT</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=o>`</span><span class=n>dynasty</span><span class=o>`</span><span class=w> </span><span class=nb>varchar</span><span class=p>(</span><span class=mi>11</span><span class=p>)</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=o>`</span><span class=n>author</span><span class=o>`</span><span class=w> </span><span class=nb>text</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=o>`</span><span class=n>paragraph</span><span class=o>`</span><span class=w> </span><span class=nb>text</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=o>`</span><span class=n>strains</span><span class=o>`</span><span class=w> </span><span class=nb>text</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=o>`</span><span class=n>title</span><span class=o>`</span><span class=w> </span><span class=nb>text</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=k>PRIMARY</span><span class=w> </span><span class=k>KEY</span><span class=w> </span><span class=p>(</span><span class=o>`</span><span class=n>id</span><span class=o>`</span><span class=p>),</span><span class=w>
+</span><span class=w>  </span><span class=k>KEY</span><span class=w> </span><span class=o>`</span><span class=n>poet_title</span><span class=o>`</span><span class=w> </span><span class=p>(</span><span class=o>`</span><span class=n>title</span><span class=o>`</span><span class=p>(</span><span class=mi>10</span><span class=p>))</span><span class=w> </span><span class=k>USING</span><span class=w> </span><span class=n>BTREE</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=k>KEY</span><span class=w> </span><span class=o>`</span><span class=n>poet_dynasty</span><span class=o>`</span><span class=w> </span><span class=p>(</span><span class=o>`</span><span class=n>dynasty</span><span class=o>`</span><span class=p>)</span><span class=w> </span><span class=k>USING</span><span class=w> </span><span class=n>HASH</span><span class=p>,</span><span class=w>
+</span><span class=w>  </span><span class=k>KEY</span><span class=w> </span><span class=o>`</span><span class=n>poet_author</span><span class=o>`</span><span class=w> </span><span class=p>(</span><span class=o>`</span><span class=n>author</span><span class=o>`</span><span class=p>(</span><span class=mi>10</span><span class=p>))</span><span class=w> </span><span class=k>USING</span><span class=w> </span><span class=n>BTREE</span><span class=w>
+</span><span class=w></span><span class=p>)</span><span class=w> </span><span class=n>ENGINE</span><span class=o>=</span><span class=n>InnoDB</span><span class=w> </span><span class=n>AUTO_INCREMENT</span><span class=o>=</span><span class=mi>311862</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=n>CHARSET</span><span class=o>=</span><span class=n>utf8mb4</span><span class=p>;</span><span class=w>
+</span></code></pre></div><h2 id=查询语句>查询语句</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=k>SELECT</span><span class=w> </span><span class=n>r1</span><span class=p>.</span><span class=n>title</span><span class=p>,</span><span class=w>
+</span><span class=w>       </span><span class=n>r1</span><span class=p>.</span><span class=n>author</span><span class=p>,</span><span class=w>
+</span><span class=w>       </span><span class=n>r1</span><span class=p>.</span><span class=n>paragraph</span><span class=w>
+</span><span class=w></span><span class=k>FROM</span><span class=w> </span><span class=n>poet</span><span class=w> </span><span class=k>AS</span><span class=w> </span><span class=n>r1</span><span class=w>
+</span><span class=w></span><span class=k>JOIN</span><span class=w>
+</span><span class=w>  </span><span class=p>(</span><span class=k>SELECT</span><span class=w> </span><span class=n>CEIL</span><span class=p>(</span><span class=n>RAND</span><span class=p>()</span><span class=w> </span><span class=o>*</span><span class=w>
+</span><span class=w>                 </span><span class=p>(</span><span class=k>SELECT</span><span class=w> </span><span class=k>MAX</span><span class=p>(</span><span class=n>id</span><span class=p>)</span><span class=w>
+</span><span class=w>                  </span><span class=k>FROM</span><span class=w> </span><span class=n>poet</span><span class=p>))</span><span class=w> </span><span class=k>AS</span><span class=w> </span><span class=n>id</span><span class=p>)</span><span class=w> </span><span class=k>AS</span><span class=w> </span><span class=n>r2</span><span class=w>
+</span><span class=w></span><span class=k>WHERE</span><span class=w> </span><span class=n>r1</span><span class=p>.</span><span class=n>id</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=n>r2</span><span class=p>.</span><span class=n>id</span><span class=w>
+</span><span class=w></span><span class=k>ORDER</span><span class=w> </span><span class=k>BY</span><span class=w> </span><span class=n>r1</span><span class=p>.</span><span class=n>id</span><span class=w> </span><span class=k>ASC</span><span class=w>
+</span><span class=w></span><span class=k>LIMIT</span><span class=w> </span><span class=mi>1</span><span class=p>;</span><span class=w>
+</span></code></pre></div><p>结果样例：</p>
+<pre tabindex=0><code>*************************** 1. row ***************************
+    title: 雜詠下 林禽
+   author: 洪适
+paragraph: 蒙潤碧千顆，迎曦紅半頰。閱古憩鵝池，牽連青李帖。
+1 row in set (0.001 sec)
+</code></pre><p>若要查询随机的一条<code>author</code>为<code>李白</code>的记录，此处使用存储过程来实现：</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=k>DELIMITER</span><span class=w> </span><span class=err>$</span><span class=w>
+</span><span class=w>
+</span><span class=w></span><span class=k>CREATE</span><span class=w> </span><span class=k>DEFINER</span><span class=o>=`</span><span class=n>app</span><span class=o>`@`%`</span><span class=w> </span><span class=k>PROCEDURE</span><span class=w> </span><span class=o>`</span><span class=n>random_poet_of_libai</span><span class=o>`</span><span class=p>(</span><span class=w> </span><span class=p>)</span><span class=w>
+</span><span class=w></span><span class=k>BEGIN</span><span class=w>
+</span><span class=w></span><span class=k>SET</span><span class=w> </span><span class=o>@</span><span class=n>_rand_index</span><span class=w> </span><span class=p>:</span><span class=o>=</span><span class=w> </span><span class=n>CEIL</span><span class=p>(</span><span class=w> </span><span class=n>RAND</span><span class=p>(</span><span class=w> </span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=p>(</span><span class=w> </span><span class=k>SELECT</span><span class=w> </span><span class=k>COUNT</span><span class=p>(</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=p>)</span><span class=w> </span><span class=k>FROM</span><span class=w> </span><span class=n>poet</span><span class=w> </span><span class=k>WHERE</span><span class=w> </span><span class=n>author</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s1>&#39;李白&#39;</span><span class=w> </span><span class=p>)</span><span class=w> </span><span class=p>);</span><span class=w>
+</span><span class=w></span><span class=k>PREPARE</span><span class=w> </span><span class=n>stmt</span><span class=w> </span><span class=k>FROM</span><span class=w> </span><span class=s1>&#39;SELECT title, author, paragraph FROM poet WHERE author = \&#39;</span><span class=err>李白\</span><span class=s1>&#39; LIMIT ?, 1;&#39;</span><span class=p>;</span><span class=w>
+</span><span class=w></span><span class=k>EXECUTE</span><span class=w> </span><span class=n>stmt</span><span class=w> </span><span class=k>USING</span><span class=w> </span><span class=o>@</span><span class=n>_rand_index</span><span class=p>;</span><span class=w>
+</span><span class=w></span><span class=k>DEALLOCATE</span><span class=w> </span><span class=k>PREPARE</span><span class=w> </span><span class=n>stmt</span><span class=p>;</span><span class=w>
+</span><span class=w></span><span class=k>END</span><span class=w>
+</span><span class=w>
+</span><span class=w></span><span class=k>DELIMITER</span><span class=w> </span><span class=p>;</span><span class=w>
+</span><span class=w>
+</span><span class=w></span><span class=k>CALL</span><span class=w> </span><span class=n>random_poet_of_libai</span><span class=p>();</span><span class=w>
+</span></code></pre></div><p>结果样例：</p>
+<pre tabindex=0><code>*************************** 1. row ***************************
+    title: 雜曲歌辭 鳴雁行
+   author: 李白
+paragraph: 胡雁鳴，辭燕山，昨發委羽朝度關。一一銜蘆枝，南飛散落天地間。連行接翼往復還，客居煙波寄湘吳。凌霜觸雪毛體枯，畏逢矰繳驚相呼。
+1 row in set (0.008 sec)
+</code></pre><h2 id=参考>参考</h2>
+<ul>
+<li><a href=https://stackoverflow.com/questions/4329396/mysql-select-10-random-rows-from-600k-rows-fast>MySQL select 10 random rows from 600K rows fast</a></li>
+<li><a href=https://stackoverflow.com/a/10025538>Using variable in a LIMIT clause in MySQL</a></li>
+</ul>
+<div class="float-right mb-8">
+<p class="text-sm mb-4 font-gray-700 italic">(69 words)</p>
+</div>
+</article>
+</div>
+</main>
+<hr>
+<footer class="w-full text-center p-4 pin-b text-xs text-gray-400">
+<p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p>
+</footer>
+</body>
+</html>
