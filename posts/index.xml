@@ -5,10 +5,10 @@ Some heap dump formats (e.g. HPROF dumps from recent Java 6 VMs and IBM system d
 只要能找到内容，根据上文说到的xlxs结构，我们可以把xml等文本写到文本，再根据响应的文件结构存放，使用zip压缩后更名为xlsx文件，就算是提取了。
 2 阅读源码 走一下POI的初始化workbook代码，可以发现构造器org.apache.poi.xssf.usermodel.XSSFWorkbook#XSSFWorkbook(org.apache.poi.openxml4j.opc.OPCPackage)的唯一入参的类型OPCPackage唯一实现是org.apache.poi.openxml4j.opc.ZipPackage，也许会有解压缩后的文件内容。
 3 查看栈的局部变量 打开MAT的线程视图：
-打开堆转储文件，根据之前的分析OOM是由线程http-nio-8080-exec-5引发的，我们导航到这个线程；点击以下按钮，展开这个县城的全部栈帧：
-![]/(vx_images/211516125586294.png)
+打开堆转储文件，根据之前的分析OOM是由线程http-nio-8080-exec-5引发的，我们导航到这个线程；点击以下按钮，展开这个线程的全部栈帧：
 然后导航到方法org.apache.poi.xssf.usermodel.XSSFWorkbook#XSSFWorkbook(org.apache.poi.openxml4j.opc.OPCPackage)：
-关注ZipPackage类型的变量，点击它左侧的按钮展开，再递归地展开，最终能找到字段zipEntries，对应的列表既是xlsx文件内包含的所有文件：</description></item><item><title>一次由Excel解析导致的OOM及其排查</title><link>https://zenuo.github.io/posts/2023/05/28/%E4%B8%80%E6%AC%A1%E7%94%B1excel%E8%A7%A3%E6%9E%90%E5%AF%BC%E8%87%B4%E7%9A%84oom%E5%8F%8A%E5%85%B6%E6%8E%92%E6%9F%A5/</link><pubDate>Sun, 28 May 2023 00:00:00 +0000</pubDate><guid>https://zenuo.github.io/posts/2023/05/28/%E4%B8%80%E6%AC%A1%E7%94%B1excel%E8%A7%A3%E6%9E%90%E5%AF%BC%E8%87%B4%E7%9A%84oom%E5%8F%8A%E5%85%B6%E6%8E%92%E6%9F%A5/</guid><description>在业务系统功能中，不难见到上传Excel文件批量处理的场景，由于Excel文件的复杂性，存在很多容易出问题的可能性。
+关注ZipPackage类型的变量，点击它左侧的按钮展开，再递归地展开，最终能找到字段zipEntries，对应的列表既是xlsx文件内包含的所有文件：
+4 提取内容到xlsx文件 找到了xml数据，我们如何构造一个xlsx文件呢，根据上文提到的xlsx文件结构：</description></item><item><title>一次由Excel解析导致的OOM及其排查</title><link>https://zenuo.github.io/posts/2023/05/28/%E4%B8%80%E6%AC%A1%E7%94%B1excel%E8%A7%A3%E6%9E%90%E5%AF%BC%E8%87%B4%E7%9A%84oom%E5%8F%8A%E5%85%B6%E6%8E%92%E6%9F%A5/</link><pubDate>Sun, 28 May 2023 00:00:00 +0000</pubDate><guid>https://zenuo.github.io/posts/2023/05/28/%E4%B8%80%E6%AC%A1%E7%94%B1excel%E8%A7%A3%E6%9E%90%E5%AF%BC%E8%87%B4%E7%9A%84oom%E5%8F%8A%E5%85%B6%E6%8E%92%E6%9F%A5/</guid><description>在业务系统功能中，不难见到上传Excel文件批量处理的场景，由于Excel文件的复杂性，存在很多容易出问题的可能性。
 1 复现 我们通过一个简化的SpringBoot工程来演示有问题的代码、如何通过Eclipse Memory Analyzer工具分析堆转储文件，来定位到问题代码。
 工程代码excel-oom.zip：
 . ├── pom.xml ├── readme.md ├── src │ └── main │ └── java │ └── demo │ └── exceloom │ └── DemoExcelOomApplication.java ├── test.xlsx 在DemoExcelOomApplication.java中是我们关注的重点，使用Apache POI框架解析输入流，然后读取第一张表的每一行：
