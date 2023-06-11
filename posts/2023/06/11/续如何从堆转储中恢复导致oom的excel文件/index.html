@@ -1,0 +1,55 @@
+<!doctype html><html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>（续）如何从堆转储中恢复导致OOM的Excel文件</title><meta name=generator content="Hugo 0.112.3"><link rel=stylesheet href="https://zenuo.github.io/css/styles.min.da6e1927bcb6a0faebcb06ab9925c87524b8057860afacf48eab54fcbf9eef18.css" integrity="sha256-2m4ZJ7y2oPrrywarmSXIdSS4BXhgr6z0jqtU/L+e7xg="><script async defer data-domain=kaiwern.com src=https://plausible.io/js/plausible.js></script>
+<link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Lora&family=Source+Sans+Pro:wght@400;600&display=swap" rel=stylesheet><body class="flex flex-col min-h-screen px-6 max-w-prose md:w-2/3 m-auto"><nav class=mt-8><ul id=nav-menu class="w-full flex items-center list-reset"><li><a href=https://zenuo.github.io/>Home</a></li><li><a href=https://zenuo.github.io/series/>Series</a></li><li><a href=https://zenuo.github.io/fragments/>Fragments</a></li><li><a href=https://zenuo.github.io/about/>About</a></li><li><a href=https://zenuo.github.io/tags/>Tags</a></li></ul></nav><main class="flex-1 mt-10 sm:mt-12"><header class="mb-8 font-sans-serif"><div class="text-sm font-gray-700 mb-8"><p class="uppercase font-semibold"><a class=text-gray-700 href=/posts>posts</a></p><p>Jun 11, 2023</p></div><h1 class="title mb-2">（续）如何从堆转储中恢复导致OOM的Excel文件</h1><p class="text-sm font-gray-700 mb-4 italic">Estimated Reading Time: 2 minutes (228 words)</p><div id=tags><span class="badge badge-primary rounded-badge"><a href=https://zenuo.github.io/tags/tech/>tech</a></span></div></header><article class="prose serif mb-12 text-gray-800"><p>OOM发生后，我们可以通过堆转储文件分析出原因，那么我们能从堆转储文件里挖到更多细节吗？这一篇我们继续聊聊Excel OOM的事儿。</p><h2 id=1-理论基础>1 理论基础</h2><p>根据<a href="https://help.eclipse.org/latest/index.jsp?topic=%2Forg.eclipse.mat.ui.help%2Ftasks%2Fanalyzingthreads.html">MAT文档Analyzing Threads</a>描述，hprof文件含有线程的栈以及栈里的局部变量：</p><blockquote><p>Some heap dump formats (e.g. HPROF dumps from recent Java 6 VMs and IBM system dumps) contain information about the call stacks of threads, and the Java local objects per stack frame.</p></blockquote><p>也就是说<b>若程序实现是把excel解压缩之后的内容都加载到内存中的话，那么是可能提取出来的。</b></p><p>只要能找到内容，根据上文说到的xlxs结构，我们可以把xml等文本写到文本，再根据响应的文件结构存放，使用zip压缩后更名为xlsx文件，就算是提取了。</p><h2 id=2-阅读源码>2 阅读源码</h2><p>走一下POI的初始化workbook代码，可以发现构造器<code>org.apache.poi.xssf.usermodel.XSSFWorkbook#XSSFWorkbook(org.apache.poi.openxml4j.opc.OPCPackage)</code>的唯一入参的类型OPCPackage唯一实现是<code>org.apache.poi.openxml4j.opc.ZipPackage</code>，也许会有解压缩后的文件内容。</p><h2 id=3-查看栈的局部变量>3 查看栈的局部变量</h2><p>打开MAT的线程视图：</p><p><img src=/vx_images/224995797836405.png alt></p><p>打开堆转储文件，根据之前的分析OOM是由线程<code>http-nio-8080-exec-5</code>引发的，我们导航到这个线程；点击以下按钮，展开这个县城的全部栈帧：</p><p>![]/(vx_images/211516125586294.png)</p><p>然后导航到方法<code>org.apache.poi.xssf.usermodel.XSSFWorkbook#XSSFWorkbook(org.apache.poi.openxml4j.opc.OPCPackage)</code>：</p><p><img src=/vx_images/137842625132772.png alt></p><p>关注ZipPackage类型的变量，点击它左侧的按钮展开，再递归地展开，最终能找到字段<code>zipEntries</code>，对应的列表既是xlsx文件内包含的所有文件：</p><p><img src=/vx_images/466012783817302.png alt></p><h2 id=4-提取内容到xlsx文件>4 提取内容到xlsx文件</h2><p>找到了xml数据，我们如何构造一个xlsx文件呢，根据上文提到的xlsx文件结构：</p><pre tabindex=0><code>.
+├── [Content_Types].xml
+├── _rels
+├── docProps
+│   ├── app.xml
+│   └── core.xml
+└── xl
+    ├── _rels
+    │   └── workbook.xml.rels
+    ├── sharedStrings.xml
+    ├── styles.xml
+    ├── theme
+    │   └── theme1.xml
+    ├── workbook.xml
+    └── worksheets
+        └── sheet1.xml
+</code></pre><p>看起来是比较复杂的，我们可以逆向思维：<b>创建一个空白的xlsx，解压，然后将堆中的xml内容覆盖到对应的xml文件，再打包成zip，改拓展名为xlsx</b></p><p>打开Excel，新建空白的工作簿，在第一张表的某个单元格输入内容，保存到文件<code>my-xlsx.xlsx</code>，然后解压：</p><p><img src=/vx_images/468666757761760.png alt></p><p>回到MAT界面，右击<code>xl/sharedStrings.xml</code>的<code>data</code>属性，Copy > Save Value To File：</p><p><img src=/vx_images/243445115911442.png alt></p><p>覆盖到我们刚才解压的xlsx的sharedStrings.xml：</p><p><img src=/vx_images/546495669559358.png alt></p><p>存储后确认对应文件的长度是否于堆内的长度一致：</p><p><img src=/vx_images/200695222658818.png alt></p><p>重复上面的动作，将<code>xl/worksheets/sheet1.xml</code>的内容覆盖到文件。</p><blockquote><p>更完善的处理应该是将堆里的10个文件都提取出来，但只是为了查看第一张表的内容，提取这里两个文件已经足够。</p></blockquote><p>然后打开命令行，切换到my-xlsx文件夹，当前文件夹内容如下：</p><pre tabindex=0><code>➜  my-xlsx tree .
+.
+├── [Content_Types].xml
+├── _rels
+├── docProps
+│   ├── app.xml
+│   └── core.xml
+├── my-new.xlsx
+└── xl
+    ├── _rels
+    │   └── workbook.xml.rels
+    ├── sharedStrings.xml
+    ├── styles.xml
+    ├── theme
+    │   └── theme1.xml
+    ├── workbook.xml
+    └── worksheets
+        └── sheet1.xml
+
+6 directories, 10 files
+</code></pre><p>执行命令<code>zip -r my-new.xlsx *</code>：</p><pre tabindex=0><code>➜  my-xlsx zip -r my-new.xlsx *
+  adding: [Content_Types].xml (deflated 71%)
+  adding: _rels/ (stored 0%)
+  adding: _rels/.rels (deflated 60%)
+  adding: docProps/ (stored 0%)
+  adding: docProps/app.xml (deflated 51%)
+  adding: docProps/core.xml (deflated 50%)
+  adding: xl/ (stored 0%)
+  adding: xl/workbook.xml (deflated 61%)
+  adding: xl/worksheets/ (stored 0%)
+  adding: xl/worksheets/sheet1.xml (deflated 91%)
+  adding: xl/styles.xml (deflated 60%)
+  adding: xl/theme/ (stored 0%)
+  adding: xl/theme/theme1.xml (deflated 80%)
+  adding: xl/_rels/ (stored 0%)
+  adding: xl/_rels/workbook.xml.rels (deflated 66%)
+  adding: xl/sharedStrings.xml (deflated 48%)
+</code></pre><p>可以发现当前文件夹内新增了文件<code>my-new.xlsx</code>，使用Excel打开它：</p><p>因为这个xlsx文件的构造过程不完善，所以会提示，我们选择Yes继续：</p><p><img src=/vx_images/40811391366524.png alt></p><p>然后Excel会提示已经修复了这个文件，若选择View则可查看修复日志，选择Delete则直接查看修复之后的内容：</p><p><img src=/vx_images/354801619124950.png alt></p><p>查看修复之后的内容：</p><p><img src=/vx_images/252882602787580.png alt></p><p>至此提取成功。</p><h2 id=5-总结>5 总结</h2><p>以上，我认识到了堆转储文件的更多功能，学习了更多排查问题的思路和方法。</p></article></main><hr><footer class="w-full text-center p-4 pin-b text-xs text-gray-400"><p>made with <a href=https://gohugo.io class="underline hover:text-blue-400">Hugo</a> and <a href=https://tailwindcss.com class="underline hover:text-blue-400">TailwindCSS</a></p></footer></body></html>
