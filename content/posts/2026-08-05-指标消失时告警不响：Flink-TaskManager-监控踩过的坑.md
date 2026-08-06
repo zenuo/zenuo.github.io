@@ -1,10 +1,8 @@
 ---
-title: 指标消失时告警不响：Flink TaskManager 监控踩过的坑
+title: 🕳指标消失时告警不响：Flink TaskManager 监控踩过的坑
 date: 2026-08-05T00:00:00+0800
 tags: [tech]
 ---
-
-# 🕳指标消失时告警不响：Flink TaskManager 监控踩过的坑
 
 Prometheus + Grafana 盯 Flink，常见做法是看 JobManager 上报的已注册 TaskManager 数：
 
