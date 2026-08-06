@@ -22,7 +22,6 @@
 {{ else }}
   {{ $styles := $styles| minify | fingerprint | resources.PostProcess }}
   <link rel="stylesheet" href="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}">
-  <script async defer data-domain="kaiwern.com" src="https://plausible.io/js/plausible.js"></script>
 {{ end }}
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
