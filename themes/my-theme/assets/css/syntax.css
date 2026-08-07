@@ -1,5 +1,8 @@
 .markdown pre code {
   padding: 0;
+  white-space: inherit;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .markdown code {
@@ -17,8 +20,11 @@
   padding: 0.5rem;
   border-radius: 0.25rem;
   line-height: 1.5;
-  white-space: pre-wrap;
+  /* Keep original line layout; scroll horizontally instead of wrapping/squeezing. */
+  white-space: pre;
   overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Other */ .chroma .x {  }

@@ -691,7 +691,8 @@ a:hover {
   padding-bottom: 0.8571429em;
   padding-left: 1.1428571em;
   padding: 0.5rem;
-  white-space: pre-wrap;
+  white-space: pre;
+  max-width: 100%;
 }
 
 .prose :where(pre code):not(:where([class~="not-prose"] *)) {
@@ -704,6 +705,9 @@ a:hover {
   font-size: inherit;
   font-family: inherit;
   line-height: inherit;
+  white-space: inherit;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .prose :where(pre code):not(:where([class~="not-prose"] *))::before {
@@ -1113,6 +1117,15 @@ a:hover {
 
 /* General */
 
+/* Flex column body defaults to min-width:auto; allow children to shrink so
+   wide <pre> content scrolls inside the code block instead of expanding the page. */
+
+main,
+.prose {
+  min-width: 0;
+  max-width: 100%;
+}
+
 #nav-menu li a {
   font-family: 'Source Sans Pro', sans-serif;
   text-transform: uppercase;
@@ -1387,6 +1400,9 @@ nav#TableOfContents > ul > li {
 
 .markdown pre code {
   padding: 0;
+  white-space: inherit;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .markdown code {
@@ -1404,8 +1420,11 @@ nav#TableOfContents > ul > li {
   padding: 0.5rem;
   border-radius: 0.25rem;
   line-height: 1.5;
-  white-space: pre-wrap;
+  /* Keep original line layout; scroll horizontally instead of wrapping/squeezing. */
+  white-space: pre;
   overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Other */
@@ -2039,6 +2058,10 @@ nav#TableOfContents > ul > li {
   width: 100%;
 }
 
+.min-w-0 {
+  min-width: 0px;
+}
+
 .max-w-prose {
   max-width: 65ch;
 }
@@ -2352,8 +2375,14 @@ nav#TableOfContents > ul > li {
 }
 
 @media (min-width: 768px) {
-  .md\:w-2\/3 {
-    width: 66.666667%;
+  .md\:max-w-3xl {
+    max-width: 48rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:max-w-4xl {
+    max-width: 56rem;
   }
 }
 
