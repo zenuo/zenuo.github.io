@@ -28,12 +28,17 @@ module.exports = {
               "padding": "0.5rem",
               "borderRadius": "0.25rem",
               "lineHeight": "1.5",
-              "whiteSpace": "pre-wrap",
+              // Keep original line layout; scroll horizontally instead of wrapping.
+              "whiteSpace": "pre",
               "overflowX": "auto",
+              "maxWidth": "100%",
             },
             "pre code": {
               "padding": "0",
-              "color": "#333"
+              "color": "#333",
+              "whiteSpace": "inherit",
+              "wordBreak": "normal",
+              "overflowWrap": "normal",
             },
             "code": {
               "font-size": "0.875rem",

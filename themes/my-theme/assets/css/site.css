@@ -1,5 +1,13 @@
 /* General */
 
+/* Flex column body defaults to min-width:auto; allow children to shrink so
+   wide <pre> content scrolls inside the code block instead of expanding the page. */
+main,
+.prose {
+  min-width: 0;
+  max-width: 100%;
+}
+
 #nav-menu li a {
   @apply font-sans-serif;
   @apply uppercase;
